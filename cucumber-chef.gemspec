@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{cucumber-chef}
-  s.version = "0.5.1"
+  s.version = "0.5.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Stephen Nelson-Smith"]
@@ -78,8 +78,8 @@ Gem::Specification.new do |s|
     "spec/unit/test_lab_spec.rb",
     "spec/unit/test_runner_spec.rb"
   ]
-  s.homepage = %q{http://github.com/atalanta/cucumber-chef}
-  s.licenses = ["MIT"]
+  s.homepage = %q{http://cucumber-chef.org}
+  s.licenses = ["Apache v2"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.6.2}
   s.summary = %q{Tests Chef-built infrastructure}
