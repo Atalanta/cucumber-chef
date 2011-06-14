@@ -13,8 +13,8 @@ require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "cucumber-chef"
-  gem.homepage = "http://github.com/atalanta/cucumber-chef"
-  gem.license = "MIT"
+  gem.homepage = "http://cucumber-chef.org"
+  gem.license = "Apache v2"
   gem.summary = "Tests Chef-built infrastructure"
   gem.description = "Framework for behaviour-drive infrastructure development."
   gem.email = "stephen@atalanta-systems.com"
