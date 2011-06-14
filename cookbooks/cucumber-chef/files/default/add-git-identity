@@ -1,0 +1,2 @@
+eval $(ssh-agent) > /dev/null 2>&1
+ssh-add /root/.ssh/git-key.rsa > /dev/null 2>&1

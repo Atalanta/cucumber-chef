@@ -1,0 +1,11 @@
+Feature: Example feature for <%= @project %>
+  So that I can be learn how to use cucumber-chef
+  As an infrastructure developer
+  I can run an example feature that doesn't do much
+
+Scenario: Example scenario for <%= @project %>
+  Given I have a remote server
+  And I apply the <%= @project %> role/recipe
+  And run Chef
+  When I connect to the remote server from the test server
+  Then the <% @project %> server behaves as it should

@@ -1,0 +1,3 @@
+UserKnownHostsFile /dev/null
+StrictHostKeyChecking no
+LogLevel error

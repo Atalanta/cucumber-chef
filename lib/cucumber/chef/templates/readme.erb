@@ -1,0 +1,14 @@
+Welcome to the <%= @project %> suite of cucumber-chef tests
+
+Your general workflow will be to write cucumber features that describe the intended behaviour of '<%= @project %>'.  You will then write failing tests by writing steps to test the behaviour, expressing them as cucumer scenarios. 
+
+You will then want to create a '<%= @project %>' cookbook, and write recipes that make your tests pass.  Upload your cookbook to the Opscode Platform, and then run the tests with: 
+
+Then run your tests with:
+
+cucumber-chef test <%= @project %>
+
+For an example feature, take a look at ./<%= @project %>/features/example.feature
+
+For an example step definition, look at ./<%= @project %>/features/example.feature
+
