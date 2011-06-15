@@ -55,7 +55,7 @@ Now check your config again, with cucumber-chef display config.  If you get no c
 
     $ cucumber-chef setup
 
-This command will set up a complete test lab environment, including a controller.  As long as you've provided valid AWS and Opscode credentials, it will do this automatically.  The process takes about 12 minutes, after which you'll have a fully cuntioning platform available for you to use.
+This command will set up a complete test lab environment, including a controller.  As long as you've provided valid AWS and Opscode credentials, it will do this automatically.  The process takes about 12 minutes, after which you'll have a fully funtioning platform available for you to use.
 
 The next stage is to set up a project.  A project is simply a directory structure for containing your cucumber features and steps, already set up with an appropriate environment to make use of the step definitions provided with cucumber-chef.  We think it makes most sense to have this in your organisation's chef repo.  Cucumber-chef provides a task which will create a the directory for you, and populate it with a README and an example feature and step.
 
