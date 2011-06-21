@@ -48,7 +48,7 @@ class Chef
         ami = connection.images.get(locate_config_value(:image))
 
         server_def = {
-        :image_id => locate_config_value(:image),
+        :image_id => Chef::Config[:knife][:aws_image_id],
         :groups => config[:security_groups],
         :flavor_id => locate_config_value(:flavor),
         :key_name => Chef::Config[:knife][:aws_ssh_key_id],
