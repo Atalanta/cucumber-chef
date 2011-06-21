@@ -12,6 +12,8 @@ gem "cucumber-nagios", ">= 0"
 gem "rspec", ">= 0"
 gem "fog", ">= 0"
 gem "thor", ">= 0"
+gem "awesome_print", ">= 0"
+gem "net-scp", ">= 0"
 
 group :development do
   gem "bundler", "~> 1.0.0"
