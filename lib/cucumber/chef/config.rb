@@ -40,7 +40,7 @@ module Cucumber
         @config
       end
 
-      def test_config
+      def self.test_config
         config = self.new
         config[:mode] = "test"
         config
