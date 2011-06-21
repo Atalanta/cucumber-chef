@@ -84,6 +84,9 @@ Now add the EC2 configuration:
     knife[:identity_file] = "/path/to/aws_ssh_key.pem"
     knife[:availability_zone] = "eu-west-1a"
     knife[:region] = "eu-west-1"
+    knife[:aws_image_id] = "ami-339ca947"
+
+Note that right now Cucumber-Chef only supports Ubuntu-based  test labs.
 
 And set your environment variables:
 
