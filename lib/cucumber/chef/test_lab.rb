@@ -38,12 +38,12 @@ module Cucumber
 
       def destroy
         running_labs.each do |server|
-          #server.destroy
-          puts server.public_ip_address
+          puts "Destroying Server: #{server.public_ip_address}"
+          server.destroy
         end
         nodes.each do |node|
+          puts "Not destroying Node: #{node[:ec2][:public_ipv4]}"
           # node.destroy
-          puts node[:ec2][:public_ipv4]
         end
       end
 
