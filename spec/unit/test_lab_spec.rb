@@ -2,6 +2,24 @@ require "rubygems"
 require "bundler/setup"
 require File.join(File.dirname(__FILE__), "../../lib/cucumber-chef")
 
+def tcp_test_ssh(hostname)
+  tcp_socket = TCPSocket.new(hostname, 22)
+  IO.select([tcp_socket], nil, nil, 5)
+rescue Errno::ETIMEDOUT
+  false
+rescue Errno::EPERM
+  false
+rescue Errno::ECONNREFUSED
+  sleep 2
+  false
+  # This happens on EC2 quite often
+rescue Errno::EHOSTUNREACH
+  sleep 2
+  false
+ensure
+  tcp_socket && tcp_socket.close
+end
+
 describe Cucumber::Chef::TestLab do
   before(:all) do
     @config = Cucumber::Chef::Config.test_config
@@ -47,7 +65,7 @@ describe Cucumber::Chef::TestLab do
       sleep(10)
       provisioner.upload_cookbook(@config)
       provisioner.upload_role(@config)
-      provisioner.bootstrap_node(@dns_name, @config).run
+      provisioner.bootstrap_node(@dns_name, @config)
     end
 
     after(:each) { subject.destroy }
