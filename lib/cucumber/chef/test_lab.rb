@@ -52,7 +52,7 @@ module Cucumber
       end
 
       def info
-        "#{node.name}: #{node[:ec2][:public_ipv4]}"
+        running_labs.first.public_ip_address
       end
 
       def public_hostname
