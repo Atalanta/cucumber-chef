@@ -32,6 +32,7 @@ class CucumberChef < Thor
     
     def generate_project_skeleton(project_dir)
       template_dir = Pathname.new(__FILE__).parent.parent + 'lib' + 'cucumber' + 'chef' + 'templates'
+      CucumberChef.source_root template_dir.realpath
       templates = {
         "readme.erb" => 'README',
         "example_feature.erb" => 'features/example.feature',
@@ -39,8 +40,7 @@ class CucumberChef < Thor
         "env.rb" => "features/support/env.rb"
       }
       templates.each do |filename, destination|
-        template((template_dir + filename).realpath,
-                 project_dir + destination)
+        template(filename, project_dir + destination)
       end
     end
 
