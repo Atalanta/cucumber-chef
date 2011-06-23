@@ -56,17 +56,15 @@ module Cucumber
       end
 
       def public_hostname
-        node.cloud.public_hostname
+        nodes.first.cloud.public_hostname
       end
 
-      def node
-        @node ||= begin
+      def nodes
         search = ::Chef::Search::Query.new
         mode = @config[:mode]
         query = "roles:test_lab_test AND tags:#{mode}"
         nodes, offset, total = search.search("node", URI.escape(query))
-        nodes.compact.first
-        end
+        nodes.compact
       end
 
       def running_labs
