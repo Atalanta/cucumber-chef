@@ -1,24 +1,13 @@
 #!/usr/bin/env ruby
-
-require 'rubygems'
-require 'thor'
 require 'pathname'
 require 'fileutils'
-require 'yaml'
-require 'awesome_print'
-require 'chef'
-require 'chef/knife'
-require 'chef/knife/bootstrap'
-require 'chef/knife/ssh'
-require 'socket'
-require 'net/ssh/multi'
-require 'readline'
-require 'stringio'
+
+require 'rubygems'
+require 'bundler/setup'
+require 'thor'
 
 $LOAD_PATH << File.join(File.dirname(__FILE__), '../lib')
 require 'cucumber-chef'
-
-GEM_DIR = Gem.default_dir
 
 class CucumberChef < Thor
   include Thor::Actions
@@ -79,7 +68,6 @@ class CucumberChef < Thor
     rescue ::Cucumber::Chef::Error => err
       error(err.message)
     end
-    
   end
 
   desc "connect", "Connect to a container in your test lab"

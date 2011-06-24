@@ -1,15 +1,16 @@
-require "chef"
-require "chef/cookbook_uploader"
+require 'readline'
+require 'socket'
+require 'stringio'
+
+require 'chef'
+require 'chef/cookbook_uploader'
 require 'chef/knife'
 require 'chef/knife/bootstrap'
 require 'chef/knife/core/bootstrap_context'
 require 'chef/knife/ssh'
-require 'socket'
-require 'net/ssh/multi'
+require 'fog'
 require 'net/scp'
-require "fog"
-require 'readline'
-require 'stringio'
+require 'net/ssh/multi'
 
 module Cucumber
   module Chef
