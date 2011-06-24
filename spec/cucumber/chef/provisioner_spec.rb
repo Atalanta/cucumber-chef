@@ -64,34 +64,4 @@ describe Cucumber::Chef::Provisioner do
       end.should be
     end
   end
-
-  describe "build_controller" do
-
-    before(:each) do
-      server = subject.build_test_lab(@config, StringIO.new)
-      @dns_name = server.dns_name
-      puts "Hanging around..." until tcp_test_ssh(server.public_ip_address)
-      puts "Got ssh..."
-      sleep(10)
-      subject.upload_cookbook(@config)
-      subject.upload_role(@config)
-      subject.bootstrap_node(@dns_name, @config)
-    end
-    
-    after(:each) do
-      config = @config[:knife]
-      connection = Fog::Compute.new(:provider => 'AWS',
-                                    :aws_access_key_id => config[:aws_access_key_id],
-                                    :aws_secret_access_key => config[:aws_secret_access_key],
-                                    :region => config[:region])
-      connection.servers.each do |s|
-        s.destroy if s.tags['cucumber-chef'] == 'test' && s.state == 'running'
-      end
-    end
-
-    it "should build a cucumber-chef controller" do
-      controller_builder = subject.build_controller(@dns_name, @config)
-      puts controller_builder.ui.stdout.string
-    end
-  end
 end
