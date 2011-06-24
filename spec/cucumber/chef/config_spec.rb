@@ -1,6 +1,4 @@
-require "rubygems"
-require "bundler/setup"
-require File.join(File.dirname(__FILE__), "../../lib/cucumber-chef")
+require File.join(File.dirname(__FILE__), "../../spec_helper.rb")
 
 describe Cucumber::Chef::Config do
   before(:all) do

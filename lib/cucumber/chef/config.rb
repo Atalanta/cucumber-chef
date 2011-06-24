@@ -4,13 +4,11 @@ module Cucumber
 
     class Config
       KEYS = %w[mode node_name chef_server_url client_key validation_key validation_client_name]
-      KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file]
+      KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region aws_image_id availability_zone aws_ssh_key_id identity_file]
 
       def initialize
         config[:mode] = "user"
       end
-
-
 
       def self.mode
         config.test_mode? ? 'test' : 'user'

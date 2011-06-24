@@ -26,7 +26,6 @@ module Cucumber
         bootstrap.config[:validation_client_name] = config["validation_client_name"]
         bootstrap.config[:validation_key] = config["validation_key"]
         bootstrap.config[:chef_server_url] = config["chef_server_url"]
-        bootstrap
         bootstrap.run
         tag_node(config)
       end
@@ -46,7 +45,8 @@ module Cucumber
         bootstrap.config[:validation_client_name] = config["validation_client_name"]
         bootstrap.config[:validation_key] = config["validation_key"]
         bootstrap.config[:chef_server_url] = config["chef_server_url"]
-
+        bootstrap.run
+        bootstrap
       end
 
       def upload_cookbook(config)

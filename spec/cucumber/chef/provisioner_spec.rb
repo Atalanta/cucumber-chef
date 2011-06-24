@@ -1,24 +1,4 @@
-require "rubygems"
-require "bundler/setup"
-require File.join(File.dirname(__FILE__), "../../lib/cucumber-chef")
-
-def tcp_test_ssh(hostname)
-  tcp_socket = TCPSocket.new(hostname, 22)
-  IO.select([tcp_socket], nil, nil, 5)
-rescue Errno::ETIMEDOUT
-  false
-rescue Errno::EPERM
-  false
-rescue Errno::ECONNREFUSED
-  sleep 2
-  false
-  # This happens on EC2 quite often
-rescue Errno::EHOSTUNREACH
-  sleep 2
-  false
-ensure
-  tcp_socket && tcp_socket.close
-end
+require File.join(File.dirname(__FILE__), "../../spec_helper.rb")
 
 describe Cucumber::Chef::Provisioner do
   before(:all) do
@@ -78,8 +58,7 @@ describe Cucumber::Chef::Provisioner do
     end
 
     it "should assign a random name to the node" do
-      bootstrapper = subject.bootstrap_node(@dns_name, @config)
-      bootstrapper.run
+      subject.bootstrap_node(@dns_name, @config)
       @test_lab.nodes.detect do |node|
         node.name.match /^cucumber-chef-[0-9a-f]{8}$/
       end.should be
@@ -96,7 +75,7 @@ describe Cucumber::Chef::Provisioner do
       sleep(10)
       subject.upload_cookbook(@config)
       subject.upload_role(@config)
-      subject.bootstrap_node(@dns_name, @config).run
+      subject.bootstrap_node(@dns_name, @config)
     end
     
     after(:each) do
@@ -112,9 +91,7 @@ describe Cucumber::Chef::Provisioner do
 
     it "should build a cucumber-chef controller" do
       controller_builder = subject.build_controller(@dns_name, @config)
-      controller_builder.run
       puts controller_builder.ui.stdout.string
     end
-
   end
 end
