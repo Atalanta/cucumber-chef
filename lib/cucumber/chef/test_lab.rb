@@ -52,7 +52,7 @@ module Cucumber
       end
 
       def info
-        running_labs.first.public_ip_address
+        (exists? && running_labs.first.public_ip_address) || ""
       end
 
       def public_hostname

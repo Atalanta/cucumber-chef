@@ -7,6 +7,12 @@ describe Cucumber::Chef::TestLab do
 
   subject { Cucumber::Chef::TestLab.new(@config) }
     
+  describe "with no running labs" do
+    it "should not return any info" do
+      subject.info.should == ""
+    end
+  end
+
   describe "build" do
     after(:each) { subject.destroy }
 
