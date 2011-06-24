@@ -1,0 +1,110 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd"> 
+ 
+<html lang="en"> 
+<head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+  <title>Cucumber-chef</title> 
+  <!-- Typekit service section --> 
+  <script type="text/javascript" src="http://use.typekit.com/jmb0kkz.js"></script> 
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script> 
+  <!-- End of typekit service section --> 
+ 
+  <!-- Framework CSS --> <link rel="stylesheet" href="style/style.css" type="text/css" media="screen, projection"> </head> 
+  
+   <body> <div class="container"> 
+  
+   
+      <div id="nav"> 
+      <ul> 
+        <li class="selected">Main</li> 
+        <li>Docs</li> 
+      </ul>    
+      </div> 
+      
+    <div id="header">  
+    <img src="images/cucumber-chef-logo.png" width="380" height="46" alt="Cucumber Chef Logo"/> 
+    <h3>A library of tools to enable test driven development</h3>   
+    </div> 
+  
+   <div class="page"> 
+  
+   <div id="panel"> 
+     <a href="https://github.com/Atalanta/cucumber-chef"><img src="images/large-button.png" width="252" height="52" class="imgpad" alt="Git Hub" /></a>   
+     <a href="http://oreilly.com/catalog/0636920020042"><img src="images/book-cover.png" width="252" height="330" alt="Book Cover"/></a> 
+     <p class="book-description">Test-Driven Infrastructure with Chef<br/>by Stephen Nelson-Smith<br/>Published by O’Reilly</p> 
+     <a href="http://oreilly.com/catalog/0636920020042"><img src="images/buy-button.png" width="62" height="27" alt="Buy Button"/></a> 
+   </div> 
+  
+   <h2>Overview</h2> 
+  
+   <p><strong>Cucumber-chef</strong> begins with a very simple premise. If we are framing our infrastructure as code - if we’re writing
+  cookbooks, recipes and other pieces of automation in a high level programming language, such as Ruby, then it makes sense to follow the
+  current wisdom across the software development world to maximise the quality, maintainability and reusability of our code, providing maximum
+  chance that we’ll deliver value with it. One area which has been shown to have a very positive effect is the proactive of ‘test-driven’
+  development. In this paradigm, the developer begins by writing a test that captures the intended behaviour of the code they are going to
+  write. This test will start out by failing. The developer then writes code to make the test pass, and iterates thereafter.
+  <strong>Cucumber-Chef</strong> provides a framework to make it easier to do test-driven development for infrastructure.</p> 
+  
+   <h3>Vocabulary</h3> 
+  
+   <p>Throughout this documentation, a few terms will crop up regularly. It makes sense to define these up front, as they’re just terms we’ve
+  been using since we started writing Cucumber-chef. They may even change, but in the meantime, so we’re all n the same page, here are some of
+  the terms we use:</p> 
+  
+   <ul> <li><strong>Test Lab:</strong> An environment made up (at present) of an EC2 instance, configured to be an LXC host. This machine does
+  nothing other than provide space in which Linux containers can be created and destroyed.</li> 
+  
+   <li><strong>Controller:</strong> One special Linux container which acts as the central point from which tests are run. This machine is where
+  the tests run, and has connectivity and credentials to connect to the machines that are created as part of a test run.</li> 
+  
+   <li><strong>Container:</strong> A container is a lightweight virtual machine - it is entirely self-contained, with its own process tree,
+  resource constraints, filesystem and network stack. It shares a kernel with the Test Lab host server.</li> </ul> 
+  
+   <h3>Getting Started</h3> 
+  
+   <p><strong>Cucumber-chef</strong> is tightly integrated with Chef - it uses your knife.rb for credentials, and any cucumber-chef-specific
+  configuration goes in knife.rb under the cucumber-chef namespace.</p> 
+  
+   <p>On installation, the first thing you should do is run:</p> 
+  
+   <div class="inset-box"> 
+   <pre> 
+    $ cucumber-chef displayconfig
+   </pre> 
+   </div> 
+  
+   <p>This will look for your knife.rb, and extract the relevant sections, check them, and display them on the screen. If any entries are
+  missing, it will alert you.The current recommendation is to keep your knife.rb inside your organisation’s chef repository, in .chef, and use
+  environment variables to specify username, organisation name and cloud provider credentials. Cucumber-chef supports and encourages this
+  approach. It will search for a directory called .chef in your current directory, and then carry on going up the directory tree until it finds
+  one. In practice this means that if you stay within the chef-repo directory for the organisation on which you’re working, cucumber-chef will
+  use the knife.rb; if your elsewhere in the filesystem rooted in your home directory, and have .chef in your home directory, cucumber-chef will
+  use that. Otherwise you’ll need to either change into a directory where a .chef can be found, or copy, creatre or link accordingly. In most
+  cases we anticipate that you’ll be inside the chef-repo of your organisation, and the documentation is written from this perspective.</p> 
+  
+   <p>In its current incarnation, cucumber-chef makes two important assumptions. Firstly, we assume you’re using the Opscode platform rather
+  than your own Chef server. Secondly, we assume that you are comfortable with using Amazon’s EC2 service for providing the ‘bare metal’ on
+  which we set up the test lab. Future releases may well allow you to use your own Chef server, and will definitely look at offering alternative
+  cloud providers. In the meantime, we welcome patches and pull requests!</p> 
+  
+  <p>Set your environment variables:</p> 
+  
+  <div class="inset-box"> 
+  <pre> 
+  $ export OPSCODE_USER=platform_user_name
+  $ export ORGNAME=platform_organisation
+  $ export AWS_ACCESS_KEY_ID=SEKRITKEY
+  $ export AWS_SECRET_ACCESS_KEY=REELYSEKRITKEY    
+  </pre> 
+  </div> 
+  
+   </div> 
+  
+   </div> 
+  
+   </body> 
+  
+   </html> 
+
