@@ -30,6 +30,10 @@ describe Cucumber::Chef::TestLab do
       }.to raise_error(Cucumber::Chef::TestLabError)
     end
 
+    it "should report its public ip address", :slow => true do
+      server = subject.build(StringIO.new)
+      subject.info.should == server.public_ip_address
+    end
   end
 
   describe "destroy" do
@@ -37,27 +41,6 @@ describe Cucumber::Chef::TestLab do
       subject.build(StringIO.new)
       subject.destroy
       subject.exists?.should_not be
-    end
-  end
-
-  describe "against a bootstrapped lab" do
-    before(:each) do
-      provisioner = Cucumber::Chef::Provisioner.new
-      server = provisioner.build_test_lab(@config, StringIO.new)
-      @dns_name = server.dns_name
-      @public_ip_address = server.public_ip_address
-      puts "Hanging around..." until tcp_test_ssh(server.public_ip_address)
-      puts "Got ssh..."
-      sleep(10)
-      provisioner.upload_cookbook(@config)
-      provisioner.upload_role(@config)
-      provisioner.bootstrap_node(@dns_name, @config)
-    end
-
-    after(:each) { subject.destroy }
-
-    it "should report its public ip address", :slow => true do
-      subject.info.should match(/#{@public_ip_address}/)
     end
   end
 end
