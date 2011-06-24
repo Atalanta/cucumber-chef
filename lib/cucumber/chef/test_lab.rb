@@ -42,8 +42,8 @@ module Cucumber
           server.destroy
         end
         nodes.each do |node|
-          puts "Not destroying Node: #{node[:ec2][:public_ipv4]}"
-          # node.destroy
+          puts "Destroying Node: #{node[:cloud][:public_ipv4]}"
+          node.destroy
         end
       end
 
