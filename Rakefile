@@ -7,6 +7,9 @@ require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec)
 task :default => :spec
 
+require 'cucumber/rake/task'
+Cucumber::Rake::Task.new(:cucumber)
+
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
