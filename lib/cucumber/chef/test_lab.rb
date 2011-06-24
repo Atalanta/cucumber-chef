@@ -38,12 +38,12 @@ module Cucumber
 
       def destroy
         running_labs.each do |server|
-          #server.destroy
-          puts server.public_ip_address
+          puts "Destroying Server: #{server.public_ip_address}"
+          server.destroy
         end
         nodes.each do |node|
+          puts "Not destroying Node: #{node[:ec2][:public_ipv4]}"
           # node.destroy
-          puts node[:ec2][:public_ipv4]
         end
       end
 
@@ -52,21 +52,19 @@ module Cucumber
       end
 
       def info
-        "#{node.name}: #{node[:ec2][:public_ipv4]}"
+        running_labs.first.public_ip_address
       end
 
       def public_hostname
-        node.cloud.public_hostname
+        nodes.first.cloud.public_hostname
       end
 
-      def node
-        @node ||= begin
+      def nodes
         search = ::Chef::Search::Query.new
         mode = @config[:mode]
         query = "roles:test_lab_test AND tags:#{mode}"
         nodes, offset, total = search.search("node", URI.escape(query))
-        nodes.compact.first
-        end
+        nodes.compact
       end
 
       def running_labs
