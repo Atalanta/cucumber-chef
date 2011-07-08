@@ -1,7 +1,6 @@
 source "http://rubygems.org"
 
-gemspec
-gem "chef", ">= 0.10.0"
+gem "chef", ">= 0.10.2"
 gem "fog", ">= 0"
 gem "thor", ">= 0"
 
