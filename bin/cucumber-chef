@@ -2,23 +2,19 @@
 require 'pathname'
 require 'fileutils'
 
-require 'rubygems'
-require 'bundler/setup'
 require 'thor'
-
-$LOAD_PATH << File.join(File.dirname(__FILE__), '../lib')
 require 'cucumber-chef'
 
 class CucumberChef < Thor
   include Thor::Actions
-  
+
   no_tasks do
     def create_directory_structure(project_dir)
       %w{step_definitions support}.each do |dir|
         FileUtils.mkdir_p(project_dir + "features" + dir)
       end
     end
-    
+
     def generate_project_skeleton(project_dir)
       template_dir = Pathname.new(__FILE__).parent.parent + 'lib' + 'cucumber' + 'chef' + 'templates'
       CucumberChef.source_root template_dir.realpath
@@ -44,7 +40,7 @@ class CucumberChef < Thor
       exit 255
     end
   end
-  
+
   desc "project <project name>" , "Create a project template for testing an infrastructure"
   def project(project_name)
     @project = project_name
@@ -52,7 +48,7 @@ class CucumberChef < Thor
     create_directory_structure(project_dir)
     generate_project_skeleton(project_dir)
   end
-  
+
   desc "setup", "Set up a cucumber-chef test lab in Amazon EC2"
   method_option :test, :type  => :boolean
   def setup
@@ -74,7 +70,7 @@ class CucumberChef < Thor
   def connect
     puts "Not implemented.  For now, find the IP of your test lab using the info task, and connect manually."
   end
-  
+
   desc "displayconfig", "Display the current config from knife.rb"
   method_option :test, :type  => :boolean
   def displayconfig

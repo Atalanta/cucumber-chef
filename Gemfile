@@ -1,8 +1,10 @@
 source "http://rubygems.org"
 
+gem "rake", "~> 0.9.2"
 gem "chef", ">= 0.10.2"
 gem "fog", ">= 0"
 gem "thor", ">= 0"
+gem "net-scp", ">= 0"
 
 group :development do
   gem "cucumber", ">= 0"
