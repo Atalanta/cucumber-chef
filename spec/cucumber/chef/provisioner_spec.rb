@@ -46,8 +46,6 @@ describe Cucumber::Chef::Provisioner do
       @test_lab.destroy
       server = subject.build_test_lab(@config, StringIO.new)
       @dns_name = server.dns_name
-      puts "Hanging around..." until tcp_test_ssh(server.public_ip_address)
-      puts "Got ssh..."
       sleep(10)
       subject.upload_cookbook(@config)
       subject.upload_role(@config)
