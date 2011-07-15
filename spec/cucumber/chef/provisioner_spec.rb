@@ -44,7 +44,14 @@ describe Cucumber::Chef::Provisioner do
     before(:each) do
       @test_lab = Cucumber::Chef::TestLab.new(@config)
       @test_lab.destroy
-      server = subject.build_test_lab(@config, StringIO.new)
+      begin
+        buildoutput = StringIO.new
+        server = subject.build_test_lab(@config, buildoutput)
+      rescue
+        puts "Output from #build_test_lab:"
+        puts buildoutput.read
+        raise
+      end
       @dns_name = server.dns_name
       sleep(10)
       subject.upload_cookbook(@config)
@@ -57,7 +64,14 @@ describe Cucumber::Chef::Provisioner do
     
  
     it "should assign a random name to the node" do
-      subject.bootstrap_node(@dns_name, @config)
+      begin
+        subject.bootstrap_node(@dns_name, @config)
+      rescue
+        puts "BOOTSTRAP FAILED!"
+        puts "  STANDARD OUTPUT:", subject.stdout.read, "\n\n"
+        puts "  STANDARD ERROR:", subject.stderr.read, "\n\n"
+        raise
+      end
       @test_lab.nodes.detect do |node|
         node.name.match /^cucumber-chef-[0-9a-f]{8}$/
       end.should be

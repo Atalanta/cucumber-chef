@@ -5,48 +5,22 @@ module Cucumber
     class ProvisionerError < Error ; end
 
     class Provisioner
+      attr_reader :stdout, :stderr, :stdin
+      
       def initialize
         @cookbook_path = File.join(File.dirname(__FILE__), "../../../cookbooks/cucumber-chef")
+        @stdout, @stderr, @stdin = StringIO.new, StringIO.new, StringIO.new
       end
 
       def bootstrap_node(dns_name, config)
         template_file = File.join(File.dirname(__FILE__), "templates/ubuntu10.04-gems.erb")
-        bootstrap = ::Chef::Knife::Bootstrap.new
-        @stdout, @stderr, @stdin = StringIO.new, StringIO.new, StringIO.new
-        ui = ::Chef::Knife::UI.new(@stdout, @stderr, @stdin, bootstrap.config)
-        bootstrap.ui = ui
-        nodename = chef_node_name(config)
-        bootstrap.name_args = [dns_name]
-        bootstrap.config[:run_list] = "role[test_lab_test]"
-        bootstrap.config[:ssh_user] = "ubuntu"
-        bootstrap.config[:identity_file] = config[:knife][:identity_file]
-        bootstrap.config[:chef_node_name] = nodename
-        bootstrap.config[:use_sudo] = true
-        bootstrap.config[:template_file] = template_file
-        bootstrap.config[:validation_client_name] = config["validation_client_name"]
-        bootstrap.config[:validation_key] = config["validation_key"]
-        bootstrap.config[:chef_server_url] = config["chef_server_url"]
-        bootstrap.run
+        run_bootstrap(config, template_file, dns_name, chef_node_name(config))
         tag_node(config)
       end
 
       def build_controller(dns_name, config)
         template_file = File.join(File.dirname(__FILE__), "templates/controller.erb")
-        bootstrap = ::Chef::Knife::Bootstrap.new
-        @stdout, @stderr, @stdout = StringIO.new, StringIO.new, StringIO.new
-        ui = ::Chef::Knife::UI.new(@stdout, @stderr, @stdout, bootstrap.config)
-        bootstrap.ui = ui
-        bootstrap.name_args = [dns_name]
-        bootstrap.config[:ssh_user] = "ubuntu"
-        bootstrap.config[:identity_file] = config[:knife][:identity_file]
-        bootstrap.config[:chef_node_name] = "cucumber-chef-controller"
-        bootstrap.config[:use_sudo] = true
-        bootstrap.config[:template_file] = template_file
-        bootstrap.config[:validation_client_name] = config["validation_client_name"]
-        bootstrap.config[:validation_key] = config["validation_key"]
-        bootstrap.config[:chef_server_url] = config["chef_server_url"]
-        bootstrap.run
-        bootstrap
+        run_bootstrap(config, template_file, dns_name, 'cucumber-chef-controller', "role[test_lab_test]")
       end
 
       def upload_cookbook(config)
@@ -77,6 +51,23 @@ module Cucumber
       end
       
     private
+      def run_bootstrap(config, template_file, dns_name, node_name, run_list=nil)
+        bootstrap = ::Chef::Knife::Bootstrap.new
+        ui = ::Chef::Knife::UI.new(@stdout, @stderr, @stdin, bootstrap.config)
+        bootstrap.ui = ui
+        bootstrap.name_args = [dns_name]
+        bootstrap.config[:run_list] = run_list
+        bootstrap.config[:ssh_user] = "ubuntu"
+        bootstrap.config[:identity_file] = config[:knife][:identity_file]
+        bootstrap.config[:chef_node_name] = node_name
+        bootstrap.config[:use_sudo] = true
+        bootstrap.config[:template_file] = template_file
+        bootstrap.config[:validation_client_name] = config["validation_client_name"]
+        bootstrap.config[:validation_key] = config["validation_key"]
+        bootstrap.config[:chef_server_url] = config["chef_server_url"]
+        bootstrap.run
+        bootstrap
+      end
       
       def chef_node_name(config=nil)
         @node_name ||= begin
