@@ -88,7 +88,6 @@ describe Cucumber::Chef::Config do
 
     it "should return the configuration values" do
       subject[:node_name].should == @opscode_user
-      subject[:knife][:ssh_user].should == "ubuntu"
     end
 
     it "should allow setting configuration values" do
