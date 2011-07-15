@@ -54,7 +54,8 @@ describe Cucumber::Chef::Provisioner do
     after(:each) do
       @test_lab.destroy
     end
-
+    
+ 
     it "should assign a random name to the node" do
       subject.bootstrap_node(@dns_name, @config)
       @test_lab.nodes.detect do |node|

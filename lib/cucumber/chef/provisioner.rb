@@ -12,8 +12,8 @@ module Cucumber
       def bootstrap_node(dns_name, config)
         template_file = File.join(File.dirname(__FILE__), "templates/ubuntu10.04-gems.erb")
         bootstrap = ::Chef::Knife::Bootstrap.new
-        @stdout, @stderr, @stdout = StringIO.new, StringIO.new, StringIO.new
-        ui = ::Chef::Knife::UI.new(@stdout, @stderr, @stdout, bootstrap.config)
+        @stdout, @stderr, @stdin = StringIO.new, StringIO.new, StringIO.new
+        ui = ::Chef::Knife::UI.new(@stdout, @stderr, @stdin, bootstrap.config)
         bootstrap.ui = ui
         nodename = chef_node_name(config)
         bootstrap.name_args = [dns_name]
