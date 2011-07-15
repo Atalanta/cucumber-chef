@@ -16,7 +16,7 @@ package "bison" do
   action :install
 end
 
-%w[cucumber-chef cucumber rspec].each do |gem|
+node['cucumber-chef'][:gems].each do |gem|
     gem_package gem
 end
 

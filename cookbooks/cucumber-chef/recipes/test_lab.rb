@@ -2,7 +2,7 @@
   package pkg
 end
 
-%w[cucumber-chef rspec cucumber].each do |gem|
+node['cucumber-chef'][:gems].each do |gem|
   gem_package gem
 end
 
