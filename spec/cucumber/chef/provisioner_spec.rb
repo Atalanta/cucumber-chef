@@ -41,6 +41,12 @@ describe Cucumber::Chef::Provisioner do
   end
 
   describe "bootstrap_node" do
+    before(:all) do
+      subject.upload_cookbook(@config)
+      subject.upload_role(@config)
+      sleep(5)
+    end
+
     before(:each) do
       @test_lab = Cucumber::Chef::TestLab.new(@config)
       @test_lab.destroy
@@ -53,9 +59,7 @@ describe Cucumber::Chef::Provisioner do
         raise
       end
       @dns_name = server.dns_name
-      sleep(10)
-      subject.upload_cookbook(@config)
-      subject.upload_role(@config)
+      sleep(30)
     end
     
     after(:each) do
@@ -65,13 +69,15 @@ describe Cucumber::Chef::Provisioner do
  
     it "should assign a random name to the node" do
       begin
+        puts "Beginning bootstrap on #{@dns_name}..."
         subject.bootstrap_node(@dns_name, @config)
       rescue
-        puts "BOOTSTRAP FAILED!"
+        puts "Output from #bootstrap_node:"
         puts "  STANDARD OUTPUT:", subject.stdout.read, "\n\n"
         puts "  STANDARD ERROR:", subject.stderr.read, "\n\n"
         raise
       end
+      sleep(10)
       @test_lab.nodes.detect do |node|
         node.name.match /^cucumber-chef-[0-9a-f]{8}$/
       end.should be
