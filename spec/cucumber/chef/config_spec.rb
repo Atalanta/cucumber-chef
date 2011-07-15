@@ -68,7 +68,8 @@ describe Cucumber::Chef::Config do
   describe "when knife.rb is missing" do
     it "should raise" do
       begin
-        chef_dir = Pathname("~/.chef").expand_path
+        # Handle case of local .chef directory for gem development
+        chef_dir = (File.exist?('.chef') ? Pathname('.chef') : Pathname("~/.chef")).expand_path
         (chef_dir + "knife.rb").rename(chef_dir + "knife.rb.bak")
         config_file = chef_dir + "knife.rb"
         expect { subject.config }.to raise_error(Cucumber::Chef::ConfigError)
