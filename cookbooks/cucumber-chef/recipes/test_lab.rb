@@ -2,7 +2,7 @@
   package pkg
 end
 
-%w[cucumber-chef rspec cucumber].each do |gem|
+%w[cucumber-chef rspec cucumber cucumber-nagios].each do |gem|
   gem_package gem
 end
 
