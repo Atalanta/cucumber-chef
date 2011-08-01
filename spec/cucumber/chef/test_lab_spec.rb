@@ -7,6 +7,17 @@ describe Cucumber::Chef::TestLab do
 
   subject { Cucumber::Chef::TestLab.new(@config) }
     
+  it "should create a cucumber-chef security group" do
+    existing_group = subject.connection.security_groups.get("cucumber-chef")
+    existing_group && existing_group.destroy
+    subject.connection.security_groups.get("cucumber-chef").should_not be
+    lab = Cucumber::Chef::TestLab.new(@config)
+    permissions = lab.connection.security_groups.get("cucumber-chef").ip_permissions
+    permissions.size.should == 1
+    permissions.first["fromPort"].should == 22
+    permissions.first["toPort"].should == 22
+  end
+
   describe "with no running labs" do
     it "should not return any info" do
       subject.info.should == ""

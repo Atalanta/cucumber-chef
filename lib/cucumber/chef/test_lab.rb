@@ -3,6 +3,8 @@ module Cucumber
     class TestLabError < Error ; end
 
     class TestLab
+      attr_reader :connection
+
       def initialize(config)
         @config = config
         @connection =
