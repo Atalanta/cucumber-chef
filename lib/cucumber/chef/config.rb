@@ -1,3 +1,5 @@
+require "ubuntu_ami"
+
 module Cucumber
   module Chef
     class ConfigError < Error ; end
@@ -73,8 +75,19 @@ module Cucumber
         end
       end
 
+      def aws_image_id
+        if self[:knife][:aws_image_id]
+          self[:knife][:aws_image_id]
+        elsif self[:knife][:ubuntu_release] && self[:knife][:region]
+          query = ::UbuntuAmi.new(self[:knife][:ubuntu_release])
+          instance_arch = query.arch_size(self[:knife][:aws_instance_arch] || "i386")
+          disk_store = query.disk_store(self[:knife][:aws_instance_disk_store] || "instance-store")
+          query.run["#{query.region_fix(self[:knife][:region])}_#{instance_arch}#{disk_store}"]
+        end
+      end
+
     private
-      
+
       def verify_orgname
         if !ENV["ORGNAME"] || ENV["ORGNAME"] == ""
           @errors << "Your organisation must be set using the environment variable ORGNAME."
@@ -111,7 +124,7 @@ module Cucumber
           @errors << "Invalid Opscode platform credentials. Please check."
         end
       end
-      
+
       def verify_aws_credentials
         if config[:knife][:aws_access_key_id] && config[:knife][:aws_secret_access_key]
           compute = Fog::Compute.new(:provider => 'AWS',

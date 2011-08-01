@@ -7,6 +7,7 @@ gem "cucumber-nagios", ">= 0"
 gem "fog", ">= 0"
 gem "thor", ">= 0"
 gem "net-scp", ">= 0"
+gem "ubuntu_ami", "~> 0.2"
 
 group :development do
   gem "rspec", ">= 0"
