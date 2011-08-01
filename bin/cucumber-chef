@@ -98,7 +98,7 @@ class CucumberChef < Thor
     lab.destroy
   end
 
-  desc "upload <project name>", "Upload a cucumber-chef test suite to the test lab platform"
+  desc "upload <project name>", "Upload the cucumber-chef test suite <project name> to the test lab platform"
   def upload(project_name)
     project_dir = Pathname.new(".") + "cucumber-chef" + project_name
     unless File.exists?(project_dir)
@@ -109,7 +109,7 @@ class CucumberChef < Thor
     runner.upload_project
   end
 
-  desc "test", "Run a cucumber-chef test suite from a workstation."
+  desc "test <project name>", "Run the cucumber-chef test suite <project name> from a workstation."
   def test(project_name)
     project_dir = Pathname.new(".") + "cucumber-chef" + project_name
     unless File.exists?(project_dir)
