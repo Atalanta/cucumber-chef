@@ -65,7 +65,6 @@ describe Cucumber::Chef::Provisioner do
     after(:each) do
       @test_lab.destroy
     end
-    
  
     it "should assign a random name to the node" do
       begin
@@ -77,10 +76,16 @@ describe Cucumber::Chef::Provisioner do
         puts "  STANDARD ERROR:", subject.stderr.read, "\n\n"
         raise
       end
-      sleep(10)
-      @test_lab.nodes.detect do |node|
-        node.name.match /^cucumber-chef-[0-9a-f]{8}$/
-      end.should be
+      found_node = false
+      tries = 0
+      while ! found_node && tries < 5
+        tries += 1
+        sleep(10)
+        found_node = !!@test_lab.nodes.detect do |node|
+          node.name.match /^cucumber-chef-[0-9a-f]{8}$/
+        end
+      end
+      found_node.should be
     end
   end
 end
