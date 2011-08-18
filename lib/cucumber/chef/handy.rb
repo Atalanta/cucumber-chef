@@ -77,7 +77,7 @@ module Cucumber
       def stop_container(name)
         status = %x[lxc-info -n #{name} 2>&1]
         if status.include?("RUNNING")
-          %x[lxc-destroy -d -n #{name}]
+          %x[lxc-stop -n #{name}]
           sleep 5
         end
       end
