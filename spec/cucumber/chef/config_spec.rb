@@ -162,6 +162,17 @@ describe Cucumber::Chef::Config do
         subject.aws_image_id.should == "large-ebs-instance"
       end
     end
+
+    it "should default to an m1.small instance type" do
+      subject.aws_instance_type.should == "m1.small"
+    end
+
+    describe "and an instance type is specified" do
+      it "should return the specified instance type" do
+        subject[:knife][:aws_instance_type] = "m1.large"
+        subject.aws_instance_type.should == "m1.large"
+      end
+    end
   end
 end
 

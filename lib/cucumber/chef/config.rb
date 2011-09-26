@@ -86,6 +86,10 @@ module Cucumber
         end
       end
 
+      def aws_instance_type
+        self[:knife][:aws_instance_type] || "m1.small"
+      end
+
     private
 
       def verify_orgname
