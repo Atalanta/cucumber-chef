@@ -23,7 +23,7 @@ mount "/cgroup" do
   action [:mount, :enable]
 end
 
-template "/usr/lib/lxc/templates/lxc-lucid-chef" do
+template "/usr/bin/lxc-lucid-chef" do
   source "lxc-lucid-chef"
   mode "0755"
   variables( :orgname => node["cucumber-chef"]["orgname"] )
