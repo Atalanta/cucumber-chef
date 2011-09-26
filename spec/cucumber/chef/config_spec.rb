@@ -174,5 +174,16 @@ describe Cucumber::Chef::Config do
       end
     end
   end
+
+  it "should default to security group cucumber-chef" do
+    subject.security_group.should == "cucumber-chef"
+  end
+
+  describe "and a security group is specified" do
+    it "should return the specified security group" do
+      subject[:knife][:aws_security_group] = "my-security-group"
+      subject.security_group.should == "my-security-group"
+    end
+  end
 end
 
