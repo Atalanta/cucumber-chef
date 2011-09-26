@@ -2,7 +2,7 @@ Cucumber-chef is a library of tools to enable the emerging discipline of infrast
 
 ## Overview
 
-Cucumber-chef begins with a very simple premise.  If we are framing our infrastructure as code - if we're writing cookbooks, recipes and other pieces of automation in a high level programming language, such as Ruby, then it makes sense to follow the current wisdom across the software development world to maximise the quality, maintainability and reusability of our code, providing maximum chance that we'll deliver value with it.  One area which has been shown to have a very positive effect is the practive of 'test-driven' development.  In this paradigm, the developer begins by writing a test that captures the intended behaviour of the code  they are going to write.  This test will start out by failing.  The developer then writes code to make the test pass, and iterates thereafter.  
+Cucumber-chef begins with a very simple premise.  If we are framing our infrastructure as code - if we're writing cookbooks, recipes and other pieces of automation in a high level programming language, such as Ruby, then it makes sense to follow the current wisdom across the software development world to maximise the quality, maintainability and reusability of our code, providing maximum chance that we'll deliver value with it.  One area which has been shown to have a very positive effect is the practive of 'test-driven' development.  In this paradigm, the developer begins by writing a test that captures the intended behaviour of the code  they are going to write.  This test will start out by failing.  The developer then writes code to make the test pass, and iterates thereafter.
 
 Cucumber-chef provides a framework to make it easier to do test-driven development for infrastructure.  It does this by providing a test infrastructure, in the cloud, which provides a very fast, lightweight and cheap way to fire up virtual machines for testing.  We call this the "test lab".
 
@@ -24,7 +24,7 @@ Installing Cucumber-Chef is simple.  It's distributed as a RubyGem, so you can s
 
 Once installed, you can run cucumber-chef on the command line to get an overview of the tasks it can carry out.
 
-    $ cucumber-chef 
+    $ cucumber-chef
     Tasks:
       cucumber-chef connect                 # Connect to a container in your test lab
       cucumber-chef destroy                 # Destroy running test labs
@@ -38,7 +38,7 @@ Once installed, you can run cucumber-chef on the command line to get an overview
 
 ### Integrate with Hosted Chef and Amazon EC2
 
-In it's current incarnation, Cucumber-Chef makes two important assumptions.  Firstly, it assumes you're using Opscode Hosted Chef rather than your own Chef server.  Secondly, it assume that you are comfortable with using Amazon's EC2 service for providing the 'bare metal' on which we set up the test lab.  
+In it's current incarnation, Cucumber-Chef makes two important assumptions.  Firstly, it assumes you're using Opscode Hosted Chef rather than your own Chef server.  Secondly, it assume that you are comfortable with using Amazon's EC2 service for providing the 'bare metal' on which we set up the test lab.
 
 Cucumber-chef is tightly integrated with Chef - it uses your knife.rb for credentials, and any cucumber-chef-specific configuration goes in knife.rb under the cucumber-chef namespace.
 
@@ -88,7 +88,7 @@ Now add the EC2 configuration:
 
 Note that right now Cucumber-Chef only supports Ubuntu-based  test labs.
 
-And set your environment variables:
+Set your environment variables:
 
     $ export AWS_ACCESS_KEY_ID=SEKRITKEY
     $ export AWS_SECRET_ACCESS_KEY=REELYSEKRITKEY
@@ -98,6 +98,22 @@ And then ensure your AWS ssh key is in place.
 
 Now check your config again, with cucumber-chef display config.  If you get no complaints, you're ready to set up a test lab.
 
+#### AWS image id and instance type
+
+You can specify an AMI in your EC2 configuration either directly with the `:aws_image_id` parameter or by setting the `:ubuntu release` parameter:
+
+    knife[:ubuntu_release] = "lucid"
+
+You can also set the additional parameters:
+
+    knife[:aws_instance_arch] = "amd64"
+    knife[:aws_instance_disk_store] = "ebs"
+
+`:aws_instance_arch` takes the values "i386" or "amd64" and defaults to "i386", `:aws_instance_disk_store` takes the values "instance-store" and "ebs" and defaults to "instance-store".
+
+If you want to specify an instance type for your test lab use the `:aws_instance_type` setting (default is "m1.small"):
+
+    knife[:aws_instance_type] = "m1.large"
 
 ### Run cucumber-chef setup
 
@@ -144,9 +160,9 @@ You can write the tests and Chef code wherever you like.  We're assuming you pre
 
 At the moment cucumber-chef doesn't pass though clever filtering and tagging options that cucumber supports - you run all the tests.  We're going to improve that soon, again, patches and pull requests very welcome.
 
-Running the test task will upload your current project to the test lab, and run the tests, reporting the results back to the screen.  Cucumber-chef also provides an upload task, so you can push the current project to the test lab, and then connect to test lab yourself to run tests in a more granular way.  To do this, you need to know the IP of the test lab.  You can find this out by running:
+Running the test task will upload your current project to the test lab, and run the tests, reporting the results back to the screen. Cucumber-chef also provides an upload task, so you can push the current project to the test lab, and then connect to test lab yourself to run tests in a more granular way.  To do this, you need to know the IP of the test lab.  You can find this out by running:
 
-    $ cucumber-chef info 
+    $ cucumber-chef info
 
 At present, Cucumber-Chef only allows one test lab per AWS account and Opscode Hosted Chef account.
 

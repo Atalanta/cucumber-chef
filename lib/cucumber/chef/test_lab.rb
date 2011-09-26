@@ -24,9 +24,9 @@ module Cucumber
           raise TestLabError.new("A test lab already exists using the AWS credentials you supplied")
         end
         server_definition = {
-          :image_id => @config[:knife][:aws_image_id],
+          :image_id => @config.aws_image_id,
           :groups => @security_group,
-          :flavor_id => "m1.small",
+          :flavor_id => @config.aws_instance_type,
           :key_name => @config[:knife][:aws_ssh_key_id],
           :availability_zone => @config[:knife][:availability_zone],
           :tags => {"purpose" => "cucumber-chef"},

@@ -6,7 +6,7 @@ module Cucumber
 
     class Config
       KEYS = %w[mode node_name chef_server_url client_key validation_key validation_client_name]
-      KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region aws_image_id availability_zone aws_ssh_key_id identity_file]
+      KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file]
 
       def initialize
         config[:mode] = "user"
@@ -60,6 +60,16 @@ module Cucumber
           value = config[:knife][key.to_sym]
           values << "knife[:#{key}]: #{value}"
         end
+        [:aws_instance_arch, :aws_instance_disk_store, :aws_instance_type].each do |key|
+          if config[:knife][key]
+            values << "knife[#{key}]: #{config[:knife][key]}"
+          end
+        end
+        if config[:knife][:aws_image_id]
+          values << "knife[:aws_image_id]: #{config[:knife][:aws_image_id]}"
+        else
+          values << "knife[:ubuntu_release]: #{config[:knife][:ubuntu_release]} (aws image id: #{aws_image_id})"
+        end
         values
       end
 
@@ -112,6 +122,9 @@ module Cucumber
         end
         KNIFE_KEYS.each do |key|
           missing_keys << "knife[:#{key}]" unless value = config[:knife][key.to_sym]
+        end
+        unless config[:knife][:aws_image_id] || config[:knife][:ubuntu_release]
+          missing_keys << "knife[:aws_image_id] or knife[:ubuntu_release]"
         end
         if missing_keys.size > 0
           @errors << "Incomplete config file, please specify: #{missing_keys.join(", ")}."
