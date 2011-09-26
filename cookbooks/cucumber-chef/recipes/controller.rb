@@ -21,6 +21,8 @@ cookbook_file "/root/.bashrc" do
   source "add-git-identity"
 end
 
+directory "/etc/lxc"
+
 cookbook_file "/etc/lxc/controller" do
   source "lxc-controller-network-config"
 end
