@@ -115,6 +115,12 @@ If you want to specify an instance type for your test lab use the `:aws_instance
 
     knife[:aws_instance_type] = "m1.large"
 
+#### AWS security group
+
+By default `cucumber-chef` will use a security group "cucumber-chef", creating it if it doesn't exist. You can specify another security group with the configuration setting `:aws_security_group`.
+
+    knife[:aws_security_group] = "my-existing-security-group"
+
 ### Run cucumber-chef setup
 
 
