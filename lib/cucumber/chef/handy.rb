@@ -1,6 +1,10 @@
 module Cucumber
   module Chef
     module Handy
+      def get_root(name)
+        File.join('/var/lib/lxc', name, 'rootfs')
+      end
+
       def create_server(server, ip)
         create_network_config(server, ip)
         create_container(server)
@@ -18,7 +22,7 @@ module Cucumber
       end
 
       def create_container(name)
-        unless File.exists?("/var/lib/lxc/#{name}")
+        unless File.exists?(get_root(name))
           %x[lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef > /dev/null 2>&1 ]
         end
       end
@@ -28,19 +32,18 @@ module Cucumber
         a = Array.new
         a << run_list
         rl['run_list'] = a
-        first_boot = File.join('/var/lib/lxc', name, 'rootfs/etc/chef/first-boot.json')
+        first_boot = File.join(get_root(name), '/etc/chef/first-boot.json')
         File.open(first_boot, 'w') do |f|
           f.puts rl.to_json
         end
       end
 
       def run_chef_first_time(name)
-        %x[chroot /var/lib/lxc/#{name}/rootfs /bin/bash -c 'chef-client -j /etc/chef/first-boot.json > /dev/null 2>&1']
+        %x[chroot #{get_root(name)} /bin/bash -c 'chef-client -j /etc/chef/first-boot.json -N #{name} > /dev/null 2>&1']
       end
 
       def run_chef(name)
-        container_path = "/var/lib/lxc/#{name}/rootfs"
-        %x[chroot #{container_path} /bin/bash -c 'chef-client > /dev/null 2>&1']
+        %x[chroot #{get_root(name)} /bin/bash -c 'chef-client > /dev/null 2>&1']
       end
       
       def databag_item_from_file(file)
@@ -56,7 +59,7 @@ module Cucumber
       end
 
       def create_client_rb(orgname)
-        client_rb = File.join('/var/lib/lxc', name, 'rootfs/etc/chef/client.rb')
+        client_rb = File.join(get_root(name), 'etc/chef/client.rb')
         File.open(client_rb, 'w') do |f|
           f.puts "log_level        :info"
           f.puts "log_location     STDOUT"
@@ -77,7 +80,7 @@ module Cucumber
       def stop_container(name)
         status = %x[lxc-info -n #{name} 2>&1]
         if status.include?("RUNNING")
-          %x[lxc-destroy -d -n #{name}]
+          %x[lxc-stop -n #{name}]
           sleep 5
         end
       end

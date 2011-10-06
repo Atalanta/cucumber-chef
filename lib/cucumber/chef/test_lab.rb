@@ -12,11 +12,7 @@ module Cucumber
                            :aws_access_key_id => @config[:knife][:aws_access_key_id],
                            :aws_secret_access_key => @config[:knife][:aws_secret_access_key],
                            :region => @config[:knife][:region])
-        @security_group = 'cucumber-chef'
-        unless @connection.security_groups.get(@security_group)
-          @connection.create_security_group(@security_group, 'cucumber-chef test lab')
-          @connection.security_groups.get(@security_group).authorize_port_range(22..22)
-        end
+        ensure_security_group if @config.security_group == "cucumber-chef"
       end
 
       def build(output)
@@ -24,9 +20,9 @@ module Cucumber
           raise TestLabError.new("A test lab already exists using the AWS credentials you supplied")
         end
         server_definition = {
-          :image_id => @config[:knife][:aws_image_id],
-          :groups => @security_group,
-          :flavor_id => "m1.small",
+          :image_id => @config.aws_image_id,
+          :groups => @config.security_group,
+          :flavor_id => @config.aws_instance_type,
           :key_name => @config[:knife][:aws_ssh_key_id],
           :availability_zone => @config[:knife][:availability_zone],
           :tags => {"purpose" => "cucumber-chef"},
@@ -87,6 +83,13 @@ module Cucumber
         tag.key = "cucumber-chef"
         tag.value = @config[:mode]
         tag.save
+      end
+
+      def ensure_security_group
+        unless @connection.security_groups.get(@config.security_group)
+          @connection.create_security_group(@config.security_group, 'cucumber-chef test lab')
+          @connection.security_groups.get(@config.security_group).authorize_port_range(22..22)
+        end
       end
     end
   end

@@ -6,7 +6,8 @@ module Cucumber
 
     class Config
       KEYS = %w[mode node_name chef_server_url client_key validation_key validation_client_name]
-      KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region aws_image_id availability_zone aws_ssh_key_id identity_file]
+      KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file]
+      OPTIONAL_KNIFE_KEYS = %w[aws_instance_arch aws_instance_disk_store aws_instance_type]
 
       def initialize
         config[:mode] = "user"
@@ -56,9 +57,13 @@ module Cucumber
           value = config[key]
           values << "#{key}: #{value}"
         end
-        KNIFE_KEYS.each do |key|
-          value = config[:knife][key.to_sym]
-          values << "knife[:#{key}]: #{value}"
+        (KNIFE_KEYS + OPTIONAL_KNIFE_KEYS).each do |key|
+          values << "knife[:#{key}]: #{knife_config[key.to_sym]}" if knife_config[key.to_sym]
+        end
+        if knife_config[:aws_image_id]
+          values << "knife[:aws_image_id]: #{knife_config[:aws_image_id]}"
+        else
+          values << "knife[:ubuntu_release]: #{knife_config[:ubuntu_release]} (aws image id: #{aws_image_id})"
         end
         values
       end
@@ -76,14 +81,22 @@ module Cucumber
       end
 
       def aws_image_id
-        if self[:knife][:aws_image_id]
-          self[:knife][:aws_image_id]
-        elsif self[:knife][:ubuntu_release] && self[:knife][:region]
-          query = ::UbuntuAmi.new(self[:knife][:ubuntu_release])
-          instance_arch = query.arch_size(self[:knife][:aws_instance_arch] || "i386")
-          disk_store = query.disk_store(self[:knife][:aws_instance_disk_store] || "instance-store")
-          query.run["#{query.region_fix(self[:knife][:region])}_#{instance_arch}#{disk_store}"]
+        if knife_config[:aws_image_id]
+          knife_config[:aws_image_id]
+        elsif knife_config[:ubuntu_release] && knife_config[:region]
+          query = ::UbuntuAmi.new(knife_config[:ubuntu_release])
+          instance_arch = query.arch_size(knife_config[:aws_instance_arch] || "i386")
+          disk_store = query.disk_store(knife_config[:aws_instance_disk_store] || "instance-store")
+          query.run["#{query.region_fix(knife_config[:region])}_#{instance_arch}#{disk_store}"]
         end
+      end
+
+      def aws_instance_type
+        knife_config[:aws_instance_type] || "m1.small"
+      end
+
+      def security_group
+        knife_config[:aws_security_group] || "cucumber-chef"
       end
 
     private
@@ -107,7 +120,10 @@ module Cucumber
           missing_keys << key unless value && value != ""
         end
         KNIFE_KEYS.each do |key|
-          missing_keys << "knife[:#{key}]" unless value = config[:knife][key.to_sym]
+          missing_keys << "knife[:#{key}]" unless value = knife_config[key.to_sym]
+        end
+        unless knife_config[:aws_image_id] || knife_config[:ubuntu_release]
+          missing_keys << "knife[:aws_image_id] or knife[:ubuntu_release]"
         end
         if missing_keys.size > 0
           @errors << "Incomplete config file, please specify: #{missing_keys.join(", ")}."
@@ -126,16 +142,20 @@ module Cucumber
       end
 
       def verify_aws_credentials
-        if config[:knife][:aws_access_key_id] && config[:knife][:aws_secret_access_key]
+        if knife_config[:aws_access_key_id] && knife_config[:aws_secret_access_key]
           compute = Fog::Compute.new(:provider => 'AWS',
-                                     :aws_access_key_id => config[:knife][:aws_access_key_id],
-                                     :aws_secret_access_key => config[:knife][:aws_secret_access_key])
+                                     :aws_access_key_id => knife_config[:aws_access_key_id],
+                                     :aws_secret_access_key => knife_config[:aws_secret_access_key])
           compute.describe_availability_zones
         else
           @errors << "Invalid AWS credentials. Please check."
         end
       rescue Fog::Service::Error => err
         @errors << "Invalid AWS credentials. Please check."
+      end
+
+      def knife_config
+        self[:knife]
       end
     end
   end
