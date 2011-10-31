@@ -15,7 +15,7 @@ module Cucumber
         upload_project
         @project_path = File.join('/home/ubuntu', File.basename(@project_dir), 'features')
         connection = Net::SSH.start(@hostname, 'ubuntu', :keys => @key) do |ssh|
-          @output = ssh.exec!("sudo cucumber #{@project_path}")
+          @output = ssh.exec!("sudo cucumber -c #{@project_path}")
         end
         puts @output
       end
