@@ -9,7 +9,7 @@ module Cucumber
       
       def initialize
         @cookbook_path = File.join(File.dirname(__FILE__), "../../../cookbooks/cucumber-chef")
-        @stdout, @stderr, @stdin = StringIO.new, StringIO.new, StringIO.new
+        @stdout, @stderr, @stdin = $stdout, $stderr, $stdin
       end
 
       def bootstrap_node(dns_name, config)

@@ -16,8 +16,7 @@ Gem::Specification.new do |s|
   s.executables = ["cucumber-chef"]
   s.extra_rdoc_files = [
     "LICENSE",
-    "README.md",
-    "TODO"
+    "README.md"
   ]
   s.files = [
     ".document",
@@ -44,7 +43,7 @@ Gem::Specification.new do |s|
     "cookbooks/cucumber-chef/recipes/controller.rb",
     "cookbooks/cucumber-chef/recipes/lxc.rb",
     "cookbooks/cucumber-chef/recipes/test_lab.rb",
-    "cookbooks/cucumber-chef/recipes/testrunner.rb",
+    "cookbooks/cucumber-chef/recipes/test_runner.rb",
     "cookbooks/cucumber-chef/roles/controller.rb",
     "cookbooks/cucumber-chef/roles/test_lab_test.rb",
     "cookbooks/cucumber-chef/templates/default/controller-client.erb",
