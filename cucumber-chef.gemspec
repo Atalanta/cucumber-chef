@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.authors = ["Zachary Patten", "Stephen Nelson-Smith"]
   s.email = ["jovelabs@gmail.com", "stephen@atalanta-systems.com"]
-  s.homepage = ["http://github.com/zpatten/cucumber-chef", "http://cucumber-chef.org"]
+  s.homepage = "http://github.com/zpatten/cucumber-chef"
   s.description = "Framework for behaviour-drive infrastructure development."
   s.summary = "Tests Chef-built infrastructure"
   s.required_rubygems_version = ">= 1.3.6"
