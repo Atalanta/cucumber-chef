@@ -5,7 +5,7 @@ require File.expand_path("../lib/cucumber/chef/version", __FILE__)
 Gem::Specification.new do |s|
   s.name = "cucumber-chef"
   s.version = Cucumber::Chef::VERSION
-  s.platform = Gems::Platform::RUBY
+  s.platform = Gem::Platform::RUBY
   s.authors = ["Zachary Patten", "Stephen Nelson-Smith"]
   s.email = ["jovelabs@gmail.com", "stephen@atalanta-systems.com"]
   s.homepage = ["http://github.com/zpatten/cucumber-chef", "http://cucumber-chef.org"]
