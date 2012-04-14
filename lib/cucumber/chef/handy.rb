@@ -26,7 +26,7 @@ module Cucumber
           %x[lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef > /dev/null 2>&1 ]
         end
       end
-      
+
       def set_run_list(name, run_list)
         rl = Hash.new
         a = Array.new
@@ -45,7 +45,7 @@ module Cucumber
       def run_chef(name)
         %x[chroot #{get_root(name)} /bin/bash -c 'chef-client > /dev/null 2>&1']
       end
-      
+
       def databag_item_from_file(file)
         ::Chef::JSONCompat.from_json(File.read(file))
       end
@@ -68,7 +68,7 @@ module Cucumber
           f.puts "node_name 'cucumber-chef-#{name}'"
         end
       end
-      
+
       def start_container(name)
         status = %x[lxc-info -n #{name} 2>&1]
         if status.include?("STOPPED")
@@ -90,4 +90,4 @@ module Cucumber
       end
     end
   end
-end	
+end

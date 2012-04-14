@@ -15,7 +15,7 @@ require 'net/ssh/multi'
 module Cucumber
   module Chef
     class Error < StandardError ; end
-    
+
     autoload :Config, "cucumber/chef/config"
     autoload :Provisioner, "cucumber/chef/provisioner"
     autoload :TestLab, "cucumber/chef/test_lab"
@@ -23,11 +23,11 @@ module Cucumber
   end
 end
 
-begin 
+begin
   require 'cucumber/chef/version'
 rescue LoadError => e
   dep = e.message.split.last
-  puts "You don't appear to have #{dep} installed." 
+  puts "You don't appear to have #{dep} installed."
   puts "Perhaps run `gem bundle` or `gem install #{dep}`?"
   exit 2
 end
