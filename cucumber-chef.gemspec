@@ -16,8 +16,7 @@ Gem::Specification.new do |s|
   s.executables = ["cucumber-chef"]
   s.extra_rdoc_files = [
     "LICENSE",
-    "README.md",
-    "TODO"
+    "README.md"
   ]
   s.files = [
     ".document",
