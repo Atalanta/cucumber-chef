@@ -69,6 +69,7 @@ module Cucumber
       end
 
       def verify
+        puts "Verifing Configuration..."
         @errors = []
         verify_orgname
         verify_opscode_user
