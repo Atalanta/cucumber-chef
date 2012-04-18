@@ -84,10 +84,21 @@ module Cucumber
         if knife_config[:aws_image_id]
           knife_config[:aws_image_id]
         elsif knife_config[:ubuntu_release] && knife_config[:region]
-          query = ::UbuntuAmi.new(knife_config[:ubuntu_release])
-          instance_arch = query.arch_size(knife_config[:aws_instance_arch] || "i386")
-          disk_store = query.disk_store(knife_config[:aws_instance_disk_store] || "instance-store")
-          query.run["#{query.region_fix(knife_config[:region])}_#{instance_arch}#{disk_store}"]
+          #query = ::UbuntuAmi.new(knife_config[:ubuntu_release])
+          #instance_arch = query.arch_size(knife_config[:aws_instance_arch] || "i386")
+          #disk_store = query.disk_store(knife_config[:aws_instance_disk_store] || "instance-store")
+          #query.run["#{query.region_fix(knife_config[:region])}_#{instance_arch}#{disk_store}"]
+
+#          Ubuntu.release("lucid").amis.each do |ami|
+#            puts "#{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})"
+#          end
+          ami = Ubuntu.release(knife_config[:ubuntu_release]).amis.find do |ami|
+            ami.arch == (knife_config[:aws_instance_arch] || "i386") &&
+            ami.root_store == (knife_config[:aws_instance_disk_store] || "instance-store") &&
+            ami.region == knife_config[:region]
+          end
+#          puts "#{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})"
+          ami.name
         end
       end
 
