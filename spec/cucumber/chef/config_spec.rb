@@ -119,11 +119,11 @@ describe Cucumber::Chef::Config do
 
     describe "and no ami is specified but region and ubuntu release are" do
       before(:each) do
-        UbuntuAmi.any_instance.should_receive(:run).and_return({ "eu_west_large_ebs"=>"large-ebs-instance",
-                                                                 "eu_west_small_ebs"=>"small-ebs-instance",
-                                                                 "eu_west_large"=>"large-instance",
-                                                                 "eu_west_small"=>"small-instance",
-                                                                 "us_west_small"=>"us-west-small-instance" })
+        Ubuntu.any_instance.should_receive(:run).and_return({"eu_west_large_ebs"=>"large-ebs-instance",
+                                                             "eu_west_small_ebs"=>"small-ebs-instance",
+                                                             "eu_west_large"=>"large-instance",
+                                                             "eu_west_small"=>"small-instance",
+                                                             "us_west_small"=>"us-west-small-instance" })
         subject[:knife][:aws_image_id] = nil
         subject[:knife][:ubuntu_release] = "lucid"
         subject[:knife][:region] = "eu-west-1"
