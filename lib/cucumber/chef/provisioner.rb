@@ -6,7 +6,7 @@ module Cucumber
 
     class Provisioner
       attr_accessor :stdout, :stderr, :stdin
-      
+
       def initialize
         @cookbook_path = File.join(File.dirname(__FILE__), "../../../cookbooks/cucumber-chef")
         @stdout, @stderr, @stdin = StringIO.new, StringIO.new, StringIO.new
@@ -26,8 +26,10 @@ module Cucumber
       def upload_cookbook(config)
         version_loader = ::Chef::Cookbook::CookbookVersionLoader.new(@cookbook_path)
         version_loader.load_cookbooks
-        uploader = ::Chef::CookbookUploader.new(version_loader.cookbook_version,
-                                                @cookbook_path)
+        uploader = ::Chef::CookbookUploader.new(version_loader.cookbook_version, @cookbook_path)
+        # attempt to validate the cookbook
+        uploader.validate_cookbook
+        # attempt to upload the cookbook
         uploader.upload_cookbook
       end
 
@@ -39,7 +41,7 @@ module Cucumber
         role = ::Chef::Role.from_disk("controller")
         role.save
       end
-      
+
       def build_test_lab(config, output)
         TestLab.new(config).build(output)
       end
@@ -49,7 +51,7 @@ module Cucumber
         node.tags << (config.test_mode? ? 'test' : 'user')
         node.save
       end
-      
+
     private
       def run_bootstrap(config, template_file, dns_name, node_name, run_list=nil)
         bootstrap = ::Chef::Knife::Bootstrap.new
@@ -68,7 +70,7 @@ module Cucumber
         bootstrap.run
         bootstrap
       end
-      
+
       def chef_node_name(config=nil)
         @node_name ||= begin
           if config.test_mode?
