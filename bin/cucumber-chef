@@ -17,6 +17,7 @@ class CucumberChef < Thor
 
     def generate_project_skeleton(project_dir)
       template_dir = Pathname.new(__FILE__).parent.parent + 'lib' + 'cucumber' + 'chef' + 'templates'
+
       CucumberChef.source_root template_dir.realpath
       templates = {
         "readme.erb" => 'README',
@@ -24,6 +25,7 @@ class CucumberChef < Thor
         "example_step.erb" => 'features/step_definitions/example_step.rb',
         "env.rb" => "features/support/env.rb"
       }
+
       templates.each do |filename, destination|
         template(filename, project_dir + destination)
       end
@@ -113,7 +115,9 @@ class CucumberChef < Thor
   def test(project_name)
     project_dir = Pathname.new(".") + "cucumber-chef" + project_name
     unless File.exists?(project_dir)
-      raise "Project dir '#{project_dir}' does not exist."
+      raise "Project directory '#{project_dir}' does not exist."
+    else
+      puts "Using project directory: #{project_dir}"
     end
     config.verify
     runner = Cucumber::Chef::TestRunner.new(project_dir, config)
