@@ -7,18 +7,19 @@ module Cucumber
 
       def initialize(config)
         @config = config
-        @connection =
-          Fog::Compute.new(:provider => 'AWS',
-                           :aws_access_key_id => @config[:knife][:aws_access_key_id],
-                           :aws_secret_access_key => @config[:knife][:aws_secret_access_key],
-                           :region => @config[:knife][:region])
+        @connection = Fog::Compute.new(:provider => 'AWS',
+                                       :aws_access_key_id => @config[:knife][:aws_access_key_id],
+                                       :aws_secret_access_key => @config[:knife][:aws_secret_access_key],
+                                       :region => @config[:knife][:region])
         ensure_security_group if @config.security_group == "cucumber-chef"
       end
 
-      def build(output)
-        if exists?
-          output.puts("A test lab already exists using the AWS credentials you have supplied; attempting to reprovision it.")
-          @server = running_labs.first
+################################################################################
+
+      def create
+        if labs_exists?
+          puts("A test lab already exists using the AWS credentials you have supplied; attempting to reprovision it.")
+          @server = labs_running.first
         else
           server_definition = {
             :image_id => @config.aws_image_id,
@@ -26,31 +27,29 @@ module Cucumber
             :flavor_id => @config.aws_instance_type,
             :key_name => @config[:knife][:aws_ssh_key_id],
             :availability_zone => @config[:knife][:availability_zone],
-            :tags => {"purpose" => "cucumber-chef"},
+            :tags => {"purpose" => "cucumber-chef", "cucumber-chef" => @config[:mode]},
             :identity_file => @config[:knife][:identity_file]
           }
           @server = @connection.servers.create(server_definition)
-          output.puts "Provisioning cucumber-chef test lab platform."
-          output.print "Waiting for server"
-          @server.wait_for { output.print "."; ready? }
-          output.puts("\n")
+          puts "Provisioning cucumber-chef test lab platform."
+          print("Waiting for instance")
+          @server.wait_for { print "."; ready? }
+          puts("OK.\n")
           tag_server
         end
-        output.puts("Instance ID: #{@server.id}")
-        output.puts("IP Address:")
-        output.puts("  Public...: #{@server.public_ip_address}") if @server.public_ip_address
-        output.puts("  Private..: #{@server.private_ip_address}") if @server.private_ip_address
-        output.puts("DNS:")
-        output.puts("  Public...: #{@server.dns_name}") if @server.dns_name
-        output.puts("  Private..: #{@server.private_dns_name}") if @server.private_dns_name
-        output.puts("Username: #{@server.username}") if @server.username
-        output.puts("")
-        output.puts("Instance is spun up; proceeding to provision...")
+
+        info
+
+        print("Waiting for sshd")
+        print(".") until sshd_ready?(@server.public_ip_address)
+        puts("OK.\n")
+
         @server
       end
 
+
       def destroy
-        running_labs.each do |server|
+        labs_running.each do |server|
           puts "Destroying Server: #{server.public_ip_address}"
           server.destroy
         end
@@ -60,15 +59,64 @@ module Cucumber
         end
       end
 
-      def exists?
-        running_labs.size > 0
+################################################################################
+
+      def start
+        # TODO: Implementation
       end
+
+
+      def stop
+        # TODO: Implementation
+      end
+
+################################################################################
 
       def info
-        (exists? && running_labs.first.public_ip_address) || ""
+        if labs_exists?
+          labs.each do |lab|
+            puts("----------------------------------------------------------------------------")
+            puts("Instance ID: #{lab.id}")
+            puts("State: #{lab.state}")
+            puts("Username: #{lab.username}") if lab.username
+            puts("IP Address:")
+            puts("  Public...: #{lab.public_ip_address}") if lab.public_ip_address
+            puts("  Private..: #{lab.private_ip_address}") if lab.private_ip_address
+            puts("DNS:")
+            puts("  Public...: #{lab.dns_name}") if lab.dns_name
+            puts("  Private..: #{lab.private_dns_name}") if lab.private_dns_name
+            puts("Tags:")
+            lab.tags.to_hash.each do |k,v|
+              puts("  #{k}: #{v}")
+            end
+          end
+          puts("----------------------------------------------------------------------------")
+        else
+          puts("There are no test labs to display information for!")
+        end
       end
 
+      def labs_exists?
+        (labs.size > 0)
+      end
+
+      def labs
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && s.state != 'terminated') }
+      end
+
+      def labs_running
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && s.state == 'running') }
+      end
+
+      def labs_shutdown
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && s.state == 'shutdown') }
+      end
+
+################################################################################
+
       def public_hostname
+        puts "NODES:"
+        puts y nodes
         nodes.first.cloud.public_hostname
       end
 
@@ -80,13 +128,8 @@ module Cucumber
         nodes.compact
       end
 
-      def running_labs
-        @connection.servers.select do |s|
-          s.tags['cucumber-chef'] == @config[:mode] && s.state == 'running'
-        end
-      end
-
     private
+
       def tag_server
         tag = @connection.tags.new
         tag.resource_id = @server.id
@@ -97,10 +140,23 @@ module Cucumber
 
       def ensure_security_group
         unless @connection.security_groups.get(@config.security_group)
-          @connection.create_security_group(@config.security_group, 'cucumber-chef-test-lab')
+          @connection.create_security_group(@config.security_group, 'cucumber-chef test lab')
           @connection.security_groups.get(@config.security_group).authorize_port_range(22..22)
         end
       end
+
+      def sshd_ready?(address)
+        sleep 1
+        socket = TCPSocket.new(address, 22)
+        ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
+      rescue Errno::ETIMEDOUT
+        false
+      rescue Errno::ECONNREFUSED
+        false
+      ensure
+        (socket && socket.close)
+      end
+
     end
   end
 end
