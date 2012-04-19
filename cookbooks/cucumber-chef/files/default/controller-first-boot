@@ -1,1 +1,1 @@
-{ "run_list": [ "recipe[cucumber-chef::testrunner]" ] }
+{ "run_list": [ "recipe[cucumber-chef::test_runner]" ] }

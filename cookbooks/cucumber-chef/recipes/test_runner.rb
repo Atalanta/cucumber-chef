@@ -17,7 +17,7 @@ package "bison" do
 end
 
 node['cucumber-chef'][:gems].each do |gem|
-    gem_package gem
+  gem_package gem
 end
 
 directory "/root/.ssh" do
