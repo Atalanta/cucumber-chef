@@ -55,7 +55,7 @@ module Cucumber
         bootstrap = ::Chef::Knife::Bootstrap.new
         ui = ::Chef::Knife::UI.new(STDOUT, STDERR, STDIN, bootstrap.config)
         bootstrap.ui = ui
-        bootstrap.name_args = [server.dns_name]
+        bootstrap.name_args = [server.public_ip_address]
         bootstrap.config[:run_list] = run_list
         bootstrap.config[:ssh_user] = "ubuntu"
         bootstrap.config[:identity_file] = config[:knife][:identity_file]
