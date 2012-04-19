@@ -128,7 +128,7 @@ EOF
     cat <<EOF > $image/root/.ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzj2O8BxvLn1Q7vUTiyFdtle9SeataEF//+651mXTV8WdKuXGRgvIKZPu+ZnTsqnDoR+pwMRFf95hDPHScpdYj2WVY1cN2e6xEKEsz3xcKdhaTuAOBd47J9wu6Nmgr1aZ/2/AWTrLEOMxUVVp/bzeSFzfHR2bctfKCKzMUCLGZLEGn0Yv5Qbk56Vr9A5jUJcKgCodWOpTcPlf+kKzxejgt/wHRZTRrJIOyx5Zhddim10/sZZ8ct9+WgBwhIL2fUHrsAb1wjxKpQCOYoxHuRSFnv4zrFzblI737TmQIHkkb9g08z3qIJLLiLKgGNXP2wclA37ctGfqwfJWj9FA9nI9iQ== root@cucumber
 EOF
-    
+
     mkdir $image/etc/chef
 
     cat <<EOF > $image/tmp/validation.pem
@@ -136,10 +136,10 @@ EOF
 EOF
     awk NF $image/tmp/validation.pem > $image/etc/chef/validation.pem
     rm $image/tmp/validation.pem
-    
+
     cat <<EOF > $image/etc/chef/client.rb
-log_level        :info
-log_location     STDOUT
+log_level        :debug
+log_location     "/var/log/chef.log"
 chef_server_url  "<%= Chef::Config[:chef_server_url] %>"
 validation_client_name "<%= Chef::Config[:validation_client_name] %>"
 EOF
@@ -153,6 +153,10 @@ EOF
     cp /etc/resolv.conf $image/etc/resolv.conf
     cp /etc/lxc/install-chef.sh $image/tmp/install-chef.sh
     chroot $image /bin/sh -c "/usr/bin/apt-get update && /usr/bin/apt-get --assume-yes --allow-unauthenticated install strace ruby1.9.1p180"
+
+    # Update rubygems (1.8.10 fixes gerkin's invalid gemspec)
+    chroot $image /bin/sh -c "/usr/local/bin/gem update --system"
+
     mkdir -p $image/$HOME
     chroot $image /bin/sh -c "/usr/local/bin/gem install chef --no-ri --no-rdoc 2>&1" 2>&1 >> /tmp/data
     return $?
