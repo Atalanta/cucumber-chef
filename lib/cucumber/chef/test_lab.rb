@@ -17,25 +17,35 @@ module Cucumber
 
       def build(output)
         if exists?
-          raise TestLabError.new("A test lab already exists using the AWS credentials you supplied")
+          output.puts("A test lab already exists using the AWS credentials you have supplied; attempting to reprovision it.")
+          @server = running_labs.first
+        else
+          server_definition = {
+            :image_id => @config.aws_image_id,
+            :groups => @config.security_group,
+            :flavor_id => @config.aws_instance_type,
+            :key_name => @config[:knife][:aws_ssh_key_id],
+            :availability_zone => @config[:knife][:availability_zone],
+            :tags => {"purpose" => "cucumber-chef"},
+            :identity_file => @config[:knife][:identity_file]
+          }
+          @server = @connection.servers.create(server_definition)
+          output.puts "Provisioning cucumber-chef test lab platform."
+          output.print "Waiting for server"
+          @server.wait_for { output.print "."; ready? }
+          output.puts("\n")
+          tag_server
         end
-        server_definition = {
-          :image_id => @config.aws_image_id,
-          :groups => @config.security_group,
-          :flavor_id => @config.aws_instance_type,
-          :key_name => @config[:knife][:aws_ssh_key_id],
-          :availability_zone => @config[:knife][:availability_zone],
-          :tags => {"purpose" => "cucumber-chef"},
-          :identity_file => @config[:knife][:identity_file]
-        }
-        @server = @connection.servers.create(server_definition)
-        output.puts "Provisioning cucumber-chef test lab platform."
-        output.print "Waiting for server"
-        @server.wait_for { output.print "."; ready? }
-        output.puts("\n")
-        tag_server
-        output.puts "Instance ID: #{@server.id} ; IP Address #{@server.public_ip_address}"
-        output.puts "Platform provisioned.  Run cucumber-chef project to get started."
+        output.puts("Instance ID: #{@server.id}")
+        output.puts("IP Address:")
+        output.puts("  Public...: #{@server.public_ip_address}") if @server.public_ip_address
+        output.puts("  Private..: #{@server.private_ip_address}") if @server.private_ip_address
+        output.puts("DNS:")
+        output.puts("  Public...: #{@server.dns_name}") if @server.dns_name
+        output.puts("  Private..: #{@server.private_dns_name}") if @server.private_dns_name
+        output.puts("Username: #{@server.username}") if @server.username
+        output.puts("")
+        output.puts("Instance is spun up; proceeding to provision...")
         @server
       end
 
@@ -87,7 +97,7 @@ module Cucumber
 
       def ensure_security_group
         unless @connection.security_groups.get(@config.security_group)
-          @connection.create_security_group(@config.security_group, 'cucumber-chef test lab')
+          @connection.create_security_group(@config.security_group, 'cucumber-chef-test-lab')
           @connection.security_groups.get(@config.security_group).authorize_port_range(22..22)
         end
       end

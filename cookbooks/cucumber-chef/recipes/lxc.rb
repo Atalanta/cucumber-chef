@@ -24,7 +24,7 @@ mount "/cgroup" do
 end
 
 template "/usr/bin/lxc-lucid-chef" do
-  source "lxc-lucid-chef"
+  source "lxc-lucid-chef.erb"
   mode "0755"
   variables( :orgname => node["cucumber-chef"]["orgname"] )
   action :create

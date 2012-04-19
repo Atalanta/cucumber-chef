@@ -41,7 +41,7 @@ cookbook_file "/var/lib/lxc/controller/rootfs/etc/chef/first-boot.json" do
 end
 
 controllers = search(:node, 'name:cucumber-chef-controller')
-execute 'chroot /var/lib/lxc/controller/rootfs /bin/bash -c "chef-client -j /etc/chef/first-boot.json > /dev/null 2>&1"' do
+execute 'chroot /var/lib/lxc/controller/rootfs /bin/bash -c "chef-client -j /etc/chef/first-boot.json"' do
   action :run
   not_if { controllers.length > 0 }
 end

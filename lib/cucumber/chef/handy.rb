@@ -23,7 +23,7 @@ module Cucumber
 
       def create_container(name)
         unless File.exists?(get_root(name))
-          %x[lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef > /dev/null 2>&1 ]
+          %x[lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef]
         end
       end
 
@@ -39,11 +39,11 @@ module Cucumber
       end
 
       def run_chef_first_time(name)
-        %x[chroot #{get_root(name)} /bin/bash -c 'chef-client -j /etc/chef/first-boot.json -N #{name} > /dev/null 2>&1']
+        %x[chroot #{get_root(name)} /bin/bash -c 'chef-client -j /etc/chef/first-boot.json -N #{name}']
       end
 
       def run_chef(name)
-        %x[chroot #{get_root(name)} /bin/bash -c 'chef-client > /dev/null 2>&1']
+        %x[chroot #{get_root(name)} /bin/bash -c 'chef-client']
       end
 
       def databag_item_from_file(file)
@@ -61,11 +61,11 @@ module Cucumber
       def create_client_rb(orgname)
         client_rb = File.join(get_root(name), 'etc/chef/client.rb')
         File.open(client_rb, 'w') do |f|
-          f.puts "log_level        :info"
-          f.puts "log_location     STDOUT"
-          f.puts "chef_server_url  'https://api.opscode.com/organizations/#{orgname}'"
-          f.puts "validation_client_name '#{orgname}-validator'"
-          f.puts "node_name 'cucumber-chef-#{name}'"
+          f.puts "log_level               :debug"
+          f.puts "log_location            \"/var/log/chef.log\""
+          f.puts "chef_server_url         \"https://api.opscode.com/organizations/#{orgname}\""
+          f.puts "validation_client_name  \"#{orgname}-validator\""
+          f.puts "node_name               \"cucumber-chef-#{name}\""
         end
       end
 
