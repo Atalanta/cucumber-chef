@@ -26,6 +26,7 @@ node_name               "<%= @config[:chef_node_name] %>"
 EOP
 ) > /var/lib/lxc/controller/rootfs/etc/chef/client.rb
 
+(
 cat <<EOP
 { "run_list": [ "recipe[cucumber-chef::controller]" ] }
 EOP
