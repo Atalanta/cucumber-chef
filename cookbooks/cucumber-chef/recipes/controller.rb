@@ -33,7 +33,7 @@ end
 
 template "/var/lib/lxc/controller/rootfs/etc/chef/client.rb" do
   source "controller-client.erb"
-  variables( :orgname => node["cucumber-chef"]["orgname"] )
+  variables(:orgname => node["cucumber-chef"]["orgname"])
 end
 
 cookbook_file "/var/lib/lxc/controller/rootfs/etc/chef/first-boot.json" do
@@ -50,4 +50,3 @@ execute 'lxc-start -d -n controller' do
   status = %x[lxc-info -n controller 2>&1]
   not_if {status.include?("RUNNING")}
 end
-

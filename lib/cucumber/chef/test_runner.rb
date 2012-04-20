@@ -21,8 +21,8 @@ module Cucumber
       end
 
       def upload_project
-        lab = Cucumber::Chef::TestLab.new(@config)
-        @hostname = lab.public_hostname
+        test_lab = Cucumber::Chef::TestLab.new(@config)
+        @hostname = test_lab.labs_running.first.public_ip_address
         @key = File.expand_path(@config[:knife][:identity_file])
         %x[scp -r -i #{@key} #{@project_dir} ubuntu@#{@hostname}:]
         puts "Cucumber-chef project: #{File.basename(@project_dir)} sucessfully uploaded to the test lab."

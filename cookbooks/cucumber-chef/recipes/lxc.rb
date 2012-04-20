@@ -29,7 +29,3 @@ template "/usr/bin/lxc-lucid-chef" do
   variables( :orgname => node["cucumber-chef"]["orgname"] )
   action :create
 end
-
-
-
-

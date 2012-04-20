@@ -81,6 +81,7 @@ module Cucumber
       def displayconfig
         puts config.list.join("\n")
         config.verify
+
       rescue ::Cucumber::Chef::Error => err
         error(err.message)
       end
@@ -89,8 +90,10 @@ module Cucumber
       method_option :test, :type  => :boolean
       def info
         config.verify
-        test_lab = Cucumber::Chef::TestLab.new(config)
-        test_lab.info if test_lab
+        if (test_lab = Cucumber::Chef::TestLab.new(config))
+          test_lab.info
+        end
+
       rescue ::Cucumber::Chef::Error => err
         error(err.message)
       end
