@@ -16,9 +16,8 @@ package "bison" do
   action :install
 end
 
-node['cucumber-chef'][:gems].each do |gem|
-  gem_package gem[:name]
-  source gem[:source] if gem[:source]
+%w(rspec cucumber cucumber-nagios cucumber-chef).each do |gem|
+  gem_package gem
 end
 
 directory "/root/.ssh" do

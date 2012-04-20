@@ -4,4 +4,6 @@ run_list(
   "recipe[cucumber-chef::test_runner]"
 )
 
-override_attributes "cucumber-chef" => { "orgname" => "#{ENV['ORGNAME']}" }
+override_attributes "cucumber-chef" => {
+  "orgname" => "#{ENV['ORGNAME']}"
+}

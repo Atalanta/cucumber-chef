@@ -1,10 +1,9 @@
-%w[rsync build-essential libxml2-dev libxslt1-dev].each do |pkg|
+%w(rsync build-essential libxml2-dev libxslt1-dev).each do |pkg|
   package pkg
 end
 
-node['cucumber-chef'][:gems].each do |gem|
-  gem_package gem[:name]
-  source gem[:source] if gem[:source]
+%w(rspec cucumber cucumber-nagios cucumber-chef).each do |gem|
+  gem_package gem
 end
 
 directory "/root/.ssh" do

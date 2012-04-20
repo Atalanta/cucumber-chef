@@ -8,11 +8,5 @@ run_list(
 
 # "gems" => %w(cucumber-chef rspec cucumber)
 override_attributes "cucumber-chef" => {
-  "orgname" => "#{ENV['ORGNAME']}",
-  "gems" => [
-    { :name => 'rspec' },
-    { :name => 'cucumber' },
-    { :name => 'cucumber-nagios' },
-    { :name => 'cucumber-chef' }
-  ]
+  "orgname" => "#{ENV['ORGNAME']}"
 }
