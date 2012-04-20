@@ -21,12 +21,6 @@ cookbook_file "/root/.bashrc" do
   source "add-git-identity"
 end
 
-directory "/etc/lxc"
-
-cookbook_file "/etc/lxc/controller" do
-  source "lxc-controller-network-config"
-end
-
 execute "lxc-create -n controller -f /etc/lxc/controller -t lucid-chef" do
   not_if {File.exists?("/var/lib/lxc/controller")}
 end
