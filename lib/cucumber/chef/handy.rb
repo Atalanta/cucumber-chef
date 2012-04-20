@@ -39,11 +39,11 @@ module Cucumber
       end
 
       def run_chef_first_time(name)
-        %x[chroot #{get_root(name)} /bin/bash -c 'chef-client -j /etc/chef/first-boot.json -N #{name}']
+        %x[chroot #{get_root(name)} /bin/bash -c '/usr/bin/chef-client -j /etc/chef/first-boot.json -N #{name}']
       end
 
       def run_chef(name)
-        %x[chroot #{get_root(name)} /bin/bash -c 'chef-client']
+        %x[chroot #{get_root(name)} /bin/bash -c '/usr/bin/chef-client']
       end
 
       def databag_item_from_file(file)
