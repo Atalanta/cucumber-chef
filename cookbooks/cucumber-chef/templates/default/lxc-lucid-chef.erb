@@ -145,20 +145,12 @@ validation_client_name "<%= Chef::Config[:validation_client_name] %>"
 EOF
 
 
-    cat <<EOF > $image/etc/apt/sources.list.d/atalanta.list
-deb http://packages.atalanta-systems.com lucid main
-EOF
-
     rm $image/etc/resolv.conf
     cp /etc/resolv.conf $image/etc/resolv.conf
-    cp /etc/lxc/install-chef.sh $image/tmp/install-chef.sh
-    chroot $image /bin/sh -c "/usr/bin/apt-get update && /usr/bin/apt-get --assume-yes --allow-unauthenticated install strace ruby1.9.1p180"
-
-    # Update rubygems (1.8.10 fixes gerkin's invalid gemspec)
-    chroot $image /bin/sh -c "/usr/local/bin/gem update --system"
-
     mkdir -p $image/$HOME
-    chroot $image /bin/sh -c "/usr/local/bin/gem install chef --no-ri --no-rdoc 2>&1" 2>&1 >> /tmp/data
+
+    cp /etc/lxc/install-chef.sh $image/tmp/install-chef.sh
+    chroot $image /bin/sh -c "/tmp/install-chef.sh"
     return $?
 }
 

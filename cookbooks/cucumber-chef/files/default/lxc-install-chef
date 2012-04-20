@@ -1,0 +1,10 @@
+if [ ! -f /usr/bin/chef-client ]; then
+  /usr/bin/apt-get update
+  /usr/bin/apt-get install -y build-essential wget build-essential wget ruby ruby-dev libruby libruby-extras
+  cd /tmp
+  /usr/bin/wget http://production.cf.rubygems.org/rubygems/rubygems-1.8.10.tgz
+  /bin/tar zxf rubygems-1.8.10.tgz
+  cd rubygems-1.8.10
+  /usr/bin/ruby setup.rb --no-format-executable
+  /usr/bin/gem install ohai chef --no-rdoc --no-ri --verbose
+fi
