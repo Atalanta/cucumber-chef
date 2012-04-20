@@ -49,6 +49,8 @@ module Cucumber
         print(".") until sshd_ready?(@server.public_ip_address)
         puts("OK.\n")
 
+        sleep(3)
+
         @server
       end
 
