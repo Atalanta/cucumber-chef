@@ -71,6 +71,24 @@ module Cucumber
         end
       end
 
+      desc "ssh", "SSH to running test lab"
+      def ssh
+        config.verify
+
+        if (test_lab = Cucumber::Chef::TestLab.new(config))
+          ip = test_lab.labs_running.first.public_ip_address
+          key = File.expand_path(@config[:knife][:identity_file])
+          puts("Attempting ssh connection to 'ubuntu@#{ip}' with identity '#{key}'.")
+          options = [ "-i", key,
+                      "-o", "UserKnownHostsFile=/dev/null",
+                      "-o", "StrictHostKeyChecking=no",
+                      "ubuntu@#{ip}" ]
+          Kernel.exec("ssh", *options)
+        else
+          puts("No test labs available to ssh to!")
+        end
+      end
+
       desc "connect", "Connect to a container in your test lab"
       def connect
         puts "Not implemented.  For now, find the IP of your test lab using the info task, and connect manually."
@@ -132,4 +150,5 @@ module Cucumber
     end
   end
 end
+
 Cucumber::Chef::Execute.start
