@@ -14,7 +14,7 @@ module Cucumber
 
       def bootstrap_node(config, server)
         template_file = File.join(File.dirname(__FILE__), "templates/ubuntu10.04-gems.erb")
-        run_bootstrap(config, template_file, server, chef_node_name(config), "role[test_lab_test]")
+        run_bootstrap(config, template_file, server, chef_node_name(config), "role[test_lab]")
         tag_node(config)
       end
 
@@ -36,7 +36,7 @@ module Cucumber
       def upload_role(config)
         role_path = File.join(@cookbook_path, "roles")
         ::Chef::Config[:role_path] = role_path
-        role = ::Chef::Role.from_disk("test_lab_test")
+        role = ::Chef::Role.from_disk("test_lab")
         role.save
         role = ::Chef::Role.from_disk("controller")
         role.save

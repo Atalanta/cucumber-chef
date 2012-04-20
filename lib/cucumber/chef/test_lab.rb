@@ -3,7 +3,12 @@ module Cucumber
     class TestLabError < Error ; end
 
     class TestLab
-      attr_reader :connection
+      attr_reader :connection, :server
+
+      INVALID_STATES = ['terminated', 'shutting-down', 'starting-up', 'pending']
+      RUNNING_STATES = ['running']
+      SHUTDOWN_STATES = ['shutdown', 'stopping', 'stopped']
+      VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
 
       def initialize(config)
         @config = config
@@ -32,7 +37,7 @@ module Cucumber
           }
           @server = @connection.servers.create(server_definition)
           puts "Provisioning cucumber-chef test lab platform."
-          print("Waiting for instance")
+          print("Waiting for instance...")
           @server.wait_for { print "."; ready? }
           puts("OK.\n")
           tag_server
@@ -40,7 +45,7 @@ module Cucumber
 
         info
 
-        print("Waiting for sshd")
+        print("Waiting for sshd...")
         print(".") until sshd_ready?(@server.public_ip_address)
         puts("OK.\n")
 
@@ -101,29 +106,29 @@ module Cucumber
       end
 
       def labs
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && s.state != 'terminated') }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && VALID_STATES.any?{|state| s.state == state}) }
       end
 
       def labs_running
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && s.state == 'running') }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && RUNNING_STATES.any?{|state| s.state == state}) }
       end
 
       def labs_shutdown
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && s.state == 'shutdown') }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && SHUTDOWN_STATES.any?{|state| s.state == state}) }
       end
 
 ################################################################################
 
-      def public_hostname
-        puts "NODES:"
-        puts y nodes
-        nodes.first.cloud.public_hostname
-      end
+#      def public_hostname
+#        puts "NODES:"
+#        puts y nodes
+#        nodes.first.cloud.public_hostname
+#      end
 
       def nodes
         search = ::Chef::Search::Query.new
         mode = @config[:mode]
-        query = "roles:test_lab_test AND tags:#{mode}"
+        query = "roles:test_lab AND tags:#{mode}"
         nodes, offset, total = search.search("node", URI.escape(query))
         nodes.compact
       end
