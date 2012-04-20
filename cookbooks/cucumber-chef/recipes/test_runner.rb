@@ -16,8 +16,8 @@ package "bison" do
   action :install
 end
 
-node['cucumber-chef'][:gems].each do |gem|
-    gem_package gem
+%w(rspec cucumber cucumber-nagios cucumber-chef).each do |gem|
+  gem_package gem
 end
 
 directory "/root/.ssh" do
@@ -42,5 +42,3 @@ end
 cookbook_file "/root/.bashrc" do
   source "add-git-identity"
 end
-
-

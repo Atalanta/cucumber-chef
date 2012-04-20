@@ -7,7 +7,7 @@ module Cucumber
     class Config
       KEYS = %w[mode node_name chef_server_url client_key validation_key validation_client_name]
       KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file]
-      OPTIONAL_KNIFE_KEYS = %w[aws_instance_arch aws_instance_disk_store aws_instance_type]
+      OPTIONAL_KNIFE_KEYS = %w[aws_instance_arch aws_instance_disk_store aws_instance_type rubygems]
 
       def initialize
         config[:mode] = "user"
@@ -55,7 +55,7 @@ module Cucumber
         values = []
         KEYS.each do |key|
           value = config[key]
-          values << "#{key}: #{value}"
+          values << "#{key}: #{value.is_a?(File) ? value.path : value}"
         end
         (KNIFE_KEYS + OPTIONAL_KNIFE_KEYS).each do |key|
           values << "knife[:#{key}]: #{knife_config[key.to_sym]}" if knife_config[key.to_sym]
@@ -69,6 +69,7 @@ module Cucumber
       end
 
       def verify
+        puts "Verifing Configuration..."
         @errors = []
         verify_orgname
         verify_opscode_user
@@ -84,10 +85,16 @@ module Cucumber
         if knife_config[:aws_image_id]
           knife_config[:aws_image_id]
         elsif knife_config[:ubuntu_release] && knife_config[:region]
-          query = ::UbuntuAmi.new(knife_config[:ubuntu_release])
-          instance_arch = query.arch_size(knife_config[:aws_instance_arch] || "i386")
-          disk_store = query.disk_store(knife_config[:aws_instance_disk_store] || "instance-store")
-          query.run["#{query.region_fix(knife_config[:region])}_#{instance_arch}#{disk_store}"]
+#          Ubuntu.release("lucid").amis.each do |ami|
+#            puts "#{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})"
+#          end
+          ami = Ubuntu.release(knife_config[:ubuntu_release]).amis.find do |ami|
+            ami.arch == (knife_config[:aws_instance_arch] || "i386") &&
+            ami.root_store == (knife_config[:aws_instance_disk_store] || "instance-store") &&
+            ami.region == knife_config[:region]
+          end
+#          puts "#{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})"
+          ami.name
         end
       end
 
@@ -97,6 +104,18 @@ module Cucumber
 
       def security_group
         knife_config[:aws_security_group] || "cucumber-chef"
+      end
+
+#      def log_level
+#        config[:log_level] || :info
+#      end
+
+#      def log_location
+#        (knife_config[:log_location].is_a?(File) ? knife_config[:log_location].path : knife_config[:log_location]) || "STDOUT"
+#      end
+
+      def rubygems
+        knife_config[:rubygems] || "1.3.7"
       end
 
     private

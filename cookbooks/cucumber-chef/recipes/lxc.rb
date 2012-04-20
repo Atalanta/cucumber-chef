@@ -23,13 +23,20 @@ mount "/cgroup" do
   action [:mount, :enable]
 end
 
-template "/usr/bin/lxc-lucid-chef" do
-  source "lxc-lucid-chef"
-  mode "0755"
-  variables( :orgname => node["cucumber-chef"]["orgname"] )
-  action :create
+directory "/etc/lxc"
+
+cookbook_file "/etc/lxc/controller" do
+  source "lxc-controller-network-config"
 end
 
+cookbook_file "/etc/lxc/install-chef.sh" do
+  source "lxc-install-chef"
+  mode "0755"
+end
 
-
-
+template "/usr/bin/lxc-lucid-chef" do
+  source "lxc-lucid-chef.erb"
+  mode "0755"
+  variables(:orgname => node["cucumber-chef"]["orgname"])
+  action :create
+end

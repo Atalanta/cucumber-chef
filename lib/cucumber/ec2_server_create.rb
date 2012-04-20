@@ -66,7 +66,7 @@ class Chef
       puts("\n")
 
       puts "Public IP Address #{server.public_ip_address}"
-      
+
       print "\n#{h.color("Waiting for sshd", :magenta)}"
 
       print(".") until tcp_test_ssh(server.dns_name) { sleep @initial_sleep_delay ||= 10; puts("done") }

@@ -15,16 +15,16 @@ module Cucumber
         upload_project
         @project_path = File.join('/home/ubuntu', File.basename(@project_dir), 'features')
         connection = Net::SSH.start(@hostname, 'ubuntu', :keys => @key) do |ssh|
-          @output = ssh.exec!("sudo cucumber #{@project_path}")
+          @output = ssh.exec!("sudo cucumber -c -v #{@project_path}")
         end
         puts @output
       end
 
       def upload_project
-        lab = Cucumber::Chef::TestLab.new(@config)
-        @hostname = lab.public_hostname
+        test_lab = Cucumber::Chef::TestLab.new(@config)
+        @hostname = test_lab.labs_running.first.public_ip_address
         @key = File.expand_path(@config[:knife][:identity_file])
-        %x[scp -r -i #{@key} #{@project_dir} ubuntu@#{@hostname}: 2>/dev/null]
+        %x[scp -r -i #{@key} #{@project_dir} ubuntu@#{@hostname}:]
         puts "Cucumber-chef project: #{File.basename(@project_dir)} sucessfully uploaded to the test lab."
       end
     end

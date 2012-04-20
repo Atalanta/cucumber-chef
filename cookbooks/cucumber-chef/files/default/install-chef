@@ -1,1 +1,0 @@
-/usr/bin/apt-get update && /usr/bin/apt-get --assume-yes --allow-unauthenticated install ruby1.9.1p180 && /usr/local/bin/gem install chef --no-ri --no-rdoc

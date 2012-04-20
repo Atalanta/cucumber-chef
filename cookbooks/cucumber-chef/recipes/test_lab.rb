@@ -1,8 +1,8 @@
-%w[rsync build-essential libxml2-dev libxslt1-dev].each do |pkg|
+%w(rsync build-essential libxml2-dev libxslt1-dev).each do |pkg|
   package pkg
 end
 
-node['cucumber-chef'][:gems].each do |gem|
+%w(rspec cucumber cucumber-nagios cucumber-chef).each do |gem|
   gem_package gem
 end
 
@@ -20,4 +20,3 @@ cookbook_file "/root/.ssh/id_rsa" do
   mode "0600"
   owner "root"
 end
-

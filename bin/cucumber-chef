@@ -5,119 +5,131 @@ require 'fileutils'
 require 'thor'
 require 'cucumber-chef'
 
-class CucumberChef < Thor
-  include Thor::Actions
+module Cucumber
+  module Chef
+    class Execute < Thor
+      include Thor::Actions
 
-  no_tasks do
-    def create_directory_structure(project_dir)
-      %w{step_definitions support}.each do |dir|
-        FileUtils.mkdir_p(project_dir + "features" + dir)
+      no_tasks do
+        def create_directory_structure(project_dir)
+          %w{step_definitions support}.each do |dir|
+            FileUtils.mkdir_p(project_dir + "features" + dir)
+          end
+        end
+
+        def generate_project_skeleton(project_dir)
+          template_dir = Pathname.new(__FILE__).parent.parent + 'lib' + 'cucumber' + 'chef' + 'templates'
+
+          CucumberChef.source_root template_dir.realpath
+          templates = {
+            "readme.erb" => 'README',
+            "example_feature.erb" => 'features/example.feature',
+            "example_step.erb" => 'features/step_definitions/example_step.rb',
+            "env.rb" => "features/support/env.rb"
+          }
+
+          templates.each do |filename, destination|
+            template(filename, project_dir + destination)
+          end
+        end
+
+        def config
+          @config ||= begin
+          options.test? ? Cucumber::Chef::Config.test_config : Cucumber::Chef::Config.new
+          end
+        end
+
+        def error(message)
+          warn message
+          exit 255
+        end
+      end
+
+      desc "project <project name>" , "Create a project template for testing an infrastructure"
+      def project(project_name)
+        @project = project_name
+        project_dir = Pathname.new(".") + "cucumber-chef" + @project
+        create_directory_structure(project_dir)
+        generate_project_skeleton(project_dir)
+      end
+
+      desc "setup", "Set up a cucumber-chef test lab in Amazon EC2"
+      method_option :test, :type  => :boolean
+      def setup
+        begin
+          config.verify
+          test_lab = TestLab.new(config)
+          server = test_lab.create
+
+          provisioner = Provisioner.new
+          provisioner.upload_cookbook(config)
+          provisioner.upload_role(config)
+          provisioner.bootstrap_node(config, server)
+
+        rescue ::Cucumber::Chef::Error => err
+          error(err.message)
+        end
+      end
+
+      desc "connect", "Connect to a container in your test lab"
+      def connect
+        puts "Not implemented.  For now, find the IP of your test lab using the info task, and connect manually."
+      end
+
+      desc "displayconfig", "Display the current config from knife.rb"
+      method_option :test, :type  => :boolean
+      def displayconfig
+        puts config.list.join("\n")
+        config.verify
+
+      rescue ::Cucumber::Chef::Error => err
+        error(err.message)
+      end
+
+      desc "info", "Display information about the current test labs"
+      method_option :test, :type  => :boolean
+      def info
+        config.verify
+        if (test_lab = Cucumber::Chef::TestLab.new(config))
+          test_lab.info
+        end
+
+      rescue ::Cucumber::Chef::Error => err
+        error(err.message)
+      end
+
+      desc "destroy", "Destroy running test labs"
+      method_option :test, :type => :boolean
+      def destroy
+        config.verify
+        lab = Cucumber::Chef::TestLab.new(config)
+        lab.destroy
+      end
+
+      desc "upload <project name>", "Upload the cucumber-chef test suite <project name> to the test lab platform"
+      def upload(project_name)
+        project_dir = Pathname.new(".") + "cucumber-chef" + project_name
+        unless File.exists?(project_dir)
+          raise "Project dir '#{project_dir}' does not exist."
+        end
+        config.verify
+        runner = Cucumber::Chef::TestRunner.new(project_dir, config)
+        runner.upload_project
+      end
+
+      desc "test <project name>", "Run the cucumber-chef test suite <project name> from a workstation."
+      def test(project_name)
+        project_dir = Pathname.new(".") + "cucumber-chef" + project_name
+        unless File.exists?(project_dir)
+          raise "Project directory '#{project_dir}' does not exist."
+        else
+          puts "Using project directory: #{project_dir}"
+        end
+        config.verify
+        runner = Cucumber::Chef::TestRunner.new(project_dir, config)
+        runner.run
       end
     end
-
-    def generate_project_skeleton(project_dir)
-      template_dir = Pathname.new(__FILE__).parent.parent + 'lib' + 'cucumber' + 'chef' + 'templates'
-      CucumberChef.source_root template_dir.realpath
-      templates = {
-        "readme.erb" => 'README',
-        "example_feature.erb" => 'features/example.feature',
-        "example_step.erb" => 'features/step_definitions/example_step.rb',
-        "env.rb" => "features/support/env.rb"
-      }
-      templates.each do |filename, destination|
-        template(filename, project_dir + destination)
-      end
-    end
-
-    def config
-      @config ||= begin
-      options.test? ? Cucumber::Chef::Config.test_config : Cucumber::Chef::Config.new
-      end
-    end
-
-    def error(message)
-      warn message
-      exit 255
-    end
-  end
-
-  desc "project <project name>" , "Create a project template for testing an infrastructure"
-  def project(project_name)
-    @project = project_name
-    project_dir = Pathname.new(".") + "cucumber-chef" + @project
-    create_directory_structure(project_dir)
-    generate_project_skeleton(project_dir)
-  end
-
-  desc "setup", "Set up a cucumber-chef test lab in Amazon EC2"
-  method_option :test, :type  => :boolean
-  def setup
-    begin
-      config.verify
-      $stdout.sync
-      provisioner = ::Cucumber::Chef::Provisioner.new
-      server = provisioner.build_test_lab(config, $stdout)
-      sleep(10)
-      provisioner.upload_cookbook(config)
-      provisioner.upload_role(config)
-      provisioner.bootstrap_node(server.dns_name, config)
-    rescue ::Cucumber::Chef::Error => err
-      error(err.message)
-    end
-  end
-
-  desc "connect", "Connect to a container in your test lab"
-  def connect
-    puts "Not implemented.  For now, find the IP of your test lab using the info task, and connect manually."
-  end
-
-  desc "displayconfig", "Display the current config from knife.rb"
-  method_option :test, :type  => :boolean
-  def displayconfig
-    puts config.list.join("\n")
-    config.verify
-  rescue ::Cucumber::Chef::Error => err
-    error(err.message)
-  end
-
-  desc "info", "Display information about the current test lab"
-  method_option :test, :type  => :boolean
-  def info
-    config.verify
-    lab = Cucumber::Chef::TestLab.new(config)
-    puts lab.info
-  rescue ::Cucumber::Chef::Error => err
-    error(err.message)
-  end
-
-  desc "destroy", "Destroy running test labs"
-  method_option :test, :type => :boolean
-  def destroy
-    config.verify
-    lab = Cucumber::Chef::TestLab.new(config)
-    lab.destroy
-  end
-
-  desc "upload <project name>", "Upload the cucumber-chef test suite <project name> to the test lab platform"
-  def upload(project_name)
-    project_dir = Pathname.new(".") + "cucumber-chef" + project_name
-    unless File.exists?(project_dir)
-      raise "Project dir '#{project_dir}' does not exist."
-    end
-    config.verify
-    runner = Cucumber::Chef::TestRunner.new(project_dir, config)
-    runner.upload_project
-  end
-
-  desc "test <project name>", "Run the cucumber-chef test suite <project name> from a workstation."
-  def test(project_name)
-    project_dir = Pathname.new(".") + "cucumber-chef" + project_name
-    unless File.exists?(project_dir)
-      raise "Project dir '#{project_dir}' does not exist."
-    end
-    config.verify
-    runner = Cucumber::Chef::TestRunner.new(project_dir, config)
-    runner.run
   end
 end
-CucumberChef.start
+Cucumber::Chef::Execute.start

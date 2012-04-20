@@ -17,40 +17,40 @@ type="text/css" media="screen, projection"> </head>
 
 
 <body> <div class="container">
-  
-  
+
+
 <div id="nav">
   <ul>
     <li class="selected">Main</li>
     <li>Docs</li>
-  </ul>    
+  </ul>
 </div>
 
-<div id="header">  
+<div id="header">
   <img src="images/cucumber-chef-logo.png" width="380" height="46"
   alt="Cucumber Chef Logo"/>
-  
-  <h3>A library of tools to enable test driven development</h3>   
+
+  <h3>A library of tools to enable test driven development</h3>
 </div>
 
 <div class="page">
-  
+
 <div id="panel">
   <a href="https://github.com/Atalanta/cucumber-chef"><img
   src="images/large-button.png" width="252" height="52" class="imgpad"
   alt="Git Hub" /></a>
-  
+
   <a href="http://oreilly.com/catalog/0636920020042"><img
   src="images/book-cover.png" width="252" height="330" alt="Book
   Cover"/></a>
-  
+
   <p class="book-description">Test-Driven Infrastructure with
   Chef<br/>by Stephen Nelson-Smith<br/>Published by O’Reilly</p>
-  
+
   <a href="http://oreilly.com/catalog/0636920020042"><img
   src="images/buy-button.png" width="62" height="27" alt="Buy
   Button"/></a>
-  
+
 </div>
 
 <h2>Overview</h2>
@@ -95,23 +95,23 @@ machines with Chef, and then build end-to-end tests.</p>
   present) of an EC2 instance, configured to be an LXC host. This
   machine does nothing other than provide space in which Linux
   containers can be created and destroyed.</li>
-  
+
   <li><strong>Controller:</strong> One special Linux container which
   acts as the central point from which tests are run. This machine is
   where the tests run, and has connectivity and credentials to connect
   to the machines that are created as part of a test run.</li>
-  
+
   <li><strong>Container:</strong> A container is a lightweight virtual
   machine - it is entirely self-contained, with its own process tree,
   resource constraints, filesystem and network stack. It shares a
   kernel with the Test Lab host server.</li> </ul>
-  
-  
+
+
   <h3>Getting Started</h3>
 
   <p>Getting started with <strong>Cucumber-Chef</strong> is a simple,
   three step process:</p>
-  
+
 
 
   <ul>
@@ -124,11 +124,11 @@ machines with Chef, and then build end-to-end tests.</p>
 
   <p>Installing Cucumber-Chef is simple.  It's distributed as a
   RubyGem, so you can simply run:</p>
-  
+
 
 <div class="inset-box">
   <pre><code>$ gem install cucumber-chef
-    </code></pre> 
+    </code></pre>
 </div>
 
 <p>Once installed, you can run cucumber-chef on the command line to
@@ -136,7 +136,7 @@ get an overview of the tasks it can carry out.</p>
 
 
 <div class="inset-box">
-  <pre><code>$ cucumber-chef 
+  <pre><code>$ cucumber-chef
 Tasks:
   cucumber-chef connect                 # Connect to a container in your test lab
   cucumber-chef destroy                 # Destroy running test labs
@@ -147,10 +147,10 @@ Tasks:
   cucumber-chef setup                   # Set up a cucumber-chef test lab in Amazon EC2
   cucumber-chef test                    # Run a cucumber-chef test suite from a workstation.
   cucumber-chef upload &lt;project name&gt;   # Upload a cucumber-chef test
-</code></pre> 
+</code></pre>
 </div>
 
-<h3>Integrate with Hosted Chef and Amazon EC2</h3> 
+<h3>Integrate with Hosted Chef and Amazon EC2</h3>
 
 <p>In it's current incarnation, Cucumber-Chef makes two important
 assumptions.  Firstly, it assumes you're using Opscode Hosted Chef
@@ -195,7 +195,7 @@ accordingly.  In most cases we anticipate that you'll be inside the
 chef-repo of your organisation, and the documentation is written
 from this perspective.</p>
 
-<p>If you haven't already, refactor your knife.rb to look like this:</p> 
+<p>If you haven't already, refactor your knife.rb to look like this:</p>
 
 <div class="inset-box">
   <pre><code>current_dir = File.dirname(__FILE__)
@@ -229,12 +229,12 @@ everything still works:</p>
 
 <div class="inset-box">
   <pre><code>$ knife client list
-</code></pre> 
+</code></pre>
 </div>
 
-<p>If you get results back, we're in business.</p> 
+<p>If you get results back, we're in business.</p>
 
-<p>Now add the EC2 configuration:</p> 
+<p>Now add the EC2 configuration:</p>
 
 <div class="inset-box">
   <pre><code>knife[:aws_access_key_id] = ENV['AWS_ACCESS_KEY_ID']
@@ -251,7 +251,7 @@ knife[:aws_image_id] = "ami-339ca947"
 labs.</p>
 
 
-<p>And set your environment variables:</p> 
+<p>And set your environment variables:</p>
 
 <div class="inset-box">
   <pre><code>$ export AWS_ACCESS_KEY_ID=SEKRITKEY
@@ -260,17 +260,17 @@ $ export AWS_SSH_KEY_ID
 </code></pre>
 </div>
 
-<p>And then ensure your AWS ssh key is in place.</p> 
+<p>And then ensure your AWS ssh key is in place.</p>
 
 <p>Now check your config again, with cucumber-chef display config.  If
 you get no complaints, you're ready to set up a test lab.</p>
 
 
-<h3>Run cucumber-chef setup</h3> 
+<h3>Run cucumber-chef setup</h3>
 
 <div class="inset-box">
   <pre><code>$ cucumber-chef setup
-</code></pre> 
+</code></pre>
 </div>
 
 <p>This command will set up a complete test lab environment, As long
@@ -281,10 +281,10 @@ quickly review what that means.  You will have an EC2 machine, fully
 managed by Chef, and providing the following:</p>
 
 
-<ul> 
-  <li>The ability to provision LXC containers</li> 
-  <li>The ability to run tests against LXC containers</li> 
-  <li>A dedicated container for certain kinds of testing scenarios</li> 
+<ul>
+  <li>The ability to provision LXC containers</li>
+  <li>The ability to run tests against LXC containers</li>
+  <li>A dedicated container for certain kinds of testing scenarios</li>
 </ul>
 
 <p>The next stage is to set up a project.  A project is simply a
@@ -300,10 +300,10 @@ step.</p>
 <div class="inset-box">
   <pre><code>$ cd /path/to/chef-repo
 $ cucumber-chef project example
-</code></pre> 
+</code></pre>
 </div>
 
-<p>This will create a directory, cucumber-chef, and a subdirectory, example.</p> 
+<p>This will create a directory, cucumber-chef, and a subdirectory, example.</p>
 
 <div class="inset-box">
   <pre><code>└── example
@@ -317,7 +317,7 @@ $ cucumber-chef project example
 </code></pre>
 </div>
 
-<h2>Writing tests</h2> 
+<h2>Writing tests</h2>
 
 <p>Once you've got your test lab set up, and you've generated a
 project, it's time to crack on with writing a test.  The basic idea is
@@ -330,17 +330,17 @@ this:</p>
   <li>1) An infrastructure requirement is established</li>
   <li>2) Write a cucumber feature that expresses the required
   behaviour of the infrastructure requirement</li>
-  
+
   <li>3) Write steps that will build this infrastructure environment
   on the test lab, using the step definitions provided - these include
   the ability to create a container, apply roles to it, and destroy it
   again.</li>
-  
+
   <li>4) Write cookbooks and recipes and supporting code to make
   the test pass</li>
-</ul></p> 
+</ul></p>
 
-<h2>Running tests</h2> 
+<h2>Running tests</h2>
 
 <p>You can write the tests and Chef code wherever you like.  We're
 assuming you prefer working on your local machine, and checking into
@@ -368,7 +368,7 @@ IP of the test lab.  You can find this out by running:</p>
 
 
 <div class="inset-box">
-  <pre><code>$ cucumber-chef info 
+  <pre><code>$ cucumber-chef info
 </code></pre>
 </div>
 
