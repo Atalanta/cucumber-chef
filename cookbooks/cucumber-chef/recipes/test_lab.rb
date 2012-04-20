@@ -3,7 +3,8 @@
 end
 
 node['cucumber-chef'][:gems].each do |gem|
-  gem_package gem
+  gem_package gem[:name]
+  source gem[:source] if gem[:source]
 end
 
 directory "/root/.ssh" do
@@ -20,4 +21,3 @@ cookbook_file "/root/.ssh/id_rsa" do
   mode "0600"
   owner "root"
 end
-

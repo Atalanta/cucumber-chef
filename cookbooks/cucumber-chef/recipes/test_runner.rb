@@ -17,7 +17,8 @@ package "bison" do
 end
 
 node['cucumber-chef'][:gems].each do |gem|
-  gem_package gem
+  gem_package gem[:name]
+  source gem[:source] if gem[:source]
 end
 
 directory "/root/.ssh" do
@@ -42,5 +43,3 @@ end
 cookbook_file "/root/.bashrc" do
   source "add-git-identity"
 end
-
-
