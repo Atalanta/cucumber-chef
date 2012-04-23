@@ -72,6 +72,7 @@ module Cucumber
       end
 
       desc "ssh", "SSH to running test lab"
+      method_option :test, :type => :boolean
       def ssh
         config.verify
 

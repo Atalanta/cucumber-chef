@@ -2,4 +2,4 @@ log_level               :debug
 log_location            "/var/log/chef.log"
 chef_server_url         "https://api.opscode.com/organizations/<%= @orgname %>"
 validation_client_name  "<%= @orgname %>-validator"
-node_name               "cucumber-chef-controller"
+node_name               "<%= @nodename %>"

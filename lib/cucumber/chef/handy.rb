@@ -17,13 +17,13 @@ module Cucumber
           f.puts "lxc.network.flags = up"
           f.puts "lxc.network.link = br0"
           f.puts "lxc.network.name = eth0"
-          f.puts "lxc.network.ipv4 = #{ip}/24"
+          f.puts "lxc.network.ipv4 = #{ip}/16"
         end
       end
 
       def create_container(name)
         unless File.exists?(get_root(name))
-          %x[lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef]
+          %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t lxc-lucid-chef)
         end
       end
 
@@ -32,18 +32,18 @@ module Cucumber
         a = Array.new
         a << run_list
         rl['run_list'] = a
-        first_boot = File.join(get_root(name), '/etc/chef/first-boot.json')
+        first_boot = File.join(get_root(name), "/etc/chef/first-boot.json")
         File.open(first_boot, 'w') do |f|
           f.puts rl.to_json
         end
       end
 
       def run_chef_first_time(name)
-        %x[chroot #{get_root(name)} /bin/bash -c '/usr/bin/chef-client -j /etc/chef/first-boot.json -N #{name}']
+        %x(chroot #{get_root(name)} /bin/bash -c "/usr/bin/chef-client -j /etc/chef/first-boot.json -N #{name}")
       end
 
       def run_chef(name)
-        %x[chroot #{get_root(name)} /bin/bash -c '/usr/bin/chef-client']
+        %x(chroot #{get_root(name)} /bin/bash -c "/usr/bin/chef-client")
       end
 
       def databag_item_from_file(file)
@@ -59,7 +59,7 @@ module Cucumber
       end
 
       def create_client_rb(orgname)
-        client_rb = File.join(get_root(name), 'etc/chef/client.rb')
+        client_rb = File.join(get_root(name), "etc/chef/client.rb")
         File.open(client_rb, 'w') do |f|
           f.puts "log_level               :debug"
           f.puts "log_location            \"/var/log/chef.log\""
@@ -70,23 +70,23 @@ module Cucumber
       end
 
       def start_container(name)
-        status = %x[lxc-info -n #{name} 2>&1]
+        status = %x(lxc-info -n #{name} 2>&1)
         if status.include?("STOPPED")
-          %x[lxc-start -d -n #{name}]
+          %x(lxc-start -d -n #{name})
           sleep 5
         end
       end
 
       def stop_container(name)
-        status = %x[lxc-info -n #{name} 2>&1]
+        status = %x(lxc-info -n #{name} 2>&1)
         if status.include?("RUNNING")
-          %x[lxc-stop -n #{name}]
+          %x(lxc-stop -n #{name})
           sleep 5
         end
       end
 
       def run_remote_command(remote_server, command)
-        %x[ssh workstation.testlab 'ssh #{remote_server} #{command}']
+        %x(ssh workstation.testlab 'ssh #{remote_server} #{command}')
       end
     end
   end

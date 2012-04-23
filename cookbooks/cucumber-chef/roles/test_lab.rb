@@ -6,7 +6,7 @@ run_list(
   "recipe[cucumber-chef::controller]"
 )
 
-# "gems" => %w(cucumber-chef rspec cucumber)
 override_attributes "cucumber-chef" => {
-  "orgname" => "#{ENV['ORGNAME']}"
+  "orgname" => "#{ENV["ORGNAME"]}",
+  "nodename" => "cucumber-chef-controller"
 }

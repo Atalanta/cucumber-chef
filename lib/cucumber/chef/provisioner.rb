@@ -13,14 +13,10 @@ module Cucumber
       end
 
       def bootstrap_node(config, server)
-        template_file = File.join(File.dirname(__FILE__), "templates/ubuntu10.04-gems.erb")
+        template_file = File.join(File.dirname(__FILE__), "bootstrap/ubuntu-#{config[:knife][:ubuntu_release]}.erb")
+        puts("Using bootstrap template '#{template_file}'.")
         run_bootstrap(config, template_file, server, chef_node_name(config), "role[test_lab]")
         tag_node(config)
-      end
-
-      def build_controller(config, server)
-        template_file = File.join(File.dirname(__FILE__), "templates/controller.erb")
-        run_bootstrap(config, template_file, server, 'cucumber-chef-controller')
       end
 
       def upload_cookbook(config)
@@ -65,11 +61,6 @@ module Cucumber
         bootstrap.config[:validation_client_name] = config["validation_client_name"]
         bootstrap.config[:validation_key] = config["validation_key"]
         bootstrap.config[:chef_server_url] = config["chef_server_url"]
-        bootstrap.config[:rubygems] = config[:knife][:rubygems]
-
-        # FIXME: this breaks with unquoted STDOUT for log_location in knife.rb
-        #bootstrap.config[:log_level] = config["log_level"]
-        #bootstrap.config[:log_location] = (config["log_location"].is_a?(File) ? config["log_location"].path : config["log_location"])
 
         puts("Running bootstrap for '#{server.public_ip_address}'.")
         bootstrap.run

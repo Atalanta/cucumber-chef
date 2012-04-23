@@ -1,5 +1,27 @@
-
 #!/bin/bash
+
+#
+# template script for generating ubuntu/lucid container for LXC
+#
+# This script is based on lxc-debian (Daniel Lezcano <daniel.lezcano@free.fr>)
+#
+
+# Copyright © 2010 Wilhelm Meier
+# Author: Wilhelm Meier <wilhelm.meier@fh-kl.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2, as
+# published by the Free Software Foundation.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
 
 configure_ubuntu()
 {
@@ -41,7 +63,7 @@ EOF
 #
 # The OpenSSH server provides secure shell access to the system.
 
-description	"OpenSSH server"
+description "OpenSSH server"
 
 start on filesystem
 stop on runlevel [!2345]
@@ -87,15 +109,13 @@ none            /var/lock                 tmpfs           nodev,noexec,nosuid,sh
 none            /lib/init/rw              tmpfs           mode=0755,nosuid,optional         0 0
 EOF
 
-
-
     # reconfigure some services
     if [ -z "$LANG" ]; then
-	chroot $rootfs locale-gen en_US.UTF-8
-	chroot $rootfs update-locale LANG=en_US.UTF-8
+    chroot $rootfs locale-gen en_US.UTF-8
+    chroot $rootfs update-locale LANG=en_US.UTF-8
     else
-	chroot $rootfs locale-gen $LANG
-	chroot $rootfs update-locale LANG=$LANG
+    chroot $rootfs locale-gen $LANG
+    chroot $rootfs update-locale LANG=$LANG
     fi
 
     # remove pointless services in a container
@@ -115,21 +135,14 @@ EOF
 
 configure_image()
 {
-    image=$cache/rootfs-$arch
-    mkdir $image/root/.ssh
+    image=$1
+
+    mkdir -p $image/root/.ssh
     chmod 0600 /root/.ssh
 
-    cat <<EOF > $image/etc/rc.local
-#!/bin/sh -e
-ip route add default via 192.168.20.1
-exit 0
-EOF
+    mkdir -p $image/$HOME
 
-    cat <<EOF > $image/root/.ssh/authorized_keys
-ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzj2O8BxvLn1Q7vUTiyFdtle9SeataEF//+651mXTV8WdKuXGRgvIKZPu+ZnTsqnDoR+pwMRFf95hDPHScpdYj2WVY1cN2e6xEKEsz3xcKdhaTuAOBd47J9wu6Nmgr1aZ/2/AWTrLEOMxUVVp/bzeSFzfHR2bctfKCKzMUCLGZLEGn0Yv5Qbk56Vr9A5jUJcKgCodWOpTcPlf+kKzxejgt/wHRZTRrJIOyx5Zhddim10/sZZ8ct9+WgBwhIL2fUHrsAb1wjxKpQCOYoxHuRSFnv4zrFzblI737TmQIHkkb9g08z3qIJLLiLKgGNXP2wclA37ctGfqwfJWj9FA9nI9iQ== root@cucumber
-EOF
-
-    mkdir $image/etc/chef
+    mkdir -p $image/etc/chef
 
     cat <<EOF > $image/tmp/validation.pem
 <%= IO.read(Chef::Config[:validation_key]) %>
@@ -137,21 +150,32 @@ EOF
     awk NF $image/tmp/validation.pem > $image/etc/chef/validation.pem
     rm $image/tmp/validation.pem
 
-    cat <<EOF > $image/etc/chef/client.rb
-log_level        :debug
-log_location     "/var/log/chef.log"
-chef_server_url  "<%= Chef::Config[:chef_server_url] %>"
-validation_client_name "<%= Chef::Config[:validation_client_name] %>"
+    cat <<EOF > $image/tmp/client.rb
+log_level               :debug
+log_location            "/var/log/chef.log"
+chef_server_url         "<%= Chef::Config[:chef_server_url] %>"
+validation_client_name  "<%= Chef::Config[:validation_client_name] %>"
+EOF
+    awk NF $image/tmp/client.rb > $image/etc/chef/client.rb
+    rm $image/tmp/client.rb
+
+    cat <<EOF > $image/etc/network/interfaces
+auto lo
+iface lo inet loopback
 EOF
 
+    cat <<EOF > $image/etc/rc.local
+#!/bin/sh -e
+ip route add default via 192.168.255.254
+exit 0
+EOF
 
     rm $image/etc/resolv.conf
     cp /etc/resolv.conf $image/etc/resolv.conf
-    mkdir -p $image/$HOME
 
     cp /etc/lxc/install-chef.sh $image/tmp/install-chef.sh
-    chroot $image /bin/sh -c "/tmp/install-chef.sh"
-    return $?
+
+    return 0
 }
 
 download_ubuntu()
@@ -164,16 +188,16 @@ download_ubuntu()
     # check the mini ubuntu was not already downloaded
     mkdir -p "$cache/partial-$arch"
     if [ $? -ne 0 ]; then
-	echo "Failed to create '$cache/partial-$arch' directory"
-	return 1
+    echo "Failed to create '$cache/partial-$arch' directory"
+    return 1
     fi
 
     # download a mini ubuntu into a cache
     echo "Downloading ubuntu minimal ..."
     debootstrap --verbose --variant=minbase --components=main,universe --arch=$arch --include=$packages lucid $cache/partial-$arch
     if [ $? -ne 0 ]; then
-	echo "Failed to download the rootfs, aborting."
-	return 1
+    echo "Failed to download the rootfs, aborting."
+    return 1
     fi
 
     mv "$1/partial-$arch" "$1/rootfs-$arch"
@@ -200,40 +224,42 @@ install_ubuntu()
     rootfs=$1
     mkdir -p /var/lock/subsys/
     (
-	flock -n -x 200
-	if [ $? -ne 0 ]; then
-	    echo "Cache repository is busy."
-	    return 1
-	fi
+    flock -n -x 200
+    if [ $? -ne 0 ]; then
+        echo "Cache repository is busy."
+        return 1
+    fi
 
-	arch=$(arch)
-	if [ "$arch" == "x86_64" ]; then
-	    arch=amd64
-	fi
+    arch=$(arch)
+    if [ "$arch" == "x86_64" ]; then
+        arch=amd64
+    fi
 
-	if [ "$arch" == "i686" ]; then
-	    arch=i386
-	fi
+    if [ "$arch" == "i686" ]; then
+        arch=i386
+    fi
 
-	echo "Checking cache download in $cache/rootfs-$arch ... "
-	if [ ! -e "$cache/rootfs-$arch" ]; then
-	    download_ubuntu $cache $arch
-	    if [ $? -ne 0 ]; then
-		echo "Failed to download 'ubuntu base'"
-		return 1
-	    fi
-	fi
-        configure_image
-	echo "Copy $cache/rootfs-$arch to $rootfs ... "
-	copy_ubuntu $cache $arch $rootfs
-	if [ $? -ne 0 ]; then
-	    echo "Failed to copy rootfs"
-	    return 1
-	fi
+    echo "Checking cache download in $cache/rootfs-$arch ... "
+    if [ ! -e "$cache/rootfs-$arch" ]; then
+        download_ubuntu $cache $arch
+        if [ $? -ne 0 ]; then
+        echo "Failed to download 'ubuntu base'"
+        return 1
+        fi
+    fi
 
-	return 0
+    configure_image "$cache/rootfs-$arch"
 
-	) 200>/var/lock/subsys/lxc
+    echo "Copy $cache/rootfs-$arch to $rootfs ... "
+    copy_ubuntu $cache $arch $rootfs
+    if [ $? -ne 0 ]; then
+        echo "Failed to copy rootfs"
+        return 1
+    fi
+
+    return 0
+
+    ) 200>/var/lock/subsys/lxc
 
     return $?
 }
@@ -277,8 +303,8 @@ sysfs           $rootfs/sys          sysfs defaults  0 0
 EOF
 
     if [ $? -ne 0 ]; then
-	echo "Failed to add configuration"
-	return 1
+    echo "Failed to add configuration"
+    return 1
     fi
 
     return 0
@@ -289,20 +315,20 @@ clean()
     cache="/var/cache/lxc/ubuntu"
 
     if [ ! -e $cache ]; then
-	exit 0
+    exit 0
     fi
 
     # lock, so we won't purge while someone is creating a repository
     (
-	flock -n -x 200
-	if [ $? != 0 ]; then
-	    echo "Cache repository is busy."
-	    exit 1
-	fi
+    flock -n -x 200
+    if [ $? != 0 ]; then
+        echo "Cache repository is busy."
+        exit 1
+    fi
 
-	echo -n "Purging the download cache..."
-	rm --preserve-root --one-file-system -rf $cache && echo "Done." || exit 1
-	exit 0
+    echo -n "Purging the download cache..."
+    rm --preserve-root --one-file-system -rf $cache && echo "Done." || exit 1
+    exit 0
 
     ) 200>/var/lock/subsys/lxc
 }
@@ -325,11 +351,11 @@ eval set -- "$options"
 while true
 do
     case "$1" in
-	-h|--help)      usage $0 && exit 0;;
-	-p|--path)      path=$2; shift 2;;
-	-n|--name)      name=$2; shift 2;;
-	-c|--clean)     clean=$2; shift 2;;
-	--)             shift 1; break ;;
+    -h|--help)      usage $0 && exit 0;;
+    -p|--path)      path=$2; shift 2;;
+    -n|--name)      name=$2; shift 2;;
+    -c|--clean)     clean=$2; shift 2;;
+    --)             shift 1; break ;;
         *)              break ;;
     esac
 done

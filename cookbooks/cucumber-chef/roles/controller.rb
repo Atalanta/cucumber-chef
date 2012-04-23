@@ -5,5 +5,5 @@ run_list(
 )
 
 override_attributes "cucumber-chef" => {
-  "orgname" => "#{ENV['ORGNAME']}"
+  "orgname" => "#{ENV["ORGNAME"]}"
 }

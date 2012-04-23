@@ -1,23 +1,9 @@
-%w{build-essential binutils-doc libxml2-dev libxslt1-dev}.each do |pkg|
-  package pkg do
-    action :install
-  end
+%w(build-essential binutils-doc autoconf flex bison libxml2-dev libxslt1-dev).each do |p|
+  package p
 end
 
-package "autoconf" do
-  action :install
-end
-
-package "flex" do
-  action :install
-end
-
-package "bison" do
-  action :install
-end
-
-%w(rspec cucumber cucumber-nagios cucumber-chef).each do |gem|
-  gem_package gem
+%w(rspec cucumber cucumber-nagios cucumber-chef).each do |g|
+  gem_package g
 end
 
 directory "/root/.ssh" do
@@ -30,7 +16,7 @@ cookbook_file "/root/.ssh/git-key.rsa" do
 end
 
 cookbook_file "/root/.ssh/config" do
-  source "permissive-ssh-config"
+  source "ssh-config"
 end
 
 cookbook_file "/root/.ssh/id_rsa" do
