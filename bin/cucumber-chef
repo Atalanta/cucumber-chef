@@ -56,15 +56,15 @@ class CucumberChef < Thor
   def setup
     begin
       config.verify
-      test_lab = TestLab.new(config)
+      test_lab = Cucumber::Chef::TestLab.new(config)
       server = test_lab.create
 
-      provisioner = Provisioner.new
+      provisioner = Cucumber::Chef::Provisioner.new
       provisioner.upload_cookbook(config)
       provisioner.upload_role(config)
       provisioner.bootstrap_node(config, server)
 
-    rescue ::Cucumber::Chef::Error => err
+    rescue Cucumber::Chef::Error => err
       error(err.message)
     end
   end
@@ -75,16 +75,18 @@ class CucumberChef < Thor
     config.verify
 
     if (test_lab = Cucumber::Chef::TestLab.new(config))
-      ip = test_lab.labs_running.first.public_ip_address
-      key = File.expand_path(@config[:knife][:identity_file])
-      puts("Attempting ssh connection to 'ubuntu@#{ip}' with identity '#{key}'.")
-      options = [ "-i", key,
-                  "-o", "UserKnownHostsFile=/dev/null",
-                  "-o", "StrictHostKeyChecking=no",
-                  "ubuntu@#{ip}" ]
-      Kernel.exec("ssh", *options)
-    else
-      puts("No test labs available to ssh to!")
+      if test_lab.labs_exist?
+        ip = test_lab.labs_running.first.public_ip_address
+        key = File.expand_path(@config[:knife][:identity_file])
+        puts("Attempting ssh connection to 'ubuntu@#{ip}' with identity '#{key}'.")
+        options = [ "-i", key,
+                    "-o", "UserKnownHostsFile=/dev/null",
+                    "-o", "StrictHostKeyChecking=no",
+                    "ubuntu@#{ip}" ]
+        Kernel.exec("ssh", *options)
+      else
+        puts("No test labs available to ssh to!")
+      end
     end
   end
 
@@ -99,7 +101,7 @@ class CucumberChef < Thor
     puts config.list.join("\n")
     config.verify
 
-  rescue ::Cucumber::Chef::Error => err
+  rescue Cucumber::Chef::Error => err
     error(err.message)
   end
 
@@ -111,7 +113,7 @@ class CucumberChef < Thor
       test_lab.info
     end
 
-  rescue ::Cucumber::Chef::Error => err
+  rescue Cucumber::Chef::Error => err
     error(err.message)
   end
 

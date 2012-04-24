@@ -22,7 +22,7 @@ module Cucumber
 ################################################################################
 
       def create
-        if labs_exists?
+        if labs_exist?
           puts("A test lab already exists using the AWS credentials you have supplied; attempting to reprovision it.")
           @server = labs_running.first
         else
@@ -80,7 +80,7 @@ module Cucumber
 ################################################################################
 
       def info
-        if labs_exists?
+        if labs_exist?
           labs.each do |lab|
             puts("----------------------------------------------------------------------------")
             puts("Instance ID: #{lab.id}")
@@ -103,7 +103,7 @@ module Cucumber
         end
       end
 
-      def labs_exists?
+      def labs_exist?
         (labs.size > 0)
       end
 
