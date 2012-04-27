@@ -9,24 +9,23 @@ Gem::Specification.new do |s|
   s.authors = ["Zachary Patten", "Stephen Nelson-Smith"]
   s.email = ["jovelabs@gmail.com", "stephen@atalanta-systems.com"]
   s.homepage = "http://github.com/zpatten/cucumber-chef"
-  s.description = "Framework for behaviour-drive infrastructure development."
   s.summary = "Tests Chef-built infrastructure"
+  s.description = "Framework for behaviour-drive infrastructure development."
   s.required_rubygems_version = ">= 1.3.6"
   s.licenses = ["Apache v2"]
 
-  s.add_dependency "chef"
-  s.add_dependency "cucumber"
-  s.add_dependency "cucumber-nagios"
-  s.add_dependency "fog"
-  s.add_dependency "thor"
-  s.add_dependency "net-scp"
-  s.add_dependency "ubuntu_ami"
+  s.add_dependency "chef", "~> 0.10.8"
+  s.add_dependency "fog", ">= 0"
+  s.add_dependency "cucumber", ">= 0"
+  s.add_dependency "thor", ">= 0"
+  s.add_dependency "ubuntu_ami", ">= 0"
 
-  s.add_development_dependency "bundler", "~> 1.0.0"
   s.add_development_dependency "rspec"
   s.add_development_dependency "rcov"
 
   s.files        = `git ls-files`.split("\n")
-  s.executables  = `git ls-files`.split("\n").map{|f| f =~ /^bin\/(.*)/ ? $1 : nil}.compact
+  s.test_files   = `git ls-files -- {test,spec,features}/*`.split("\n")
+  s.executables  = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
+
   s.require_path = 'lib'
 end

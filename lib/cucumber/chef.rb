@@ -9,7 +9,7 @@ require 'chef/knife/bootstrap'
 require 'chef/knife/core/bootstrap_context'
 require 'chef/knife/ssh'
 require 'fog'
-require 'net/scp'
+#require 'net/scp'
 require 'net/ssh/multi'
 
 module Cucumber

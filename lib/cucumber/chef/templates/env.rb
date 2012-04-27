@@ -3,7 +3,7 @@
 require 'rspec/expectations'
 require 'chef'
 require 'cucumber/chef'
-require 'cucumber/nagios/steps'
+require 'cucumber/chef/steps'
 require 'cucumber/chef/handy'
 
 class CustomWorld
