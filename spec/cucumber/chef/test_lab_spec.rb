@@ -6,7 +6,7 @@ describe Cucumber::Chef::TestLab do
   end
 
   subject { Cucumber::Chef::TestLab.new(@config) }
-    
+
   it "should create a cucumber-chef security group" do
     existing_group = subject.connection.security_groups.get("cucumber-chef")
     existing_group && existing_group.destroy

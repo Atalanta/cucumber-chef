@@ -1,6 +1,13 @@
 require "rubygems"
 require "bundler/setup"
 require File.join(File.dirname(__FILE__), "../lib/cucumber-chef")
+require "simplecov"
+
+SimpleCov.start do
+  add_filter '/spec/'
+
+#  add_group 'cucumber-chef', '/lib/'
+end if ENV["COVERAGE"]
 
 def tcp_test_ssh(hostname)
   tcp_socket = TCPSocket.new(hostname, 22)

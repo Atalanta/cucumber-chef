@@ -61,11 +61,11 @@ describe Cucumber::Chef::Provisioner do
       @dns_name = server.dns_name
       sleep(30)
     end
-    
+
     after(:each) do
       @test_lab.destroy
     end
- 
+
     it "should assign a random name to the node" do
       begin
         puts "Beginning bootstrap on #{@dns_name}..."
