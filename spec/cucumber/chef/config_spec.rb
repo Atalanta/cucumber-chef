@@ -80,6 +80,7 @@ describe Cucumber::Chef::Config do
   end
 
   describe "when configuration is valid" do
+
     it "should list the configuration values" do
       output = subject.list.join("\n")
       output.should match(/node_name:/)
@@ -117,13 +118,45 @@ describe Cucumber::Chef::Config do
       end
     end
 
-    describe "and no ami is specified but region and ubuntu release are" do
+    describe "and no ami is specified but a release, region, arch and disk store are" do
+      VALID_RELEASES = %w(lucid maverick)
+      VALID_REGIONS = %w(us-west-1 us-east-1 eu-west-1)
+      VALID_ARCHS = %w(i386 amd64)
+      VALID_DISK_STORES = %w(instance-store ebs)
+
       before(:each) do
-        Ubuntu.any_instance.should_receive(:run).and_return({"eu_west_large_ebs"=>"large-ebs-instance",
-                                                             "eu_west_small_ebs"=>"small-ebs-instance",
-                                                             "eu_west_large"=>"large-instance",
-                                                             "eu_west_small"=>"small-instance",
-                                                             "us_west_small"=>"us-west-small-instance" })
+        subject[:knife][:aws_image_id] = nil
+        subject[:knife][:ubuntu_release] = nil
+        subject[:knife][:region] = nil
+        subject[:knife][:aws_instance_arch] = nil
+        subject[:knife][:aws_instance_disk_store] = nil
+      end
+
+      VALID_RELEASES.each do |release|
+        VALID_REGIONS.each do |region|
+          VALID_ARCHS.each do |arch|
+            VALID_DISK_STORES.each do |disk_store|
+
+              it "should get a valid ami if release #{release}, region #{region}, arch #{arch}, disk store #{disk_store}" do
+                subject[:knife][:ubuntu_release] = release
+                subject[:knife][:region] = region
+                subject[:knife][:aws_instance_arch] = arch
+                subject[:knife][:aws_instance_disk_store] = disk_store
+
+                VALID_AMIS.include?(subject.aws_image_id).should == true
+              end
+
+            end
+          end
+        end
+      end
+
+    end
+
+    describe "and no ami is specified but region and ubuntu release are" do
+      VALID_AMIS = %w()
+
+      before(:each) do
         subject[:knife][:aws_image_id] = nil
         subject[:knife][:ubuntu_release] = "lucid"
         subject[:knife][:region] = "eu-west-1"
@@ -131,35 +164,37 @@ describe Cucumber::Chef::Config do
         subject[:knife][:aws_instance_disk_store] = nil
       end
 
-      it "should default to a small instance if unspecified" do
-        subject.aws_image_id.should == "small-instance"
+      it "should default to a valid ami if unspecified" do
+        VALID_AMIS.include?(subject.aws_image_id).should == true
       end
 
-      it "should get a small instance if i386 specified" do
+      it "should get a valid ami if i386 specified" do
         subject[:knife][:aws_instance_arch] = "i386"
-        subject.aws_image_id.should == "small-instance"
+        VALID_AMIS.include?(subject.aws_image_id).should == true
+#        subject.aws_image_id.should == "ami-0dc6fe79"
       end
 
-      it "should get a us-west small instance if specified" do
+      it "should get a a valid ami if i386 specified" do
         subject[:knife][:region] = "us-west-1"
-        subject[:knife][:aws_instance_arch] = "small"
-        subject.aws_image_id.should == "us-west-small-instance"
+        subject[:knife][:aws_instance_arch] = "i386"
+        VALID_AMIS.include?(subject.aws_image_id).should == true
+#        subject.aws_image_id.should == "ami-f3c59db6"
       end
 
-      it "should get a large instance if amd64 specified" do
+      it "should get a valid ami if amd64 specified" do
         subject[:knife][:aws_instance_arch] = "amd64"
-        subject.aws_image_id.should == "large-instance"
+        subject.aws_image_id.should == "ami-fbc6fe8f"
       end
 
       it "should get an ebs backed instance if specified" do
         subject[:knife][:aws_instance_disk_store] = "ebs"
-        subject.aws_image_id.should == "small-ebs-instance"
+        subject.aws_image_id.should == "ami-e3c6fe97"
       end
 
       it "should get a large ebs backed instance if specified" do
         subject[:knife][:aws_instance_disk_store] = "ebs"
         subject[:knife][:aws_instance_arch] = "amd64"
-        subject.aws_image_id.should == "large-ebs-instance"
+        subject.aws_image_id.should == "ami-edc6fe99"
       end
     end
 

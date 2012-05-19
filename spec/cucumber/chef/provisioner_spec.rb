@@ -28,7 +28,7 @@ describe Cucumber::Chef::Provisioner do
       begin
         role_path = File.expand_path("cookbooks/cucumber-chef/roles")
         ::Chef::Config[:role_path] = role_path
-        role = ::Chef::Role.from_disk("test_lab_test")
+        role = ::Chef::Role.from_disk("test_lab")
         role.destroy
       rescue Net::HTTPServerException => err
       end
@@ -36,7 +36,7 @@ describe Cucumber::Chef::Provisioner do
 
     it "should upload the test_lab role" do
       subject.upload_role(@config)
-      ::Chef::Role.list["test_lab_test"].should be
+      ::Chef::Role.list["test_lab"].should be
     end
   end
 
