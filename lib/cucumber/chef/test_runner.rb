@@ -20,6 +20,14 @@ module Cucumber
         puts @output
       end
 
+      def reset_project
+        test_lab = Cucumber::Chef::TestLab.new(@config)
+        @hostname = test_lab.labs_running.first.public_ip_address
+        @key = File.expand_path(@config[:knife][:identity_file])
+        %x[ssh -i #{@key} ubuntu@#{@hostname} "rm -rf #{@project_dir}"]
+        puts "Cucumber-chef project: #{File.basename(@project_dir)} sucessfully reset on the test lab."
+      end
+
       def upload_project
         test_lab = Cucumber::Chef::TestLab.new(@config)
         @hostname = test_lab.labs_running.first.public_ip_address

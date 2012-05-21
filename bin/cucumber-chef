@@ -143,6 +143,7 @@ class CucumberChef < Thor
     end
     config.verify
     runner = Cucumber::Chef::TestRunner.new(project_dir, config)
+    runner.reset_project
     runner.upload_project
   end
 
