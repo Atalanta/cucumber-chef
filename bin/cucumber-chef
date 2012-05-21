@@ -69,6 +69,16 @@ class CucumberChef < Thor
     end
   end
 
+  desc "amis", "List available EC2 Ubuntu AMIs"
+  def amis
+    config.verify
+    requested = [@config[:knife][:aws_instance_arch], @config[:knife][:aws_instance_disk_store], @config[:knife][:region]].compact.join(', ')
+    puts("Available EC2 AMIs for Ubuntu Release '#{@config[:knife][:ubuntu_release]}' (#{requested}):")
+    Ubuntu.release(@config[:knife][:ubuntu_release]).amis.each do |ami|
+      puts "#{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})"
+    end
+  end
+
   desc "ssh", "SSH to running test lab"
   method_option :test, :type => :boolean
   def ssh

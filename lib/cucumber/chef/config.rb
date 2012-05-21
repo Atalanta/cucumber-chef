@@ -86,11 +86,6 @@ module Cucumber
           knife_config[:aws_image_id]
         elsif knife_config[:ubuntu_release] && knife_config[:region]
 
-          requested = [knife_config[:aws_instance_arch], knife_config[:aws_instance_disk_store], knife_config[:region]].compact.join(', ')
-          puts("Available EC2 AMIs for Ubuntu Release '#{knife_config[:ubuntu_release]}' (#{requested}):")
-          Ubuntu.release(knife_config[:ubuntu_release]).amis.each do |ami|
-            puts "#{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})"
-          end
 
           ami = Ubuntu.release(knife_config[:ubuntu_release]).amis.find do |ami|
             ami.arch == (knife_config[:aws_instance_arch] || "i386") &&
