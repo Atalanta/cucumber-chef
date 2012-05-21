@@ -6,9 +6,9 @@ Gem::Specification.new do |s|
   s.name = "cucumber-chef"
   s.version = Cucumber::Chef::VERSION
   s.platform = Gem::Platform::RUBY
-  s.authors = ["Zachary Patten", "Stephen Nelson-Smith"]
-  s.email = ["jovelabs@gmail.com", "stephen@atalanta-systems.com"]
-  s.homepage = "http://github.com/zpatten/cucumber-chef"
+  s.authors = ["Stephen Nelson-Smith", "Zachary Patten"]
+  s.email = ["stephen@atalanta-systems.com", "zpatten@jovelabs.com"]
+  s.homepage = "http://www.cucumber-chef.org"
   s.summary = "Tests Chef-built infrastructure"
   s.description = "Framework for behaviour-drive infrastructure development."
   s.required_rubygems_version = ">= 1.3.6"
