@@ -23,7 +23,7 @@ module Cucumber
 
       def create_container(name)
         unless File.exists?(get_root(name))
-          %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t lxc-lucid-chef)
+          %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef)
         end
       end
 
