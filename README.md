@@ -26,15 +26,17 @@ Once installed, you can run cucumber-chef on the command line to get an overview
 
     $ cucumber-chef
     Tasks:
+      cucumber-chef amis                    # List available EC2 Ubuntu AMIs
       cucumber-chef connect                 # Connect to a container in your test lab
       cucumber-chef destroy                 # Destroy running test labs
       cucumber-chef displayconfig           # Display the current config from knife.rb
       cucumber-chef help [TASK]             # Describe available tasks or one specific task
-      cucumber-chef info                    # Display information about the current test lab
+      cucumber-chef info                    # Display information about the current test labs
       cucumber-chef project <project name>  # Create a project template for testing an infrastructure
       cucumber-chef setup                   # Set up a cucumber-chef test lab in Amazon EC2
-      cucumber-chef test                    # Run a cucumber-chef test suite from a workstation.
-      cucumber-chef upload <project name>   # Upload a cucumber-chef test
+      cucumber-chef ssh                     # SSH to running test lab
+      cucumber-chef test <project name>     # Run the cucumber-chef test suite <project name> from a workstation.
+      cucumber-chef upload <project name>   # Upload the cucumber-chef test suite <project name> to the test lab platform
 
 ### Integrate with Hosted Chef and Amazon EC2
 
