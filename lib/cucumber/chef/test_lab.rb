@@ -61,8 +61,12 @@ module Cucumber
           server.destroy
         end
         nodes.each do |node|
-          puts "Destroying Node: #{node[:cloud][:public_ipv4]}"
+          puts "Destroying Chef Node: #{node[:cloud][:public_ipv4]}"
           node.destroy
+        end
+        clients.each do |client|
+          puts "Destroying Chef Client: #{client[:cloud][:public_ipv4]}"
+          client.destroy
         end
       end
 
@@ -121,18 +125,20 @@ module Cucumber
 
 ################################################################################
 
-#      def public_hostname
-#        puts "NODES:"
-#        puts y nodes
-#        nodes.first.cloud.public_hostname
-#      end
-
       def nodes
-        search = ::Chef::Search::Query.new
+        query = ::Chef::Search::Query.new
         mode = @config[:mode]
         query = "roles:test_lab AND tags:#{mode}"
-        nodes, offset, total = search.search("node", URI.escape(query))
+        nodes, offset, total = query.search("node", URI.escape(query))
         nodes.compact
+      end
+
+      def clients
+        query = ::Chef::Search::Query.new
+        mode = @config[:mode]
+        query = "roles:test_lab AND tags:#{mode}"
+        clients, offset, total = query.search("client", URI.escape(query))
+        clients.compact
       end
 
     private
