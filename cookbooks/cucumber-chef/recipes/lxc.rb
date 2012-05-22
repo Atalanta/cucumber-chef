@@ -53,3 +53,9 @@ template "/usr/lib/lxc/templates/lxc-lucid-chef" do
   source "lxc-lucid-chef.erb"
   mode "0755"
 end
+
+# install our shell script which handles installing ruby, rubygems and chef in our lxc containers
+cookbook_file "/etc/lxc/install-chef.sh" do
+  source "lxc-install-chef"
+  mode "0755"
+end

@@ -13,13 +13,6 @@ execute "lxc-create -n controller -f /etc/lxc/controller -t lucid-chef" do
   not_if { controllers.length > 0 }
 end
 
-# install our shell script which handles installing ruby, rubygems and chef in our 'controller' lxc container
-cookbook_file "#{LXC_ROOTFS}/tmp/install-chef.sh" do
-  source "lxc-install-chef"
-  mode "0755"
-  not_if { controllers.length > 0 }
-end
-
 # execute our chef installation script in the 'controller' lxc container
 execute "chroot #{LXC_ROOTFS} /bin/bash -c '/tmp/install-chef.sh'" do
   not_if { controllers.length > 0 }
