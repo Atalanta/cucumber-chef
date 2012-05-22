@@ -1,13 +1,15 @@
 module Cucumber
   module Chef
     module Handy
+
+################################################################################
+
       def get_root(name)
         File.join('/var/lib/lxc', name, 'rootfs')
       end
 
-      def create_server(server, ip)
-        create_network_config(server, ip)
-        create_container(server)
+      def run_chroot(name, command)
+        %x(chroot #{get_root(name)} /bin/bash -c '#{command}' 2>&1)
       end
 
       def create_network_config(name, ip)
@@ -21,11 +23,54 @@ module Cucumber
         end
       end
 
+################################################################################
+
+      def create_server(server, ip)
+        create_network_config(server, ip)
+        create_container(server)
+      end
+
+      def destroy_server(server)
+        destroy_container(server)
+      end
+
+################################################################################
+
       def create_container(name)
         unless File.exists?(get_root(name))
-          %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef)
+          %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef 2>&1)
+        end
+        start_container(name)
+      end
+
+      def destroy_container(name)
+        stop_container(name)
+        if File.exists?(get_root(name))
+          %x(lxc-destroy -n #{name} 2>&1)
         end
       end
+
+      def start_container(name)
+        status = %x(lxc-info -n #{name} 2>&1)
+        if status.include?("STOPPED")
+          %x(lxc-start -d -n #{name})
+          sleep 5
+        end
+      end
+
+      def stop_container(name)
+        status = %x(lxc-info -n #{name} 2>&1)
+        if status.include?("RUNNING")
+          %x(lxc-stop -n #{name})
+          sleep 5
+        end
+      end
+
+      def list_containers
+        %x(lxc-ls 2>&1).split("\n").uniq
+      end
+
+################################################################################
 
       def set_run_list(name, run_list)
         rl = Hash.new
@@ -43,7 +88,7 @@ module Cucumber
       end
 
       def run_chef(name)
-        %x(chroot #{get_root(name)} /bin/bash -c "/usr/bin/chef-client")
+        run_chroot(name, "/usr/bin/chef-client -N #{name}")
       end
 
       def databag_item_from_file(file)
@@ -66,22 +111,6 @@ module Cucumber
           f.puts "chef_server_url         \"https://api.opscode.com/organizations/#{orgname}\""
           f.puts "validation_client_name  \"#{orgname}-validator\""
           f.puts "node_name               \"cucumber-chef-#{name}\""
-        end
-      end
-
-      def start_container(name)
-        status = %x(lxc-info -n #{name} 2>&1)
-        if status.include?("STOPPED")
-          %x(lxc-start -d -n #{name})
-          sleep 5
-        end
-      end
-
-      def stop_container(name)
-        status = %x(lxc-info -n #{name} 2>&1)
-        if status.include?("RUNNING")
-          %x(lxc-stop -n #{name})
-          sleep 5
         end
       end
 
