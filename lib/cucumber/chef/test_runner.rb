@@ -12,6 +12,7 @@ module Cucumber
       end
 
       def run
+        reset_project
         upload_project
         @project_path = File.join('/home/ubuntu', File.basename(@project_dir), 'features')
         connection = Net::SSH.start(@hostname, 'ubuntu', :keys => @key) do |ssh|
