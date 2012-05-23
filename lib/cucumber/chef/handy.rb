@@ -34,6 +34,10 @@ module Cucumber
         destroy_container(server)
       end
 
+      def list_servers
+        list_containers
+      end
+
 ################################################################################
 
       def create_container(name)
