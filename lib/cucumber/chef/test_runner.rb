@@ -16,9 +16,25 @@ module Cucumber
         upload_project
         @project_path = File.join('/home/ubuntu', File.basename(@project_dir), 'features')
         connection = Net::SSH.start(@hostname, 'ubuntu', :keys => @key) do |ssh|
-          @output = ssh.exec!("sudo cucumber -c -v #{@project_path}")
+          channel = ssh.open_channel do |chan|
+            chan.exec("sudo cucumber -c -v #{@project_path}") do |ch, success|
+              raise "could not execute command" unless success
+
+              ch.on_data do |c, data|
+                STDOUT.print(data)
+                STDOUT.flush
+              end
+
+              ch.on_extended_data do |c, type, data|
+                STDERR.print(data)
+                STDERR.flush
+              end
+
+              ch.on_close { puts "done" }
+            end
+          end
+          channel.wait
         end
-        puts @output
       end
 
       def reset_project
