@@ -126,19 +126,16 @@ module Cucumber
 ################################################################################
 
       def nodes
-        query = ::Chef::Search::Query.new
         mode = @config[:mode]
-        query = "roles:test_lab AND tags:#{mode}"
-        nodes, offset, total = query.search("node", URI.escape(query))
+        nodes, offset, total = ::Chef::Search::Query.new.search(:node, URI.escape("roles:test_lab AND tags:#{mode}"))
         nodes.compact
       end
 
       def clients
-        query = ::Chef::Search::Query.new
+        n = nodes
         mode = @config[:mode]
-        query = "roles:test_lab AND tags:#{mode}"
-        clients, offset, total = query.search("client", URI.escape(query))
-        clients.compact
+        clients, offset, total = ::Chef::Search::Query.new.search(:client)
+        clients.compact.reject{ |client| !n.map(&:name).include?(client.name) }
       end
 
     private
