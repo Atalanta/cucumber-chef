@@ -11,20 +11,6 @@ directory "/root/.ssh" do
   mode "0600"
 end
 
-cookbook_file "/root/.ssh/git-key.rsa" do
-  source "git-private-key"
-end
-
 cookbook_file "/root/.ssh/config" do
   source "ssh-config"
-end
-
-cookbook_file "/root/.ssh/id_rsa" do
-  source "cucumber-private-key"
-  mode "0600"
-  owner "root"
-end
-
-cookbook_file "/root/.bashrc" do
-  source "add-git-identity"
 end

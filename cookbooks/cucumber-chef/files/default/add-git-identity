@@ -1,2 +1,0 @@
-eval $(ssh-agent)
-ssh-add /root/.ssh/git-key.rsa

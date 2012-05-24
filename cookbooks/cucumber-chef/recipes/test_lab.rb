@@ -7,16 +7,10 @@ end
 end
 
 directory "/root/.ssh" do
-  mode "0600"
   owner "root"
+  mode "0600"
 end
 
 cookbook_file "/root/.ssh/config" do
   source "ssh-config"
-end
-
-cookbook_file "/root/.ssh/id_rsa" do
-  source "cucumber-private-key"
-  mode "0600"
-  owner "root"
 end
