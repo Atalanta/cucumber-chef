@@ -41,6 +41,7 @@ module Cucumber
 ################################################################################
 
       def create_container(name)
+        # create the container if it does not exist, then start the container
         unless File.exists?(get_root(name))
           %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef 2>&1)
         end
@@ -48,6 +49,10 @@ module Cucumber
       end
 
       def destroy_container(name)
+        # bail out of we are trying to destroy the 'controller' container
+        return if (name.downcase == "controller")
+
+        # stop the container first, then destroy the container
         stop_container(name)
         if File.exists?(get_root(name))
           %x(lxc-destroy -n #{name} 2>&1)
@@ -71,7 +76,7 @@ module Cucumber
       end
 
       def list_containers
-        %x(lxc-ls 2>&1).split("\n").uniq
+        %x(lxc-ls 2>&1).split("\n").uniq.reject{ |container| container.downcase == "controller" }
       end
 
 ################################################################################
@@ -87,12 +92,8 @@ module Cucumber
         end
       end
 
-      def run_chef_first_time(name)
-        %x(chroot #{get_root(name)} /bin/bash -c "/usr/bin/chef-client -j /etc/chef/first-boot.json -N #{name}")
-      end
-
       def run_chef(name)
-        run_chroot(name, "/usr/bin/chef-client -N #{name}")
+        run_chroot(name, "/usr/bin/chef-client -j /etc/chef/first-boot.json -N #{name}")
       end
 
       def databag_item_from_file(file)
