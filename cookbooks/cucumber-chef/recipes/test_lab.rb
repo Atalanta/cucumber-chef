@@ -19,20 +19,21 @@ end
 end
 
 %w(root ubuntu).each do |user|
-  directory "/#{user}/.ssh" do
+  home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
+  directory "#{home_dir}/.ssh" do
     owner user
     group user
     mode "0700"
   end
 
-  cookbook_file "/#{user}/.ssh/config" do
+  cookbook_file "#{home_dir}/.ssh/config" do
     source "ssh-config"
     owner user
     group user
     mode "0600"
   end
 
-  cookbook_file "/#{user}/.gemrc" do
+  cookbook_file "#{home_dir}/.gemrc" do
     source "gem-rc"
     owner user
     group user
