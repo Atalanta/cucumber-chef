@@ -62,6 +62,8 @@ module Cucumber
         bootstrap.config[:validation_key] = config["validation_key"]
         bootstrap.config[:chef_server_url] = config["chef_server_url"]
 
+        sleep(10)
+
         puts("Running bootstrap for '#{server.public_ip_address}'.")
         bootstrap.run
 

@@ -49,8 +49,6 @@ module Cucumber
         print(".") until sshd_ready?(@server.public_ip_address)
         puts("OK.\n")
 
-        sleep(3)
-
         @server
       end
 
@@ -60,13 +58,21 @@ module Cucumber
           puts "Destroying Server: #{server.public_ip_address}"
           server.destroy
         end
-        nodes.each do |node|
-          puts "Destroying Chef Node: #{node[:cloud][:public_ipv4]}"
-          node.destroy
+        n = nodes
+        c = clients
+        if (n.count > 0)
+          puts("Destroying Chef Nodes:")
+          n.each do |node|
+            puts("  * #{node.name}")
+            node.destroy
+          end
         end
-        clients.each do |client|
-          puts "Destroying Chef Client: #{client[:cloud][:public_ipv4]}"
-          client.destroy
+        if (c.count > 0)
+          puts("Destroying Chef Clients:")
+          clients.each do |client|
+            puts("  * #{client.name}")
+            client.destroy
+          end
         end
       end
 
@@ -127,7 +133,7 @@ module Cucumber
 
       def nodes
         mode = @config[:mode]
-        nodes, offset, total = ::Chef::Search::Query.new.search(:node, URI.escape("roles:test_lab AND tags:#{mode}"))
+        nodes, offset, total = ::Chef::Search::Query.new.search(:node, URI.escape("name:cucumber-chef*"))
         nodes.compact
       end
 
