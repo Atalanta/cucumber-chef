@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency "thor", ">= 0"
   s.add_dependency "ubuntu_ami", ">= 0"
   s.add_dependency "rake", "~> 0.9.2"
+  s.add_dependency "net-sftp", "~> 2.0.5"
 
   s.add_development_dependency "rspec"
   s.add_development_dependency "simplecov"
