@@ -1,4 +1,4 @@
-%w{lxc bridge-utils debootstrap}.each do |p|
+%w(lxc bridge-utils debootstrap).each do |p|
   package p
 end
 
