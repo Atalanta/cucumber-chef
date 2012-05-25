@@ -8,15 +8,59 @@ module Cucumber
         File.join('/var/lib/lxc', name, 'rootfs')
       end
 
-      def create_network_config(name, ip)
+      def create_network_config(name)
         network_config = File.join("/etc/lxc", name)
         File.open(network_config, 'w') do |f|
           f.puts "lxc.network.type = veth"
           f.puts "lxc.network.flags = up"
           f.puts "lxc.network.link = br0"
           f.puts "lxc.network.name = eth0"
-          f.puts "lxc.network.ipv4 = #{ip}/16"
+          f.puts "lxc.network.hwaddr = #{@servers[name][:mac]}"
+          f.puts "lxc.network.ipv4 = 0.0.0.0"
         end
+      end
+
+      def create_dhcp_config
+        File.open("/etc/dhcp3/lxc.conf", 'w') do |f|
+          f.puts "option subnet-mask 255.255.0.0;"
+          f.puts "option broadcast-address 192.168.255.255;"
+          f.puts "option routers 192.168.255.254;"
+          f.puts "option domain-name \"cucumber-chef.org\";"
+          f.puts "option domain-name-servers 8.8.8.8, 8.8.4.4;"
+          f.puts ""
+          f.puts "subnet 192.168.0.0 netmask 255.255.0.0 {"
+          f.puts "  range 192.168.255.1 192.168.255.100;"
+          f.puts "}"
+          @servers.each do |key, value|
+            f.puts ""
+            f.puts "host #{key} {"
+            f.puts "  hardware ethernet #{value[:mac]};"
+            f.puts "  fixed-address #{value[:ip]};"
+            f.puts "}"
+          end
+        end
+        %x(service dhcp3-server restart)
+      end
+
+      def generate_mac
+        digits = [ %w(0),
+                   %w(0),
+                   %w(0),
+                   %w(0),
+                   %w(5),
+                   %w(e),
+                   %w(0 1 2 3 4 5 6 7 8 9 a b c d e f),
+                   %w(0 1 2 3 4 5 6 7 8 9 a b c d e f),
+                   %w(5 6 7 8 9 a b c d e f),
+                   %w(3 4 5 6 7 8 9 a b c d e f),
+                   %w(0 1 2 3 4 5 6 7 8 9 a b c d e f),
+                   %w(0 1 2 3 4 5 6 7 8 9 a b c d e f) ]
+        mac = ""
+        for x in 1..12 do
+          mac += digits[x-1][rand(digits[x-1].count)]
+          mac += ":" if (x.modulo(2) == 0) && (x != 12)
+        end
+        mac
       end
 
 ################################################################################
@@ -32,8 +76,9 @@ module Cucumber
 ################################################################################
 
       def create_server(server, ip)
-        @servers[server] = ip
-        create_network_config(server, ip)
+        @servers[server] = { :ip => ip, :mac => generate_mac }
+        create_network_config(server)
+        create_dhcp_config
         create_container(server)
       end
 
@@ -49,7 +94,7 @@ module Cucumber
 
       def create_container(name)
         unless File.exists?(get_root(name))
-          %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef 2>&1)
+          %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t ubuntu 2>&1)
         end
         start_container(name)
       end

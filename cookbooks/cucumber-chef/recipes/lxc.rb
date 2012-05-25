@@ -1,5 +1,20 @@
-%w(lxc bridge-utils debootstrap).each do |p|
+%w(lxc bridge-utils debootstrap dhcp3-server).each do |p|
   package p
+end
+
+# configure dhcp3-server for lxc
+bash "configure dhcp3-server" do
+  code <<-EOH
+cat <<EOF > /etc/dhcp3/dhcpd.conf
+ddns-update-style none;
+
+default-lease-time 600;
+max-lease-time 7200;
+log-facility local7;
+
+include "/etc/dhcp3/lxc.conf";
+EOF
+  EOH
 end
 
 # configure bridge-utils for lxc
