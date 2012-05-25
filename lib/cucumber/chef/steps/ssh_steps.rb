@@ -31,9 +31,11 @@ Then /^I can ssh to the following hosts with these credentials:$/ do |table|
     end
 
     lambda {
-      Net::SSH.start(session["hostname"], session["username"], :password => session["password"],
-                                                               :auth_methods => session_auth_methods,
-                                                               :keys => session_keys)
+      @connection = Net::SSH.start(session["hostname"],
+                                   session["username"],
+                                   :password => session["password"],
+                                   :auth_methods => session_auth_methods,
+                                   :keys => session_keys)
     }.should_not raise_error(Net::SSH::AuthenticationFailed)
   end
 end
@@ -63,9 +65,11 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   end
 
   lambda {
-    @connection = Net::SSH.start(hostname, session["username"], :password => session["password"],
-                                                                :auth_methods => session_auth_methods,
-                                                                :keys => session_keys)
+    @connection = Net::SSH.start(hostname,
+                                 session["username"],
+                                 :password => session["password"],
+                                 :auth_methods => session_auth_methods,
+                                 :keys => session_keys)
   }.should_not raise_error
 end
 

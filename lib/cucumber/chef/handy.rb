@@ -8,10 +8,6 @@ module Cucumber
         File.join('/var/lib/lxc', name, 'rootfs')
       end
 
-      def run_chroot(name, command)
-        %x(chroot #{get_root(name)} /bin/bash -c '#{command}' 2>&1)
-      end
-
       def create_network_config(name, ip)
         network_config = File.join("/etc/lxc", name)
         File.open(network_config, 'w') do |f|
@@ -25,7 +21,18 @@ module Cucumber
 
 ################################################################################
 
+      def run_chroot(name, command)
+        %x(chroot #{get_root(name)} /bin/bash -c '#{command}' 2>&1)
+      end
+
+      def run_remote_command(name, command)
+        %x(ssh #{@server[name]} '#{command}')
+      end
+
+################################################################################
+
       def create_server(server, ip)
+        @servers[server] = ip
         create_network_config(server, ip)
         create_container(server)
       end
@@ -41,7 +48,6 @@ module Cucumber
 ################################################################################
 
       def create_container(name)
-        # create the container if it does not exist, then start the container
         unless File.exists?(get_root(name))
           %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t lucid-chef 2>&1)
         end
@@ -49,10 +55,6 @@ module Cucumber
       end
 
       def destroy_container(name)
-        # bail out of we are trying to destroy the 'controller' container
-        return if (name.downcase == "controller")
-
-        # stop the container first, then destroy the container
         stop_container(name)
         if File.exists?(get_root(name))
           %x(lxc-destroy -n #{name} 2>&1)
@@ -76,7 +78,7 @@ module Cucumber
       end
 
       def list_containers
-        %x(lxc-ls 2>&1).split("\n").uniq.reject{ |container| container.downcase == "controller" }
+        %x(lxc-ls 2>&1).split("\n").uniq
       end
 
 ################################################################################
@@ -93,7 +95,7 @@ module Cucumber
       end
 
       def run_chef(name)
-        run_chroot(name, "/usr/bin/chef-client -j /etc/chef/first-boot.json -N #{name}")
+        run_chroot(name, "/usr/bin/chef-client -j /etc/chef/first-boot.json -N cucumber-chef-#{name}")
       end
 
       def databag_item_from_file(file)
@@ -119,9 +121,6 @@ module Cucumber
         end
       end
 
-      def run_remote_command(remote_server, command)
-        %x(ssh workstation.testlab 'ssh #{remote_server} #{command}')
-      end
     end
   end
 end
