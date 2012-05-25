@@ -40,6 +40,7 @@ module Cucumber
           end
         end
         %x(service dhcp3-server restart)
+        sleep(3)
       end
 
       def generate_mac
@@ -75,12 +76,29 @@ module Cucumber
 
 ################################################################################
 
-      def create_server(server, ip)
+      def create_server(server, ip, orgname)
         @servers[server] = { :ip => ip, :mac => generate_mac }
         create_network_config(server)
         create_dhcp_config
         create_container(server)
+        create_client_rb(server, orgname)
+        sleep(1) until sshd_ready?(ip)
       end
+
+      def sshd_ready?(address)
+        sleep 1
+        socket = TCPSocket.new(address, 22)
+        ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
+      rescue Errno::ETIMEDOUT
+        false
+      rescue Errno::ECONNREFUSED
+        false
+      rescue Errno::EHOSTUNREACH
+        false
+      ensure
+        (socket && socket.close)
+      end
+
 
       def destroy_server(server)
         destroy_container(server)
@@ -134,6 +152,7 @@ module Cucumber
         a << run_list
         rl['run_list'] = a
         first_boot = File.join(get_root(name), "/etc/chef/first-boot.json")
+        FileUtils.mkdir_p(File.dirname(first_boot))
         File.open(first_boot, 'w') do |f|
           f.puts rl.to_json
         end
@@ -155,8 +174,9 @@ module Cucumber
         databag_item.save
       end
 
-      def create_client_rb(orgname)
+      def create_client_rb(name, orgname)
         client_rb = File.join(get_root(name), "etc/chef/client.rb")
+        FileUtils.mkdir_p(File.dirname(client_rb))
         File.open(client_rb, 'w') do |f|
           f.puts "log_level               :debug"
           f.puts "log_location            \"/var/log/chef.log\""
