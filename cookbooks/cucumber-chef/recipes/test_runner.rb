@@ -1,16 +1,19 @@
-%w(build-essential binutils-doc autoconf flex bison libxml2-dev libxslt1-dev).each do |p|
-  package p
-end
-
-%w(rspec cucumber cucumber-chef).each do |g|
-  gem_package g
-end
-
 directory "/root/.ssh" do
   owner "root"
-  mode "0600"
+  group "root"
+  mode "0700"
 end
 
 cookbook_file "/root/.ssh/config" do
   source "ssh-config"
+  owner "root"
+  group "root"
+  mode "0600"
+end
+
+cookbook_file "/root/.gemrc" do
+  source "gem-rc"
+  owner "root"
+  group "root"
+  mode "0644"
 end
