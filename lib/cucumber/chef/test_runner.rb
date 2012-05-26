@@ -26,7 +26,7 @@ module Cucumber
         reset_project
         upload_project
         project_path = File.join('/home/ubuntu', File.basename(@project_dir), 'features')
-        ssh_exec_async("sudo cucumber -c -v -x #{project_path}")
+        ssh_exec_async("sudo cucumber -c -v -b #{project_path}")
       end
 
       def reset_project
@@ -64,7 +64,7 @@ module Cucumber
       end
 
       def sftp(local, remote)
-        puts("  * #{@hostname}: (SFTP) '#{local}' -> '#{remote}'")
+        puts("  * #{@hostname}: (SCP) '#{local}' -> '#{remote}'")
         Net::SFTP.start(@hostname, "ubuntu", :keys => @key) do |sftp|
           sftp.upload!(local.to_s, remote.to_s)
         end
@@ -97,7 +97,7 @@ module Cucumber
       end
 
       def sftp_via_proxy(user, host, local, remote)
-        puts("  * Proxy via #{@hostname} to #{host}: (SFTP) '#{local}' -> '#{remote}'")
+        puts("  * Proxy via #{@hostname} to #{host}: (SCP) '#{local}' -> '#{remote}'")
         proxy = Net::SSH::Proxy::Command.new("ssh -i #{@key} ubuntu@#{@hostname} nc %h %p")
         Net::SFTP.start(host, user, :keys => @key, :proxy => proxy) do |sftp|
           sftp.upload!(local.to_s, remote.to_s)
