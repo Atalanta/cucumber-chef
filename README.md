@@ -1,10 +1,10 @@
-Cucumber-chef is a library of tools to enable the emerging discipline of infrastructure as code to practice test driven development.  It provides a testing platform within which cucumber tests can be run which provision lightweight virtual machines, configure them by applying the appriporaite Chef roles to them, and then run acceptance and integration tests against the environment.
+Cucumber-chef is a library of tools to enable the emerging discipline of infrastructure as code to practice test driven development.  It provides a testing platform within which Cucumber tests can be run which provision virtual machines, configure them by applying the appropriate Chef roles to them, and then run acceptance and integration tests against the environment.
 
 ## Overview
 
-Cucumber-chef begins with a very simple premise.  If we are framing our infrastructure as code - if we're writing cookbooks, recipes and other pieces of automation in a high level programming language, such as Ruby, then it makes sense to follow the current wisdom across the software development world to maximise the quality, maintainability and reusability of our code, providing maximum chance that we'll deliver value with it.  One area which has been shown to have a very positive effect is the practive of 'test-driven' development.  In this paradigm, the developer begins by writing a test that captures the intended behaviour of the code  they are going to write.  This test will start out by failing.  The developer then writes code to make the test pass, and iterates thereafter.
+Cucumber-chef begins with a very simple premise.  If we are framing our infrastructure as code - if we're writing cookbooks, recipes and other pieces of automation in a high level programming language, such as Ruby, then it makes sense to follow the current wisdom across the software development world to maximise the quality, maintainability and reusability of our code, providing maximum chance that we'll deliver value with it.  One area which has been shown to have a very positive effect is the practive of 'test-driven' development.  In this paradigm, the developer begins by writing a test that captures the intended behaviour of the code they are going to write.  This test will start out by failing.  The developer then writes code to make the test pass, and iterates thereafter.
 
-Cucumber-chef provides a framework to make it easier to do test-driven development for infrastructure.  It does this by providing a test infrastructure, in the cloud, which provides a very fast, lightweight and cheap way to fire up virtual machines for testing.  We call this the "test lab".
+Cucumber-chef provides a framework to make it easier to do test-driven development for infrastructure.  It does this by providing a test infrastructure, which we call the "test lab", within which a number of different scenarios can be set up, and against which Cucumber features can we run.  From the outset, Cucumber-chef's design was to provide a fast, lightweight and cheap way to fire up virtual machines for testing.  At present this is achieved using Linux Containers on Amazon EC2.  Supporting alternative provisioning backends is planned, which will allow the user to opt to test using local machines, alternative cloud providers, and ultimatey alternative virtualization technologies.
 
 As you might have guessed from the name, we're going to write high level acceptance tests using Cucumber.  Cucumber-Chef provides step definitions and helper methods to make it easy to provision and manage machines with Chef, and then build end-to-end tests.
 
@@ -22,7 +22,7 @@ Installing Cucumber-Chef is simple.  It's distributed as a RubyGem, so you can s
 
     $ gem install cucumber-chef
 
-Once installed, you can run cucumber-chef on the command line to get an overview of the tasks it can carry out.
+Once installed, you can run `cucumber-chef` on the command line to get an overview of the tasks it can carry out.
 
     $ cucumber-chef
     Tasks:
@@ -40,7 +40,7 @@ Once installed, you can run cucumber-chef on the command line to get an overview
 
 ### 2) Integrate with Hosted Chef and Amazon EC2
 
-In it's current incarnation, Cucumber-Chef makes two important assumptions.  Firstly, it assumes you're using Opscode Hosted Chef rather than your own Chef server.  Secondly, it assume that you are comfortable with using Amazon's EC2 service for providing the 'bare metal' on which we set up the test lab.
+In its current incarnation, Cucumber-Chef makes two important assumptions.  Firstly, it assumes you're using Opscode Hosted Chef rather than your own Chef server.  Secondly, it assume that you are comfortable with using Amazon's EC2 service for providing the 'bare metal' on which we set up the test lab.  Removing these assumptions, to support Chef Solo, or your own Open Source Chef server is high on the list of priorities.
 
 Cucumber-chef is tightly integrated with Chef - it uses your knife.rb for credentials, and any cucumber-chef-specific configuration goes in knife.rb under the cucumber-chef namespace.
 
@@ -50,7 +50,7 @@ On installation, the first thing you should do is run:
 
 This will look for your knife.rb, and extract the relevant sections, check them, and display them on the screen.  If any entries are missing, it will alert you.
 
-The recommended best practice for Chef is to keep your knife.rb inside your organisation's Chef repository, inside the .chef directory, and use environment variables to specify username, organisation name and cloud provider credentials.  Cucumber-chef supports and encourages this approach.  It will search for a directory called .chef in your current directory, and then carry on going up the directory tree until it finds one.  In practice this means that if you stay within the chef-repo directory for the organisation on which you're working, cucumber-chef will use the knife.rb; if your elsewhere in the filesystem rooted in your home directory, and have .chef in your home directory, cucumber-chef will use that.  Otherwise you'll need to either change into a directory where a .chef can be found, or copy, creatre or link accordingly.  In most cases we anticipate that you'll be inside the chef-repo of your organisation, and the documentation is written from this perspective.
+We recommended keeping your knife.rb inside your organization's Chef repository, inside the `.chef` directory, and use environment variables to specify username, organization name and cloud provider credentials.  When run, Cucumber-chef will search for a directory called `.chef` in your current directory, and then carry on going up the directory tree until it finds one.  In practice this means that if you stay within the chef-repo directory for the organization on which you're working, Cucumber-chef will use the knife.rb in that repo; if you're elsewhere in the filesystem rooted in your home directory, and have `.chef` in your home directory, Cucumber-chef will use that.  Otherwise you'll need to either change into a directory where a `.chef` can be found, or copy, creatre or link accordingly.  In most cases we anticipate that you'll be inside the chef-repo of your organisation, and the documentation is written from this perspective.
 
 #### 2a) Refactor 'knife.rb'
 
@@ -74,7 +74,7 @@ If you haven't already, refactor your knife.rb to look like this:
 Now set your Hosted Chef username and organization name using environment variables:
 
     $ export OPSCODE_USER="platform_user_name"
-    $ export ORGNAME="platform_organisation"
+    $ export ORGNAME="platform_organization"
 
 Now put your validator and client keys in $HOME/.chef.  Verify that everything still works:
 
@@ -108,7 +108,7 @@ Now add the EC2 configuration:
 
 Note that right now Cucumber-Chef only supports Ubuntu-based test labs and LXC containers.  We have plans to support RHEL test labs and LXC containers in the near future.
 
-As of now Ubuntu maverick has a more recent version of LXC and we end up with lucid LXC containers using the version of LXC that comes with maverick.  If you set your `ubuntu_release` to lucid, things will likely blow up, but you might get lucky.
+The previous long term support (LTS) version of Ubuntu, Lucid, shipped with an old version of Linux Containers, which lacked some key capabilities, and as such, the host OS defaults to the next version - Maverick.  This will provide Lucid containers.  We plan to move quickly to using the latest LTS version, as Maverick is now end-of-life.  For now, the tested approach is to set `ubuntu_release` to `maverick`.  Other configurations are not yet supported.
 
 Now set your AWS EC2 environment variables:
 
@@ -130,9 +130,9 @@ Now check your config again, with cucumber-chef display config.  If you get no c
 
 ##### 'aws_image_id' and 'aws_instance_type'
 
-You can specify an AMI in your EC2 configuration either directly with the `:aws_image_id` parameter or by setting the `:ubuntu release` parameter:
+You can specify an AMI in your EC2 configuration either directly with the `:aws_image_id` parameter or by setting the `:ubuntu_release` parameter:
 
-    knife[:ubuntu_release] = "lucid"
+    knife[:ubuntu_release] = "maverick"
 
 You can also set the additional parameters:
 
@@ -207,7 +207,7 @@ There are several methods you will need to call in your step definitions to leve
 
 * `create_server(name, ip=nil, mac=nil)`
 
-This method will create an LXC container (i.e. server) using the supplied `name` and start it up.  Both the `ip` address and `mac` address are optional parameters.  Under normal conditions you won't need to ever specify the MAC address or, in all likelyhood, the IP address unless you are creating multi-server scenarios and require fixed addresses so you can test communication between the servers.  If you do not specify an IP address one is randomly chosen and assigned to the server for the duration of the scenario.  You can fetch this IP at any time through the `@servers` instance variable using this syntax `@servers[name][:ip]`.  The MAC address can also be fetched using `@servers[name][:mac]`.
+This method will create an LXC container (i.e. server) using the supplied `name` and start it up.  Both the `ip` address and `mac` address are optional parameters.  Under normal conditions you won't need to ever specify the MAC address or, in all likelihood, the IP address unless you are creating multi-server scenarios and require fixed addresses so you can test communication between the servers.  If you do not specify an IP address one is randomly chosen and assigned to the server for the duration of the scenario.  You can fetch this IP at any time through the `@servers` instance variable using this syntax `@servers[name][:ip]`.  The MAC address can also be fetched using `@servers[name][:mac]`.
 
 * `set_chef_client_attributes(name, attributes={})`
 
