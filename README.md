@@ -8,7 +8,7 @@ Cucumber-chef provides a framework to make it easier to do test-driven developme
 
 As you might have guessed from the name, we're going to write high level acceptance tests using Cucumber.  Cucumber-Chef provides step definitions and helper methods to make it easy to provision and manage machines with Chef, and then build end-to-end tests.
 
-## Getting started
+## Getting Started
 
 Getting started with Cucumber-Chef is a simple, three step process:
 
@@ -16,7 +16,7 @@ Getting started with Cucumber-Chef is a simple, three step process:
 2) Integrate with Hosted Chef and Amazon EC2
 3) Run cucumber-chef setup
 
-### Installing Cucumber-Chef
+### 1) Installing Cucumber-Chef
 
 Installing Cucumber-Chef is simple.  It's distributed as a RubyGem, so you can simply run:
 
@@ -38,7 +38,7 @@ Once installed, you can run cucumber-chef on the command line to get an overview
       cucumber-chef test <project name>     # Run the cucumber-chef test suite <project name> from a workstation.
       cucumber-chef upload <project name>   # Upload the cucumber-chef test suite <project name> to the test lab platform
 
-### Integrate with Hosted Chef and Amazon EC2
+### 2) Integrate with Hosted Chef and Amazon EC2
 
 In it's current incarnation, Cucumber-Chef makes two important assumptions.  Firstly, it assumes you're using Opscode Hosted Chef rather than your own Chef server.  Secondly, it assume that you are comfortable with using Amazon's EC2 service for providing the 'bare metal' on which we set up the test lab.
 
@@ -52,25 +52,29 @@ This will look for your knife.rb, and extract the relevant sections, check them,
 
 The recommended best practice for Chef is to keep your knife.rb inside your organisation's Chef repository, inside the .chef directory, and use environment variables to specify username, organisation name and cloud provider credentials.  Cucumber-chef supports and encourages this approach.  It will search for a directory called .chef in your current directory, and then carry on going up the directory tree until it finds one.  In practice this means that if you stay within the chef-repo directory for the organisation on which you're working, cucumber-chef will use the knife.rb; if your elsewhere in the filesystem rooted in your home directory, and have .chef in your home directory, cucumber-chef will use that.  Otherwise you'll need to either change into a directory where a .chef can be found, or copy, creatre or link accordingly.  In most cases we anticipate that you'll be inside the chef-repo of your organisation, and the documentation is written from this perspective.
 
+#### 2a) Refactor 'knife.rb'
+
 If you haven't already, refactor your knife.rb to look like this:
 
-    current_dir = File.dirname(__FILE__)
-    user = ENV['OPSCODE_USER'] || ENV['USER']
-    log_level :info
-    log_location STDOUT
-    node_name user
-    client_key "#{ENV['HOME']}/.chef/#{user}.pem"
-    validation_client_name "#{ENV['ORGNAME']}-validator"
-    validation_key "#{ENV['HOME']}/.chef/#{ENV['ORGNAME']}-validator.pem"
-    chef_server_url "https://api.opscode.com/organizations/#{ENV['ORGNAME']}"
-    cache_type 'BasicFile'
-    cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )
-    cookbook_path ["#{current_dir}/../cookbooks"]
+    current_dir  = File.dirname(__FILE__)
+    user         = ENV['OPSCODE_USER'] || ENV['USER']
+
+    log_level               :info
+    log_location            STDOUT
+    node_name               "#{user}"
+    client_key              "#{ENV['HOME']}/.chef/#{user}.pem"
+    validation_client_name  "#{ENV['ORGNAME']}-validator"
+    validation_key          "#{ENV['HOME']}/.chef/#{ENV['ORGNAME']}-validator.pem"
+    chef_server_url         "https://api.opscode.com/organizations/#{ENV['ORGNAME']}"
+    cache_type              'BasicFile'
+    cookbook_path           ["#{current_dir}/../cookbooks"]
+    verbose_logging         true
+    cache_options(:path => "#{ENV['HOME']}/.chef/checksums")
 
 Now set your Hosted Chef username and organization name using environment variables:
 
-    $ export OPSCODE_USER=platform_user_name
-    $ export ORGNAME=platform_organisation
+    $ export OPSCODE_USER="platform_user_name"
+    $ export ORGNAME="platform_organisation"
 
 Now put your validator and client keys in $HOME/.chef.  Verify that everything still works:
 
@@ -78,29 +82,53 @@ Now put your validator and client keys in $HOME/.chef.  Verify that everything s
 
 If you get results back, we're in business.
 
+#### 2b) Configure AWS EC2 Settings in 'knife.rb'
+
 Now add the EC2 configuration:
 
-    knife[:aws_access_key_id] = ENV['AWS_ACCESS_KEY_ID']
-    knife[:aws_secret_access_key] = ENV['AWS_SECRET_ACCESS_KEY']
-    knife[:aws_ssh_key_id] = ENV['AWS_SSH_KEY_ID']
-    knife[:identity_file] = "/path/to/aws_ssh_key.pem"
-    knife[:availability_zone] = "eu-west-1a"
-    knife[:region] = "eu-west-1"
-    knife[:aws_image_id] = "ami-339ca947"
+    # Knife EC2 Details
+    # -----------------
+    knife[:aws_access_key_id]         = ENV['AWS_ACCESS_KEY_ID']
+    knife[:aws_secret_access_key]     = ENV['AWS_SECRET_ACCESS_KEY']
+    # -----------------
+    knife[:aws_ssh_key_id]            = ENV['AWS_SSH_KEY_ID'] || user
+    knife[:identity_file]             = "#{ENV['HOME']}/.chef/#{user}.pem"
+    # -----------------
+    knife[:region]                    = "us-west-2"
+    knife[:availability_zone]         = "us-west-2a"
+    # -----------------
+    #knife[:aws_security_group]        = "my-uber-group" # default: "cucumber-chef"
+    # -----------------
+    #knife[:aws_image_id]              = "ami-76fd7146"
+    knife[:ubuntu_release]            = "maverick"
+    # -----------------
+    #knife[:aws_instance_arch]         = "amd64" # default: "i386"
+    #knife[:aws_instance_disk_store]   = "ebs" # default: "instance-store"
+    #knife[:aws_instance_type]         = "t1.micro" # default: "m1.small"
 
-Note that right now Cucumber-Chef only supports Ubuntu-based  test labs.
+Note that right now Cucumber-Chef only supports Ubuntu-based test labs and LXC containers.  We have plans to support RHEL test labs and LXC containers in the near future.
 
-Set your environment variables:
+As of now Ubuntu maverick has a more recent version of LXC and we end up with lucid LXC containers using the version of LXC that comes with maverick.  If you set your `ubuntu_release` to lucid, things will likely blow up, but you might get lucky.
 
-    $ export AWS_ACCESS_KEY_ID=SEKRITKEY
-    $ export AWS_SECRET_ACCESS_KEY=REELYSEKRITKEY
-    $ export AWS_SSH_KEY_ID
+Now set your AWS EC2 environment variables:
+
+    $ export AWS_ACCESS_KEY_ID="SEKRITKEY"
+    $ export AWS_SECRET_ACCESS_KEY="rEeLySeKrItKeY"
+    $ export AWS_SSH_KEY_ID="your_aws_pem_filename_minus_extension"
+
+    AWS_ACCESS_KEY_ID:
+      Under "Sign-In Credentials", your AWS "User name"
+    AWS_SECRET_ACCESS_KEY:
+      Under "Access Credentials", your AWS "Access Key"
+    AWS_SSH_KEY_ID:
+      The ID is the name of the key file from when you created it.  For instance
+      if your key was named KeyId.pem when you downloaded it, this would be KeyId
 
 And then ensure your AWS ssh key is in place.
 
 Now check your config again, with cucumber-chef display config.  If you get no complaints, you're ready to set up a test lab.
 
-#### AWS image id and instance type
+##### 'aws_image_id' and 'aws_instance_type'
 
 You can specify an AMI in your EC2 configuration either directly with the `:aws_image_id` parameter or by setting the `:ubuntu release` parameter:
 
@@ -111,19 +139,20 @@ You can also set the additional parameters:
     knife[:aws_instance_arch] = "amd64"
     knife[:aws_instance_disk_store] = "ebs"
 
-`:aws_instance_arch` takes the values "i386" or "amd64" and defaults to "i386", `:aws_instance_disk_store` takes the values "instance-store" and "ebs" and defaults to "instance-store".
+`:aws_instance_arch` takes the values "i386" or "amd64" and defaults to "i386"
+`:aws_instance_disk_store` takes the values "instance-store" and "ebs" and defaults to "instance-store".
 
 If you want to specify an instance type for your test lab use the `:aws_instance_type` setting (default is "m1.small"):
 
     knife[:aws_instance_type] = "m1.large"
 
-#### AWS security group
+##### AWS Security Group
 
 By default `cucumber-chef` will use a security group "cucumber-chef", creating it if it doesn't exist. You can specify another security group with the configuration setting `:aws_security_group`.
 
     knife[:aws_security_group] = "my-existing-security-group"
 
-### Run cucumber-chef setup
+### 3) Run 'cucumber-chef' Setup
 
 
     $ cucumber-chef setup
@@ -151,7 +180,7 @@ This will create a directory, cucumber-chef, and a subdirectory, example.
             └── support
                 └── env.rb
 
-## Writing tests
+## Writing Tests
 
 Once you've got your test lab set up, and you've generated a project, it's time to crack on with writing a test.  The basic idea is this:
 
@@ -160,7 +189,58 @@ Once you've got your test lab set up, and you've generated a project, it's time 
 3) Write steps that will build this infrastructure environment on the test lab, using the step definitions provided - these include the ability to create a container, apply roles to it, and destroy it again.
 4) Write cookbooks and recipes and supporting code to make the test pass
 
-## Running tests
+### Container Details
+
+All containers operate off a bridged interface on the test-lab.  All outbound, non-local traffic from the LXC containers are NAT'd through the test-lab and off to the outside world.  This bridged interface on the test-lab is configured as follows:
+
+    IP Address: 192.168.255.254
+    Netmask: 255.255.0.0
+    Broadcast: 192.168.255.255
+
+You are free to use any IP in this class B network, with the exception of the test-lab itself, which is at `192.168.255.254`.
+
+### Test Helpers
+
+#### Cucumber Scenario Centric Helpers
+
+There are several methods you will need to call in your step definitions to leverage Cucumber-Chef.  This is a brief overview of them and what they do.
+
+* `create_server(name, ip=nil, mac=nil)`
+
+This method will create an LXC container (i.e. server) using the supplied `name` and start it up.  Both the `ip` address and `mac` address are optional parameters.  Under normal conditions you won't need to ever specify the MAC address or, in all likelyhood, the IP address unless you are creating multi-server scenarios and require fixed addresses so you can test communication between the servers.  If you do not specify an IP address one is randomly chosen and assigned to the server for the duration of the scenario.  You can fetch this IP at any time through the `@servers` instance variable using this syntax `@servers[name][:ip]`.  The MAC address can also be fetched using `@servers[name][:mac]`.
+
+* `set_chef_client_attributes(name, attributes={})`
+
+This method will output the supplied `attributes` to the server `name`.  These attributes are rendered as JSON and passed to the chef-client when the `run_chef` method is called.
+
+* `run_chef(name)`
+
+This method executes the chef-client on the server `name`.  The JSON rendered by `set_chef_client_attributes` is passed to the chef-client as well.  Currently the node_name is rendered as `cucumber-chef-#{name}`.
+
+##### Examples
+
+    Given /^a newly bootstrapped server$/ do
+      create_server("devopserver")
+    end
+
+    When /^the devops users recipe is applied$/ do
+      set_chef_client_attributes("devopserver", :run_list => ["recipe[users::devops]"])
+      run_chef("devopserver")
+    end
+
+#### Cucumber Before Hook Centric Helpers
+
+* `set_chef_client(attributes={})`
+
+This method configures the base attributes used to render the chef-client's `client.rb` file.  Currently you can specify `:orgname`, `:log_level`, `:log_location`, `:chef_server_url` and `:validation_client_name`.
+
+##### Examples
+
+    Before do
+      set_chef_client(:orgname => "cucumber-chef")
+    end
+
+## Running Tests
 
 You can write the tests and Chef code wherever you like.  We're assuming you prefer working on your local machine, and checking into version control.  But we don't really care.  When it's time to run tests, cucumber-chef provides a task which handles this:
 
@@ -174,4 +254,43 @@ Running the test task will upload your current project to the test lab, and run 
 
 At present, Cucumber-Chef only allows one test lab per AWS account and Opscode Hosted Chef account.
 
+### Example Test Run
 
+Running infrastructure tests are very slow due to the nature of what is involved.  Currently Cucumber-Chef builds a clean LXC container before each scenario to avoid carrying over tainted or corrupted data from a previous scenario run.  We have plans to support libvirt so test-labs can be moved locally to take advantage of SSD drives which will undoubtedly speed up these tests considerably.
+
+    $ bin/cucumber-chef test devops
+    Verifing Configuration...
+    Cucumber-Chef Test Runner Initalized!
+      * 1.2.3.4: (SSH) 'rm -rf /home/ubuntu/devops'
+      * 1.2.3.4: (SCP) 'cucumber-chef/devops' -> '/home/ubuntu/devops'
+      * 1.2.3.4: (SSH) 'sudo cucumber -c -v -b /home/ubuntu/devops/features'
+    Code:
+      * /home/ubuntu/devops/features/support/env.rb
+      * /home/ubuntu/devops/features/step_definitions/devops_ssh_steps.rb
+
+    Features:
+      * /home/ubuntu/devops/features/devops_ssh.feature
+    Parsing feature files took 0m0.004s
+
+    Feature: devops can log into server
+
+      Scenario: devops can connect to server via ssh key # /home/ubuntu/devops/features/devops_ssh.feature:3
+      * 192.168.230.204: (LXC) 'devopserver' Building
+      * 192.168.230.204: (LXC) 'devopserver' Booted
+      * 192.168.230.204: (LXC) 'devopserver' Ready
+        Given a newly bootstrapped server                # devops/features/step_definitions/devops_ssh_steps.rb:1
+        When the devops users recipe is applied          # devops/features/step_definitions/devops_ssh_steps.rb:5
+        Then a devop should be able to ssh to the server # devops/features/step_definitions/devops_ssh_steps.rb:10
+
+      Scenario: Default shell is bash              # /home/ubuntu/devops/features/devops_ssh.feature:8
+      * 192.168.50.105: (LXC) 'devopserver' Building
+      * 192.168.50.105: (LXC) 'devopserver' Booted
+      * 192.168.50.105: (LXC) 'devopserver' Ready
+        Given a newly bootstrapped server          # devops/features/step_definitions/devops_ssh_steps.rb:1
+        When the devops users recipe is applied    # devops/features/step_definitions/devops_ssh_steps.rb:5
+        And a devop connects to the server via ssh # devops/features/step_definitions/devops_ssh_steps.rb:29
+        Then their login shell should be "bash"    # devops/features/step_definitions/devops_ssh_steps.rb:36
+
+    2 scenarios (2 passed)
+    7 steps (7 passed)
+    2m50.620s
