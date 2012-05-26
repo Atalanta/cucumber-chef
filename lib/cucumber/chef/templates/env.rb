@@ -15,17 +15,12 @@ World do
   CustomWorld.new
 end
 
-Before do
-  @servers = {}
+Before
+  set_chef_client(:orgname => "cucumber-chef")
 end
 
-# if our scenario passed destroy the containers, otherwise quit so we can inspect the containers if desired.
-#After do |scenario|
-#  if scenario.passed?
-#    list_containers.each do |container|
-#      destroy_container(container)
-#    end
-#  else
-#    Cucumber.wants_to_quit = true
-#  end
-#end
+After do |scenario|
+  list_containers.each do |container|
+    destroy_container(container)
+  end
+end
