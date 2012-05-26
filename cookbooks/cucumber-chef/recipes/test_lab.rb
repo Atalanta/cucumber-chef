@@ -39,4 +39,6 @@ end
     group user
     mode "0644"
   end
+
+  execute "ssh-keygen -q -N '' -f #{home_dir}/.ssh/id_rsa"
 end
