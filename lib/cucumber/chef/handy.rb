@@ -88,11 +88,11 @@ module Cucumber
 ################################################################################
 
       # call this in a Before hook
-      def set_chef_client(options={})
+      def set_chef_client(attributes={})
         @chef_client = { :log_level => :debug,
                          :log_location => "/var/log/chef.log",
-                         :chef_server_url => "https://api.opscode.com/organizations/#{options[:orgname]}",
-                         :validation_client_name => "#{options[:orgname]}-validator" }.merge(options)
+                         :chef_server_url => "https://api.opscode.com/organizations/#{attributes[:orgname]}",
+                         :validation_client_name => "#{attributes[:orgname]}-validator" }.merge(attributes)
       end
 
       # call this before run_chef
