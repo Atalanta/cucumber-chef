@@ -36,7 +36,7 @@ Then /^I can ssh to the following hosts with these credentials:$/ do |table|
                                    :password => session["password"],
                                    :auth_methods => session_auth_methods,
                                    :keys => session_keys)
-    }.should_not raise_error(Net::SSH::AuthenticationFailed)
+    }.should_not raise_error
   end
 end
 
