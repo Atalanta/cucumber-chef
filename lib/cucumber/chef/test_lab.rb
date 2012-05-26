@@ -69,7 +69,7 @@ module Cucumber
         end
         if (c.count > 0)
           puts("Destroying Chef Clients:")
-          clients.each do |client|
+          c.each do |client|
             puts("  * #{client.name}")
             client.destroy
           end
