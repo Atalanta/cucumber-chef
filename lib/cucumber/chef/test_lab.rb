@@ -142,15 +142,15 @@ module Cucumber
       end
 
       def labs
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && VALID_STATES.any?{|state| s.state == state}) }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode].to_s && VALID_STATES.any?{|state| s.state == state}) }
       end
 
       def labs_running
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && RUNNING_STATES.any?{|state| s.state == state}) }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode].to_s && RUNNING_STATES.any?{|state| s.state == state}) }
       end
 
       def labs_shutdown
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode] && SHUTDOWN_STATES.any?{|state| s.state == state}) }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == @config[:mode].to_s && SHUTDOWN_STATES.any?{|state| s.state == state}) }
       end
 
 ################################################################################
