@@ -23,16 +23,6 @@ module Cucumber
         @config = {}
       end
 
-      def proxy
-        raise SSHError, "you must specify a key in order to proxy" if !@config[:key]
-
-        command = ["ssh"]
-        command << ["-i", @config[:key]]
-        command << "#{@config[:user]}@#{@config[:hostname]}"
-        command << "nc %h %p"
-        command.compact.join(" ")
-      end
-
       def exec(command)
         Net::SSH.start(@config[:hostname], @config[:user], options) do |ssh|
           channel = ssh.open_channel do |chan|
@@ -64,10 +54,20 @@ module Cucumber
 
     private
 
+      def proxy_command
+        raise SSHError, "you must specify a key in order to proxy" if !@config[:key]
+
+        command = ["ssh"]
+        command << ["-i", @config[:key]]
+        command << "#{@config[:user]}@#{@config[:hostname]}"
+        command << "nc %h %p"
+        command.compact.join(" ")
+      end
+
       def options
         options = {}.merge(:password => @config[:password]) if @config[:password]
         options = {}.merge(:keys => @config[:key]) if @config[:key]
-        options = (options || {}).merge(:proxy => proxy) if @config[:proxy]
+        options = (options || {}).merge(:proxy => proxy_command) if @config[:proxy]
 
         options
       end
