@@ -133,7 +133,7 @@ module Cucumber
 ################################################################################
 
       def lxc_root(name)
-        Pathname.new(File.join("/", "var", "lib", "lxc", name, "rootfs"))
+        File.join("/", "var", "lib", "lxc", name, "rootfs")
       end
 
       def create_network_config(name)
@@ -149,7 +149,7 @@ module Cucumber
       end
 
       def create_dhcp_config
-        dhcpd_lxc_config = Pathname.new(File.join("/", "etc", "dhcp3", "lxc.conf"))
+        dhcpd_lxc_config = File.join("/", "etc", "dhcp3", "lxc.conf")
         File.open(dhcpd_lxc_config, 'w') do |f|
           f.puts("option subnet-mask 255.255.0.0;")
           f.puts("option broadcast-address 192.168.255.255;")
