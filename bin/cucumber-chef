@@ -33,7 +33,7 @@ class CucumberChef < Thor
 
     def config
       @config ||= begin
-      options.test? ? Cucumber::Chef::Config.test_config : Cucumber::Chef::Config.new
+        options.test? ? Cucumber::Chef::Config.test_config : Cucumber::Chef::Config.new
       end
     end
 
