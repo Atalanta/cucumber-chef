@@ -24,7 +24,7 @@ This section describes the recipes in the cookbook and how to use them in your e
 lxc
 ---
 
-Sets up `lxc` for use by Cucumber-Chef.
+Sets up Linux Containers for use by Cucumber-Chef.
 
 test_lab
 --------
