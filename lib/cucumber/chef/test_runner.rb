@@ -14,8 +14,8 @@ module Cucumber
 
         @ssh = Cucumber::Chef::SSH.new
         @ssh.config[:hostname] = @test_lab.labs_running.first.public_ip_address
-        @ssh.config[:user] = "ubuntu"
-        @ssh.config[:key] = File.expand_path(@config[:knife][:identity_file])
+        @ssh.config[:ssh_user] = "ubuntu"
+        @ssh.config[:identity_file] = File.expand_path(@config[:knife][:identity_file])
 
         puts("Cucumber-Chef Test Runner Initalized!")
       end

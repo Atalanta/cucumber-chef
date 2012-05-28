@@ -24,7 +24,7 @@ module Cucumber
       end
 
       def exec(command)
-        Net::SSH.start(@config[:hostname], @config[:user], options) do |ssh|
+        Net::SSH.start(@config[:hostname], @config[:ssh_user], options) do |ssh|
           channel = ssh.open_channel do |chan|
             chan.exec(command) do |ch, success|
               raise SSHError, "could not execute command" unless success
@@ -46,7 +46,7 @@ module Cucumber
       end
 
       def upload(local, remote)
-        Net::SFTP.start(@config[:hostname], @config[:user], options) do |sftp|
+        Net::SFTP.start(@config[:hostname], @config[:ssh_user], options) do |sftp|
           sftp.upload!(local.to_s, remote.to_s)
         end
       end
@@ -55,20 +55,21 @@ module Cucumber
     private
 
       def proxy_command
-        raise SSHError, "you must specify a key in order to proxy" if !@config[:key]
+        raise SSHError, "you must specify an identity file in order to proxy" if !@config[:identity_file]
 
         command = ["ssh"]
         command << ["-o", "UserKnownHostsFile=/dev/null"]
         command << ["-o", "StrictHostKeyChecking=no"]
-        command << ["-i", @config[:key]]
-        command << "#{@config[:user]}@#{@config[:hostname]}"
+        command << ["-i", @config[:identity_file]]
+        command << "#{@config[:ssh_user]}@#{@config[:hostname]}"
         command << "nc %h %p"
         command.compact.join(" ")
       end
 
       def options
-        options = {}.merge(:password => @config[:password]) if @config[:password]
-        options = {}.merge(:keys => @config[:key]) if @config[:key]
+        options = (options || {}).merge(:password => @config[:ssh_password]) if @config[:ssh_password]
+        options = (options || {}).merge(:keys => @config[:identity_file]) if @config[:identity_file]
+        options = (options || {}).merge(:user_known_hosts_file  => '/dev/null') if !@config[:host_key_verify]
         options = (options || {}).merge(:proxy => proxy_command) if @config[:proxy]
 
         options
