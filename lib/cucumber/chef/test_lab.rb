@@ -50,7 +50,7 @@ module Cucumber
         info
 
         @stdout.print("Waiting for sshd...")
-        @stdout.print(".") until sshd_ready?
+        @stdout.print(".") until Cucumber::Chef::SSH.ready?(@server.public_ip_address)
         @stdout.puts("OK.\n")
 
         @stdout.puts("Instance provisioned!")
@@ -184,16 +184,6 @@ module Cucumber
           @connection.create_security_group(@config.security_group, 'cucumber-chef test lab')
           @connection.security_groups.get(@config.security_group).authorize_port_range(22..22)
         end
-      end
-
-      def sshd_ready?
-        sleep(1)
-        socket = TCPSocket.new(@server.public_ip_address, 22)
-        ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
-      rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED
-        false
-      ensure
-        (socket && socket.close)
       end
 
     end
