@@ -58,6 +58,8 @@ module Cucumber
         raise SSHError, "you must specify a key in order to proxy" if !@config[:key]
 
         command = ["ssh"]
+        command << ["-o", "UserKnownHostsFile=/dev/null"]
+        command << ["-o", "StrictHostKeyChecking=no"]
         command << ["-i", @config[:key]]
         command << "#{@config[:user]}@#{@config[:hostname]}"
         command << "nc %h %p"
