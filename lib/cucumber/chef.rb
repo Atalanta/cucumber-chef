@@ -17,10 +17,12 @@ module Cucumber
   module Chef
     class Error < StandardError ; end
 
+    autoload :SSH, "cucumber/chef/ssh"
     autoload :Config, "cucumber/chef/config"
     autoload :Provisioner, "cucumber/chef/provisioner"
     autoload :TestLab, "cucumber/chef/test_lab"
     autoload :TestRunner, "cucumber/chef/test_runner"
+
   end
 end
 
