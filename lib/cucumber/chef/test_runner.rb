@@ -40,7 +40,7 @@ module Cucumber
       def upload_project
         local = @project_dir
         remote = File.join('/home/ubuntu', File.basename(@project_dir))
-        @ssh.sftp(local, remote)
+        @ssh.upload(local, remote)
       end
 
     end

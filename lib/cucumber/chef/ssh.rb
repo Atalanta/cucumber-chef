@@ -55,7 +55,7 @@ module Cucumber
         end
       end
 
-      def sftp(local, remote)
+      def upload(local, remote)
         Net::SFTP.start(@config[:hostname], @config[:user], options) do |sftp|
           sftp.upload!(local.to_s, remote.to_s)
         end
