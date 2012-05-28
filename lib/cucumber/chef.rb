@@ -9,8 +9,9 @@ require 'chef/knife/bootstrap'
 require 'chef/knife/core/bootstrap_context'
 require 'chef/knife/ssh'
 require 'fog'
-#require 'net/scp'
 require 'net/ssh/multi'
+require 'net/ssh/proxy/command'
+require 'net/sftp'
 
 module Cucumber
   module Chef
@@ -24,7 +25,6 @@ module Cucumber
 end
 
 begin
-  require 'cucumber/chef/version'
 rescue LoadError => e
   dep = e.message.split.last
   puts "You don't appear to have #{dep} installed."

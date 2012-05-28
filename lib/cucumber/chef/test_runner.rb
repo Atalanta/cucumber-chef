@@ -6,9 +6,6 @@ module Cucumber
 
       require 'cucumber/chef/test_lab'
 
-      require 'net/ssh/proxy/command'
-      require 'net/sftp'
-
       def initialize(project_dir, config)
         @project_dir = project_dir
         @config = config
