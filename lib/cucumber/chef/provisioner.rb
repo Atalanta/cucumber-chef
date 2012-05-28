@@ -41,7 +41,7 @@ module Cucumber
 
       def tag_node
         node = ::Chef::Node.load(chef_node_name)
-        node.tags << (@config.test_mode? ? 'test' : 'user')
+        node.tags << (@config.test_mode? ? :test : :user)
         node.save
       end
 

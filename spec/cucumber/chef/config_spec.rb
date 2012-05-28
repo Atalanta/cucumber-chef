@@ -102,15 +102,16 @@ describe Cucumber::Chef::Config do
     end
 
     it "should allow setting configuration values" do
-      subject[:mode] = "blah"
+      subject[:mode] = :blah
+      subject[:mode].should == :blah
+
       subject[:knife][:aws_access_key_id] = "bogus"
-      subject[:mode].should == "blah"
       subject[:knife][:aws_access_key_id].should == "bogus"
     end
 
     it "should provide a method for getting a test mode configuration" do
       config = Cucumber::Chef::Config.test_config(StringIO.new, StringIO.new, StringIO.new)
-      config[:mode].should == "test"
+      config[:mode].should == :test
     end
 
     it "should know it is in test mode" do

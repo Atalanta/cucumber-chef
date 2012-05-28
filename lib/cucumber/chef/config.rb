@@ -11,13 +11,27 @@ module Cucumber
 
       attr_accessor :stdout, :stderr, :stdin
 
-      def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-        @stdout, @stderr, @stdin = stdout, stderr, stdin
-        config[:mode] = "user"
-      end
+################################################################################
 
       def self.mode
-        config.test_mode? ? 'test' : 'user'
+        config.test_mode? ? :test : :user
+      end
+
+      def self.test_config(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
+        config = self.new(stdout, stderr, stdin)
+        config[:mode] = :test
+        config
+      end
+
+################################################################################
+
+      def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
+        @stdout, @stderr, @stdin = stdout, stderr, stdin
+        config[:mode] = :user
+      end
+
+      def test_mode?
+        config[:mode] == :test
       end
 
       def [](key)
@@ -44,16 +58,6 @@ module Cucumber
         @config
       end
 
-      def self.test_config(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-        config = self.new(stdout, stderr, stdin)
-        config[:mode] = "test"
-        config
-      end
-
-      def test_mode?
-        config[:mode] == "test"
-      end
-
       def list
         values = []
         KEYS.each do |key|
@@ -72,7 +76,6 @@ module Cucumber
       end
 
       def verify
-        @stdout.puts("Verifing Configuration...")
         @errors = []
         verify_orgname
         verify_opscode_user
