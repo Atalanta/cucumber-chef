@@ -16,6 +16,10 @@ World do
 end
 
 Before
+  list_containers.each do |container|
+    destroy_container(container)
+  end
+
   set_chef_client(:orgname => "cucumber-chef")
 end
 

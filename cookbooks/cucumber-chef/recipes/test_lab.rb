@@ -1,3 +1,22 @@
+#
+# Author:: Zachary Patten (<zpatten@jovelabs.com>)
+# Cookbook Name:: cucumber-chef
+# Recipe:: test_lab
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
 %w(build-essential wget ruby-full ruby-dev libxml2-dev libxslt1-dev).each do |p|
   package p
 end
@@ -26,15 +45,15 @@ end
     mode "0700"
   end
 
-  cookbook_file "#{home_dir}/.ssh/config" do
-    source "ssh-config"
+  template "#{home_dir}/.ssh/config" do
+    source "ssh-config.erb"
     owner user
     group user
     mode "0600"
   end
 
-  cookbook_file "#{home_dir}/.gemrc" do
-    source "gem-rc"
+  template "#{home_dir}/.gemrc" do
+    source "gemrc.erb"
     owner user
     group user
     mode "0644"

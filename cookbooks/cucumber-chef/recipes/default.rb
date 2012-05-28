@@ -1,7 +1,6 @@
 #
-# Author:: Zachary Patten (<zpatten@jovelabs.com>)
 # Cookbook Name:: cucumber-chef
-# Role:: test_lab
+# Recipe:: default
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,12 +16,5 @@
 #
 
 
-name "test_lab"
-description "Platform for running acceptance and integration tests"
-run_list(
-  "recipe[cucumber-chef]"
-)
-
-override_attributes "cucumber-chef" => {
-  "orgname" => "#{ENV["ORGNAME"]}"
-}
+include_recipe "cucumber-chef::lxc"
+include_recipe "cucumber-chef::test_lab"

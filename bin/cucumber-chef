@@ -51,7 +51,7 @@ class CucumberChef < Thor
     generate_project_skeleton(project_dir)
   end
 
-  desc "setup", "Set up a cucumber-chef test lab in Amazon EC2"
+  desc "setup", "Setup Cucumber-Chef test lab in Amazon EC2"
   method_option :test, :type  => :boolean
   def setup
     begin
@@ -67,6 +67,14 @@ class CucumberChef < Thor
     rescue Cucumber::Chef::Error => err
       error(err.message)
     end
+  end
+
+  desc "teardown", "Teardown Cucumber-Chef test lab in Amazon EC2"
+  method_option :test, :type => :boolean
+  def teardown
+    config.verify
+    test_lab = Cucumber::Chef::TestLab.new(config)
+    test_lab.destroy
   end
 
   desc "amis", "List available EC2 Ubuntu AMIs"
@@ -125,14 +133,6 @@ class CucumberChef < Thor
 
   rescue Cucumber::Chef::Error => err
     error(err.message)
-  end
-
-  desc "destroy", "Destroy running test labs"
-  method_option :test, :type => :boolean
-  def destroy
-    config.verify
-    lab = Cucumber::Chef::TestLab.new(config)
-    lab.destroy
   end
 
   desc "upload <project name>", "Upload the cucumber-chef test suite <project name> to the test lab platform"

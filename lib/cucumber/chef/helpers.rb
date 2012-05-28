@@ -39,7 +39,7 @@ module Cucumber
         create_network_config(name)
         create_container(name)
         create_client_rb(name)
-        sleep(1) until container_sshd_ready?(ip)
+        sleep(1) until Cucumber::Chef::SSH.ready?(ip)
 
         log(name, ip, "Ready")
       end
@@ -179,14 +179,7 @@ module Cucumber
         run_command("service dhcp3-server restart")
       end
 
-      def container_sshd_ready?(ip)
-        socket = TCPSocket.new(ip, 22)
-        ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
-      rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-        false
-      ensure
-        (socket && socket.close)
-      end
+################################################################################
 
       def generate_ip
         octets = [ 192..192,

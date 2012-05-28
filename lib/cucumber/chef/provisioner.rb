@@ -13,10 +13,10 @@ module Cucumber
         @cookbook_path = File.join(File.dirname(__FILE__), "../../../cookbooks/cucumber-chef")
       end
 
-      def bootstrap_node(config, server)
-        template_file = File.join(File.dirname(__FILE__), "bootstrap/ubuntu-#{config[:knife][:ubuntu_release]}.erb")
+      def bootstrap_node(server)
+        template_file = File.join(File.dirname(__FILE__), "bootstrap/ubuntu-#{@config[:knife][:ubuntu_release]}.erb")
         @stdout.puts("Using bootstrap template '#{template_file}'.")
-        run_bootstrap(template_file, server, chef_node_name(config), "role[test_lab]")
+        run_bootstrap(template_file, server, chef_node_name, "role[test_lab]")
         tag_node
       end
 
@@ -24,9 +24,7 @@ module Cucumber
         version_loader = ::Chef::Cookbook::CookbookVersionLoader.new(@cookbook_path)
         version_loader.load_cookbooks
         uploader = ::Chef::CookbookUploader.new(version_loader.cookbook_version, @cookbook_path)
-        # attempt to validate the cookbook
         uploader.validate_cookbook
-        # attempt to upload the cookbook
         uploader.upload_cookbook
       end
 
@@ -34,8 +32,6 @@ module Cucumber
         role_path = File.join(@cookbook_path, "roles")
         ::Chef::Config[:role_path] = role_path
         role = ::Chef::Role.from_disk("test_lab")
-        role.save
-        role = ::Chef::Role.from_disk("controller")
         role.save
       end
 

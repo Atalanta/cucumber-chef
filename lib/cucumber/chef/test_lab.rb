@@ -42,7 +42,7 @@ module Cucumber
 
           @stdout.print("Waiting for instance...")
           @server.wait_for { ready? }
-          @stdout.puts("OK.\n")
+          @stdout.puts("OK!\n")
 
           tag_server
         end
@@ -50,8 +50,11 @@ module Cucumber
         info
 
         @stdout.print("Waiting for sshd...")
-        @stdout.print(".") until Cucumber::Chef::SSH.ready?(@server.public_ip_address)
-        @stdout.puts("OK.\n")
+        begin
+          @stdout.print(".")
+          sleep(1)
+        end until Cucumber::Chef::SSH.ready?(@server.public_ip_address)
+        @stdout.puts("OK!\n")
 
         @stdout.puts("Instance provisioned!")
 
@@ -60,12 +63,18 @@ module Cucumber
 
 
       def destroy
-        labs_running.each do |server|
-          @stdout.puts("Destroying Server: #{server.public_ip_address}")
-          server.destroy
-        end
+        l = labs
         n = nodes
         c = clients
+
+        if (l.count > 0)
+          @stdout.puts("Destroying Servers:")
+          l.each do |server|
+            @stdout.puts("  * #{server.public_ip_address}")
+            server.destroy
+          end
+        end
+
         if (n.count > 0)
           @stdout.puts("Destroying Chef Nodes:")
           n.each do |node|
@@ -73,6 +82,7 @@ module Cucumber
             node.destroy
           end
         end
+
         if (c.count > 0)
           @stdout.puts("Destroying Chef Clients:")
           c.each do |client|
