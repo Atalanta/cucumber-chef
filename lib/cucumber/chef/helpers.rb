@@ -5,13 +5,21 @@ module Cucumber
 ################################################################################
 
       def run_chroot_command(name, command)
-        %x(chroot #{lxc_root(name)} /bin/bash -c '#{command}' 2>&1)
+        output = %x(chroot #{lxc_rootfs(name)} /bin/bash -c '#{command}' 2>&1)
         raise "run_chroot_command failed" if ($? != 0)
+        output
       end
 
       def run_remote_command(name, command)
-        %x(ssh #{@servers[name][:ip]} '#{command}' 2>&1)
+        output = %x(ssh #{@servers[name][:ip]} '#{command}' 2>&1)
         raise "run_remote_command failed" if ($? != 0)
+        output
+      end
+
+      def run_command(command)
+        output = %x(#{command})
+        raise "run_command failed" if ($? != 0)
+        output
       end
 
 ################################################################################
@@ -47,38 +55,38 @@ module Cucumber
 ################################################################################
 
       def create_container(name)
-        unless File.exists?(lxc_root(name))
-          %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t ubuntu 2>&1)
-          %x(mkdir -p #{lxc_root(name)}/root/.ssh/ 2>&1)
-          %x(chmod 0700 #{lxc_root(name)}/root/.ssh/ 2>&1)
-          %x(cat /root/.ssh/id_rsa.pub > #{lxc_root(name)}/root/.ssh/authorized_keys 2>&1)
+        unless File.exists?(lxc_rootfs(name))
+          run_command("lxc-create -n #{name} -f /etc/lxc/#{name} -t ubuntu 2>&1")
+          run_command("mkdir -p #{lxc_rootfs(name)}/root/.ssh/ 2>&1")
+          run_command("chmod 0700 #{lxc_rootfs(name)}/root/.ssh/ 2>&1")
+          run_command("cat /root/.ssh/id_rsa.pub > #{lxc_rootfs(name)}/root/.ssh/authorized_keys 2>&1")
         end
         start_container(name)
       end
 
       def destroy_container(name)
         stop_container(name)
-        if File.exists?(lxc_root(name))
-          %x(lxc-destroy -n #{name} 2>&1)
+        if File.exists?(lxc_rootfs(name))
+          run_command("lxc-destroy -n #{name} 2>&1")
         end
       end
 
       def start_container(name)
-        status = %x(lxc-info -n #{name} 2>&1)
+        status = run_command("lxc-info -n #{name} 2>&1")
         if status.include?("STOPPED")
-          %x(lxc-start -d -n #{name})
+          run_command("lxc-start -d -n #{name}")
         end
       end
 
       def stop_container(name)
-        status = %x(lxc-info -n #{name} 2>&1)
+        status = run_command("lxc-info -n #{name} 2>&1")
         if status.include?("RUNNING")
-          %x(lxc-stop -n #{name})
+          run_command("lxc-stop -n #{name}")
         end
       end
 
       def list_containers
-        %x(lxc-ls 2>&1).split("\n").uniq
+        run_command("lxc-ls 2>&1").split("\n").uniq
       end
 
 ################################################################################
@@ -94,7 +102,7 @@ module Cucumber
       # call this before run_chef
       def set_chef_client_attributes(name, attributes={})
         attributes.merge!(:tags => ["container"])
-        attributes_json = File.join("/", lxc_root(name), "etc", "chef", "attributes.json")
+        attributes_json = File.join("/", lxc_rootfs(name), "etc", "chef", "attributes.json")
         FileUtils.mkdir_p(File.dirname(attributes_json))
         File.open(attributes_json, 'w') do |f|
           f.puts(attributes.to_json)
@@ -118,7 +126,7 @@ module Cucumber
       end
 
       def create_client_rb(name)
-        client_rb = File.join("/", lxc_root(name), "etc", "chef", "client.rb")
+        client_rb = File.join("/", lxc_rootfs(name), "etc/chef/client.rb")
         FileUtils.mkdir_p(File.dirname(client_rb))
         File.open(client_rb, 'w') do |f|
           f.puts("log_level               :#{@chef_client[:log_level]}")
@@ -127,17 +135,17 @@ module Cucumber
           f.puts("validation_client_name  \"#{@chef_client[:validation_client_name]}\"")
           f.puts("node_name               \"cucumber-chef-#{name}\"")
         end
-        %x(cp /etc/chef/validation.pem #{lxc_root(name)}/etc/chef/ 2>&1)
+        run_command("cp /etc/chef/validation.pem #{lxc_rootfs(name)}/etc/chef/ 2>&1")
       end
 
 ################################################################################
 
-      def lxc_root(name)
-        File.join("/", "var", "lib", "lxc", name, "rootfs")
+      def lxc_rootfs(name)
+        File.join("/var/lib/lxc", name, "rootfs")
       end
 
       def create_network_config(name)
-        lxc_network_config = File.join("/", "etc", "lxc", name)
+        lxc_network_config = File.join("/etc/lxc", name)
         File.open(lxc_network_config, 'w') do |f|
           f.puts("lxc.network.type = veth")
           f.puts("lxc.network.flags = up")
@@ -149,7 +157,7 @@ module Cucumber
       end
 
       def create_dhcp_config
-        dhcpd_lxc_config = File.join("/", "etc", "dhcp3", "lxc.conf")
+        dhcpd_lxc_config = File.join("/etc/dhcp3/lxc.conf")
         File.open(dhcpd_lxc_config, 'w') do |f|
           f.puts("option subnet-mask 255.255.0.0;")
           f.puts("option broadcast-address 192.168.255.255;")
@@ -168,7 +176,7 @@ module Cucumber
             f.puts("}")
           end
         end
-        %x(service dhcp3-server restart)
+        run_command("service dhcp3-server restart")
       end
 
       def container_sshd_ready?(ip)
