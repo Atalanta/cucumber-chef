@@ -121,14 +121,6 @@ class CucumberChef < Thor
     config.verify
     if (test_lab = Cucumber::Chef::TestLab.new(config))
       test_lab.info
-      puts("Chef Nodes:") if test_lab.nodes.count > 0
-      test_lab.nodes.each do |node|
-        puts("  * #{node.name}")
-      end
-      puts("Chef Clients:") if test_lab.clients.count > 0
-      test_lab.clients.each do |node|
-        puts("  * #{node.name}")
-      end
     end
 
   rescue Cucumber::Chef::Error => err
