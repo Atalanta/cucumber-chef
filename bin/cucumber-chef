@@ -59,10 +59,10 @@ class CucumberChef < Thor
       test_lab = Cucumber::Chef::TestLab.new(config)
       server = test_lab.create
 
-      provisioner = Cucumber::Chef::Provisioner.new
-      provisioner.upload_cookbook(config)
-      provisioner.upload_role(config)
-      provisioner.bootstrap_node(config, server)
+      provisioner = Cucumber::Chef::Provisioner.new(config)
+      provisioner.upload_cookbook
+      provisioner.upload_role
+      provisioner.bootstrap_node(server)
 
     rescue Cucumber::Chef::Error => err
       error(err.message)

@@ -5,7 +5,7 @@ describe Cucumber::Chef::Provisioner do
     @config = Cucumber::Chef::Config.test_config(StringIO.new, StringIO.new, StringIO.new)
   end
 
-  subject { Cucumber::Chef::Provisioner.new(StringIO.new, StringIO.new, StringIO.new) }
+  subject { Cucumber::Chef::Provisioner.new(@config, StringIO.new, StringIO.new, StringIO.new) }
 
   describe "upload_cookbook" do
     before(:each) do
@@ -20,7 +20,7 @@ describe Cucumber::Chef::Provisioner do
     end
 
     it "should upload the cucumber-chef cookbook" do
-      subject.upload_cookbook(@config)
+      subject.upload_cookbook
       ::Chef::CookbookVersion.list["cucumber-chef"].should be
     end
   end
@@ -37,15 +37,15 @@ describe Cucumber::Chef::Provisioner do
     end
 
     it "should upload the test_lab role" do
-      subject.upload_role(@config)
+      subject.upload_role
       ::Chef::Role.list["test_lab"].should be
     end
   end
 
   describe "bootstrap_node" do
     before(:all) do
-      subject.upload_cookbook(@config)
-      subject.upload_role(@config)
+      subject.upload_cookbook
+      subject.upload_role
     end
 
     before(:each) do
@@ -67,7 +67,7 @@ describe Cucumber::Chef::Provisioner do
 
     it "should assign a random name to the node", :slow => true do
       begin
-        subject.bootstrap_node(@config, @server)
+        subject.bootstrap_node(@server)
       rescue
         subject.stdout.rewind; subject.stderr.rewind
         puts("Output from #bootstrap_node:")
