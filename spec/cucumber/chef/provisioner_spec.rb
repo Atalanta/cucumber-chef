@@ -2,8 +2,10 @@ require File.join(File.dirname(__FILE__), "../../spec_helper.rb")
 
 describe Cucumber::Chef::Provisioner do
   before(:all) do
-    @config = Cucumber::Chef::Config.test_config
+    @config = Cucumber::Chef::Config.test_config(StringIO.new, StringIO.new, StringIO.new)
   end
+
+  subject { Cucumber::Chef::Provisioner.new(StringIO.new, StringIO.new, StringIO.new) }
 
   describe "upload_cookbook" do
     before(:each) do
@@ -44,46 +46,38 @@ describe Cucumber::Chef::Provisioner do
     before(:all) do
       subject.upload_cookbook(@config)
       subject.upload_role(@config)
-      sleep(5)
     end
 
     before(:each) do
-      @test_lab = Cucumber::Chef::TestLab.new(@config)
+      @test_lab = Cucumber::Chef::TestLab.new(@config, StringIO.new, StringIO.new, StringIO.new)
       @test_lab.destroy
       begin
-        buildoutput = StringIO.new
-        server = subject.build_test_lab(@config, buildoutput)
+        @server = @test_lab.create
       rescue
-        puts "Output from #build_test_lab:"
-        puts buildoutput.read
+        puts("Output from #create:")
+        subject.stdout.rewind
+        puts(subject.stdout.read)
         raise
       end
-      @dns_name = server.dns_name
-      sleep(30)
     end
 
     after(:each) do
       @test_lab.destroy
     end
 
-    it "should assign a random name to the node" do
+    it "should assign a random name to the node", :slow => true do
       begin
-        puts "Beginning bootstrap on #{@dns_name}..."
-        subject.bootstrap_node(@dns_name, @config)
+        subject.bootstrap_node(@config, @server)
       rescue
-        puts "Output from #bootstrap_node:"
-        puts "  STANDARD OUTPUT:", subject.stdout.read, "\n\n"
-        puts "  STANDARD ERROR:", subject.stderr.read, "\n\n"
+        subject.stdout.rewind; subject.stderr.rewind
+        puts("Output from #bootstrap_node:")
+        puts("  STDOUT:\n", subject.stdout.read, "\n\n")
+        puts("  STDERR:\n", subject.stderr.read, "\n\n")
         raise
       end
-      found_node = false
-      tries = 0
-      while ! found_node && tries < 5
-        tries += 1
-        sleep(10)
-        found_node = !!@test_lab.nodes.detect do |node|
-          node.name.match /^cucumber-chef-[0-9a-f]{8}$/
-        end
+      sleep(30)
+      found_node = !!@test_lab.nodes.detect do |node|
+        node.name.match /^cucumber-chef-[0-9a-f]{8}$/
       end
       found_node.should be
     end

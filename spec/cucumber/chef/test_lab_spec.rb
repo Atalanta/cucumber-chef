@@ -2,16 +2,16 @@ require File.join(File.dirname(__FILE__), "../../spec_helper.rb")
 
 describe Cucumber::Chef::TestLab do
   before(:all) do
-    @config = Cucumber::Chef::Config.test_config
+    @config = Cucumber::Chef::Config.test_config(StringIO.new, StringIO.new, StringIO.new)
   end
 
-  subject { Cucumber::Chef::TestLab.new(@config) }
+  subject { Cucumber::Chef::TestLab.new(@config, StringIO.new, StringIO.new, StringIO.new) }
 
   it "should create a cucumber-chef security group" do
     existing_group = subject.connection.security_groups.get("cucumber-chef")
     existing_group && existing_group.destroy
     subject.connection.security_groups.get("cucumber-chef").should_not be
-    lab = Cucumber::Chef::TestLab.new(@config)
+    lab = Cucumber::Chef::TestLab.new(@config, StringIO.new, StringIO.new, StringIO.new)
     permissions = lab.connection.security_groups.get("cucumber-chef").ip_permissions
     permissions.size.should == 1
     permissions.first["fromPort"].should == 22
@@ -20,7 +20,9 @@ describe Cucumber::Chef::TestLab do
 
   describe "with no running labs" do
     it "should not return any info" do
-      subject.info.should == nil
+      subject.info
+      subject.stdout.rewind
+      subject.stdout.read.should match(/no test labs/)
     end
   end
 
@@ -28,31 +30,33 @@ describe Cucumber::Chef::TestLab do
     after(:each) { subject.destroy }
 
     it "should spin up an ec2 instance", :slow => true do
-      output = StringIO.new
-      subject.create(output)
-      output.rewind
-      output.read.should match(/Platform provisioned/)
+      subject.create
+      subject.stdout.rewind
+      subject.stdout.read.should match(/Instance provisioned/)
     end
 
-    it "should only spin up one ec2 instance", :slow => true do
-      subject.create(StringIO.new)
-      expect {
-        subject.create(StringIO.new)
-      }.to raise_error(Cucumber::Chef::TestLabError)
+    it "should attempt reprovision if ec2 instance already exists", :slow => true do
+      subject.create
+      subject.stdout.truncate(0)
+      subject.create
+      subject.stdout.rewind
+      subject.stdout.read.should match(/attempting to reprovision/)
     end
 
     it "should report its public ip address", :slow => true do
-      server = subject.create(StringIO.new)
-      subject.info.should == server.public_ip_address
+      server = subject.create
+      subject.info
+      subject.stdout.rewind
+      subject.stdout.read.should match(/#{server.public_ip_address}/)
     end
   end
 
   describe "destroy" do
     it "should destroy the running ec2 instance", :slow => true do
-      subject.create(StringIO.new)
+      server = subject.create
       subject.destroy
-      subject.exists?.should_not be
+      subject.stdout.rewind
+      subject.stdout.read.should match(/Destroying Server: #{server.public_ip_address}/)
     end
   end
 end
-

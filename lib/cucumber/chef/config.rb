@@ -9,7 +9,10 @@ module Cucumber
       KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file]
       OPTIONAL_KNIFE_KEYS = %w[aws_instance_arch aws_instance_disk_store aws_instance_type]
 
-      def initialize
+      attr_accessor :stdout, :stderr, :stdin
+
+      def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
+        @stdout, @stderr, @stdin = stdout, stderr, stdin
         config[:mode] = "user"
       end
 
@@ -41,8 +44,8 @@ module Cucumber
         @config
       end
 
-      def self.test_config
-        config = self.new
+      def self.test_config(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
+        config = self.new(stdout, stderr, stdin)
         config[:mode] = "test"
         config
       end
@@ -69,7 +72,7 @@ module Cucumber
       end
 
       def verify
-        puts "Verifing Configuration..."
+        @stdout.puts("Verifing Configuration...")
         @errors = []
         verify_orgname
         verify_opscode_user
@@ -93,7 +96,7 @@ module Cucumber
             ami.region == knife_config[:region]
           end
 
-          puts("Using EC2 AMI: #{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})") if ami
+          @stdout.puts("Using EC2 AMI: #{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})") if ami
 
           (ami.name rescue "")
         end

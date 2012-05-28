@@ -1,5 +1,12 @@
 require File.join(File.dirname(__FILE__), "../../spec_helper.rb")
 
+VALID_AMIS = %w(ami-f3c59db6 ami-adc59de8 ami-a1c59de4 ami-afc59dea ami-0fac7566 ami-37af765e ami-8fac75e6 ami-0baf7662 ami-0dc6fe79 ami-e3c6fe97 ami-fbc6fe8f ami-edc6fe99 ami-1d154e58 ami-39154e7c ami-2b154e6e ami-3b154e7e ami-7b8f5712 ami-d38f57ba ami-098f5760 ami-d78f57be ami-d57942a1 ami-db7942af ami-df7942ab ami-c57942b1)
+
+VALID_RELEASES = %w(lucid maverick)
+VALID_REGIONS = %w(us-west-1 us-east-1 eu-west-1)
+VALID_ARCHS = %w(i386 amd64)
+VALID_DISK_STORES = %w(instance-store ebs)
+
 describe Cucumber::Chef::Config do
   before(:all) do
     @orgname = ENV["ORGNAME"]
@@ -10,6 +17,9 @@ describe Cucumber::Chef::Config do
     ENV["ORGNAME"] = @orgname
     ENV["OPSCODE_USER"] = @opscode_user
   end
+
+  subject { Cucumber::Chef::Config.new(StringIO.new, StringIO.new, StringIO.new) }
+
 
   describe "verification" do
     describe "when ORGNAME is not set" do
@@ -99,7 +109,7 @@ describe Cucumber::Chef::Config do
     end
 
     it "should provide a method for getting a test mode configuration" do
-      config = Cucumber::Chef::Config.test_config
+      config = Cucumber::Chef::Config.test_config(StringIO.new, StringIO.new, StringIO.new)
       config[:mode].should == "test"
     end
 
@@ -119,10 +129,6 @@ describe Cucumber::Chef::Config do
     end
 
     describe "and no ami is specified but a release, region, arch and disk store are" do
-      VALID_RELEASES = %w(lucid maverick)
-      VALID_REGIONS = %w(us-west-1 us-east-1 eu-west-1)
-      VALID_ARCHS = %w(i386 amd64)
-      VALID_DISK_STORES = %w(instance-store ebs)
 
       before(:each) do
         subject[:knife][:aws_image_id] = nil
@@ -154,7 +160,6 @@ describe Cucumber::Chef::Config do
     end
 
     describe "and no ami is specified but region and ubuntu release are" do
-      VALID_AMIS = %w(ami-f3c59db6 ami-adc59de8 ami-a1c59de4 ami-afc59dea ami-0fac7566 ami-37af765e ami-8fac75e6 ami-0baf7662 ami-0dc6fe79 ami-e3c6fe97 ami-fbc6fe8f ami-edc6fe99 ami-1d154e58 ami-39154e7c ami-2b154e6e ami-3b154e7e ami-7b8f5712 ami-d38f57ba ami-098f5760 ami-d78f57be ami-d57942a1 ami-db7942af ami-df7942ab ami-c57942b1)
 
       before(:each) do
         subject[:knife][:aws_image_id] = nil
@@ -168,30 +173,30 @@ describe Cucumber::Chef::Config do
         VALID_AMIS.include?(subject.aws_image_id).should == true
       end
 
-      it "should get a valid ami if i386 specified" do
+      it "should get a valid ami if arch i386 specified" do
         subject[:knife][:aws_instance_arch] = "i386"
         VALID_AMIS.include?(subject.aws_image_id).should == true
       end
 
-      it "should get a a valid ami if i386 specified" do
+      it "should get a valid ami if region us-west-1 and arch i386 specified" do
         subject[:knife][:region] = "us-west-1"
         subject[:knife][:aws_instance_arch] = "i386"
         VALID_AMIS.include?(subject.aws_image_id).should == true
       end
 
-      it "should get a valid ami if amd64 specified" do
+      it "should get a valid ami if arch amd64 specified" do
         subject[:knife][:aws_instance_arch] = "amd64"
         VALID_AMIS.include?(subject.aws_image_id).should == true
       end
 
-      it "should get an ebs backed instance if specified" do
+      it "should get a valid ami if disk store ebs specified" do
         subject[:knife][:aws_instance_disk_store] = "ebs"
         VALID_AMIS.include?(subject.aws_image_id).should == true
       end
 
-      it "should get a large ebs backed instance if specified" do
+      it "should get a valid ami if instance large and disk store ebs specified" do
         subject[:knife][:aws_instance_disk_store] = "ebs"
-        subject[:knife][:aws_instance_arch] = "amd64"
+        subject[:knife][:aws_instance_type] = "m1.large"
         VALID_AMIS.include?(subject.aws_image_id).should == true
       end
     end
@@ -219,4 +224,3 @@ describe Cucumber::Chef::Config do
     end
   end
 end
-

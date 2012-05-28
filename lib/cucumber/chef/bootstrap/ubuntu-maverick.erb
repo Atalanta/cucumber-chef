@@ -1,8 +1,27 @@
 bash -c '
-if [ ! -f /usr/bin/chef-client ]; then
-  apt-get -q update
-  apt-get -q -y install curl
-  curl -L http://www.opscode.com/chef/install.sh | bash
+
+<%= "export http_proxy=\"#{@config[:bootstrap_proxy]}\"" if @config[:bootstrap_proxy] -%>
+
+exists() {
+  if command -v $1 &>/dev/null
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+install_sh="http://opscode.com/chef/install.sh"
+version_string="<%= "-v #{@config[:bootstrap_version]}" if @config[:bootstrap_version] %>"
+
+if ! exists /usr/bin/chef-client; then
+  if exists wget; then
+    bash <(wget <%= "--proxy=on " if @config[:bootstrap_proxy] %> ${install_sh} -O -) ${version_string}
+  else
+    if exists curl; then
+      bash <(curl -L <%= "--proxy=on " if @config[:bootstrap_proxy] %> ${install_sh}) ${version_string}
+    fi
+  fi
 fi
 
 mkdir -p /etc/chef
@@ -18,11 +37,7 @@ log_level               :debug
 log_location            "/var/log/chef.log"
 chef_server_url         "<%= @config[:chef_server_url] %>"
 validation_client_name  "<%= @config[:validation_client_name] %>"
-<% if @config[:chef_node_name] == nil %>
-# Using default node name
-<% else %>
 node_name               "<%= @config[:chef_node_name] %>"
-<% end %>
 EOF
 
 cat <<EOF > /etc/chef/first-boot.json

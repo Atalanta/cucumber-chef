@@ -7,14 +7,14 @@ module Cucumber
     class Provisioner
       attr_accessor :stdout, :stderr, :stdin
 
-      def initialize
+      def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
+        @stdout, @stderr, @stdin = stdout, stderr, stdin
         @cookbook_path = File.join(File.dirname(__FILE__), "../../../cookbooks/cucumber-chef")
-        @stdout, @stderr, @stdin = StringIO.new, StringIO.new, StringIO.new
       end
 
       def bootstrap_node(config, server)
         template_file = File.join(File.dirname(__FILE__), "bootstrap/ubuntu-#{config[:knife][:ubuntu_release]}.erb")
-        puts("Using bootstrap template '#{template_file}'.")
+        @stdout.puts("Using bootstrap template '#{template_file}'.")
         run_bootstrap(config, template_file, server, chef_node_name(config), "role[test_lab]")
         tag_node(config)
       end
@@ -44,16 +44,19 @@ module Cucumber
         node.save
       end
 
+
     private
+
       def run_bootstrap(config, template_file, server, node_name, run_list=nil)
-        puts("Preparing bootstrap for '#{server.public_ip_address}'.")
+        @stdout.puts("Preparing bootstrap for '#{server.public_ip_address}'.")
 
         bootstrap = ::Chef::Knife::Bootstrap.new
-        ui = ::Chef::Knife::UI.new(STDOUT, STDERR, STDIN, bootstrap.config)
+        ui = ::Chef::Knife::UI.new(@stdout, @stderr, @stdin, bootstrap.config)
         bootstrap.ui = ui
         bootstrap.name_args = [server.public_ip_address]
         bootstrap.config[:run_list] = run_list
         bootstrap.config[:ssh_user] = "ubuntu"
+        bootstrap.config[:ssh_password] = "ubuntu"
         bootstrap.config[:identity_file] = config[:knife][:identity_file]
         bootstrap.config[:chef_node_name] = node_name
         bootstrap.config[:use_sudo] = true
@@ -61,13 +64,15 @@ module Cucumber
         bootstrap.config[:validation_client_name] = config["validation_client_name"]
         bootstrap.config[:validation_key] = config["validation_key"]
         bootstrap.config[:chef_server_url] = config["chef_server_url"]
+        bootstrap.config[:distro] = "ubuntu-#{config[:knife][:ubuntu_release]}"
+        bootstrap.config[:host_key_verify] = false
 
-        sleep(10)
+        sleep(3)
 
-        puts("Running bootstrap for '#{server.public_ip_address}'.")
+        @stdout.puts("Running bootstrap for '#{server.public_ip_address}'.")
         bootstrap.run
 
-        puts("Finished bootstrapping '#{server.public_ip_address}'.")
+        @stdout.puts("Finished bootstrapping '#{server.public_ip_address}'.")
         bootstrap
       end
 
