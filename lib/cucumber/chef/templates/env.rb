@@ -4,11 +4,11 @@ require 'rspec/expectations'
 require 'chef'
 require 'cucumber/chef'
 require 'cucumber/chef/steps'
-require 'cucumber/chef/handy'
+require 'cucumber/chef/helpers'
 
 class CustomWorld
   include Cucumber::Chef
-  include Cucumber::Chef::Handy
+  include Cucumber::Chef::Helpers
 end
 
 World do

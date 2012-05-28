@@ -1,6 +1,6 @@
 module Cucumber
   module Chef
-    module Handy
+    module Helpers
 
 ################################################################################
 
