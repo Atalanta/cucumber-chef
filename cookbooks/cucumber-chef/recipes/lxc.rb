@@ -63,14 +63,27 @@ end
 # create a configuration directory for lxc
 directory "/etc/lxc"
 
-# install our lxc container creation template
-template "/usr/lib/lxc/templates/lxc-lucid-chef" do
-  source "lxc-lucid-chef.erb"
-  mode "0755"
+# load the chef client into our distro lxc cache
+INSTALL_CHEF_SH = "/tmp/install-chef.sh"
+DISTROS = %w(ubuntu)
+ARCH = (%x(arch).include?("i686") ? "i386" : "amd64")
+
+cookbook_file "/etc/lxc/initializer" do
+  source "lxc-initializer-config"
 end
 
-# install our shell script which handles installing ruby, rubygems and chef in our lxc containers
-cookbook_file "/etc/lxc/install-chef.sh" do
-  source "lxc-install-chef"
-  mode "0755"
+DISTROS.each do |distro|
+  cache_rootfs = "/var/cache/lxc/#{distro}/rootfs-#{ARCH}"
+
+  # initialize lxc's distro cache
+  execute "lxc-create -n initializer -f /etc/lxc/initializer -t #{distro}"
+
+  execute "lxc-destroy -n initializer"
+
+  cookbook_file "#{cache_rootfs}#{INSTALL_CHEF_SH}" do
+    source "lxc-install-chef"
+    mode "0755"
+  end
+
+  execute "chroot #{cache_rootfs} /bin/bash -c '#{INSTALL_CHEF_SH}'"
 end

@@ -6,6 +6,5 @@ run_list(
 )
 
 override_attributes "cucumber-chef" => {
-  "orgname" => "#{ENV["ORGNAME"]}",
-  "nodename" => "cucumber-chef-controller"
+  "orgname" => "#{ENV["ORGNAME"]}"
 }
