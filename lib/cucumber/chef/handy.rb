@@ -21,7 +21,7 @@ module Cucumber
       def create_server(name, ip=nil, mac=nil)
         ip = (ip || generate_ip)
         mac = (mac || generate_mac)
-        @servers = {}.merge(name => { :ip => ip, :mac => mac })
+        @servers = (@servers || {}).merge(name => { :ip => ip, :mac => mac })
 
         log(name, ip, "Building")
 
