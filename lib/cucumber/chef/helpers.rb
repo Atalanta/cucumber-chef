@@ -5,11 +5,13 @@ module Cucumber
 ################################################################################
 
       def run_chroot_command(name, command)
-        %x(chroot #{get_root(name)} /bin/bash -c '#{command}' 2>&1)
+        %x(chroot #{lxc_root(name)} /bin/bash -c '#{command}' 2>&1)
+        raise "run_chroot_command failed" if ($? != 0)
       end
 
       def run_remote_command(name, command)
         %x(ssh #{@servers[name][:ip]} '#{command}' 2>&1)
+        raise "run_remote_command failed" if ($? != 0)
       end
 
 ################################################################################
@@ -28,17 +30,8 @@ module Cucumber
         create_dhcp_config
         create_network_config(name)
         create_container(name)
-        %x(mkdir -p #{get_root(name)}/root/.ssh/ 2>&1)
-        %x(chmod 0700 #{get_root(name)}/root/.ssh/ 2>&1)
-        %x(cat /root/.ssh/id_rsa.pub > #{get_root(name)}/root/.ssh/authorized_keys 2>&1)
-        sleep(1) until container_sshd_ready?(ip)
-
-        log(name, ip, "Booted")
-
-        run_remote_command(name, "DEBIAN_FRONTEND=noninteractive apt-get -q -y --force-yes install curl 2>&1")
-        run_remote_command(name, "curl -L http://www.opscode.com/chef/install.sh | bash 2>&1")
         create_client_rb(name)
-        %x(cp /etc/chef/validation.pem #{get_root(name)}/etc/chef/ 2>&1)
+        sleep(1) until container_sshd_ready?(ip)
 
         log(name, ip, "Ready")
       end
@@ -54,15 +47,18 @@ module Cucumber
 ################################################################################
 
       def create_container(name)
-        unless File.exists?(get_root(name))
+        unless File.exists?(lxc_root(name))
           %x(lxc-create -n #{name} -f /etc/lxc/#{name} -t ubuntu 2>&1)
+          %x(mkdir -p #{lxc_root(name)}/root/.ssh/ 2>&1)
+          %x(chmod 0700 #{lxc_root(name)}/root/.ssh/ 2>&1)
+          %x(cat /root/.ssh/id_rsa.pub > #{lxc_root(name)}/root/.ssh/authorized_keys 2>&1)
         end
         start_container(name)
       end
 
       def destroy_container(name)
         stop_container(name)
-        if File.exists?(get_root(name))
+        if File.exists?(lxc_root(name))
           %x(lxc-destroy -n #{name} 2>&1)
         end
       end
@@ -97,7 +93,8 @@ module Cucumber
 
       # call this before run_chef
       def set_chef_client_attributes(name, attributes={})
-        attributes_json = Pathname.new(File.join("/", get_root(name), "etc", "chef", "attributes.json"))
+        attributes.merge!(:tags => ["container"])
+        attributes_json = File.join("/", lxc_root(name), "etc", "chef", "attributes.json")
         FileUtils.mkdir_p(File.dirname(attributes_json))
         File.open(attributes_json, 'w') do |f|
           f.puts(attributes.to_json)
@@ -121,7 +118,7 @@ module Cucumber
       end
 
       def create_client_rb(name)
-        client_rb = Pathname.new(File.join("/", get_root(name), "etc", "chef", "client.rb"))
+        client_rb = File.join("/", lxc_root(name), "etc", "chef", "client.rb")
         FileUtils.mkdir_p(File.dirname(client_rb))
         File.open(client_rb, 'w') do |f|
           f.puts("log_level               :#{@chef_client[:log_level]}")
@@ -130,16 +127,17 @@ module Cucumber
           f.puts("validation_client_name  \"#{@chef_client[:validation_client_name]}\"")
           f.puts("node_name               \"cucumber-chef-#{name}\"")
         end
+        %x(cp /etc/chef/validation.pem #{lxc_root(name)}/etc/chef/ 2>&1)
       end
 
 ################################################################################
 
-      def get_root(name)
+      def lxc_root(name)
         Pathname.new(File.join("/", "var", "lib", "lxc", name, "rootfs"))
       end
 
       def create_network_config(name)
-        lxc_network_config = Pathname.new(File.join("/", "etc", "lxc", name))
+        lxc_network_config = File.join("/", "etc", "lxc", name)
         File.open(lxc_network_config, 'w') do |f|
           f.puts("lxc.network.type = veth")
           f.puts("lxc.network.flags = up")
@@ -174,7 +172,6 @@ module Cucumber
       end
 
       def container_sshd_ready?(ip)
-        sleep 1
         socket = TCPSocket.new(ip, 22)
         ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
       rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
