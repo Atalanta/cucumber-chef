@@ -142,7 +142,7 @@ class CucumberChef < Thor
       raise "Project dir '#{project_dir}' does not exist."
     end
     config.verify
-    runner = Cucumber::Chef::TestRunner.new(project_dir, config)
+    runner = Cucumber::Chef::TestRunner.new(config, project_dir)
     runner.reset_project
     runner.upload_project
   end
@@ -156,7 +156,7 @@ class CucumberChef < Thor
       puts "Using project directory: #{project_dir}"
     end
     config.verify
-    runner = Cucumber::Chef::TestRunner.new(project_dir, config)
+    runner = Cucumber::Chef::TestRunner.new(config, project_dir)
     runner.run
   end
 end

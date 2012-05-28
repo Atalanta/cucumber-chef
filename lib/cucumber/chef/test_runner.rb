@@ -6,9 +6,9 @@ module Cucumber
 
       require 'cucumber/chef/test_lab'
 
-      def initialize(project_dir, config)
-        @project_dir = project_dir
+      def initialize(config, project_dir)
         @config = config
+        @project_dir = project_dir
 
         @test_lab = Cucumber::Chef::TestLab.new(@config)
 
