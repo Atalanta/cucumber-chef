@@ -7,8 +7,8 @@ module Cucumber
 
 ################################################################################
 
-      def self.ready?(ip)
-        socket = TCPSocket.new(ip, 22)
+      def self.ready?(hostname)
+        socket = TCPSocket.new(hostname, 22)
         ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
       rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
         false
