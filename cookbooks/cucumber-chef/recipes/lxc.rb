@@ -75,7 +75,6 @@ end
 DISTROS.each do |distro|
   cache_rootfs = "/var/cache/lxc/#{distro}/rootfs-#{ARCH}"
 
-  # initialize lxc's distro cache
   execute "lxc-create -n initializer -f /etc/lxc/initializer -t #{distro}"
 
   execute "lxc-destroy -n initializer"
