@@ -5,6 +5,19 @@ module Cucumber
     class SSH
       attr_accessor :stdout, :stderr, :stdin, :config
 
+################################################################################
+
+      def self.ready?(ip)
+        socket = TCPSocket.new(ip, 22)
+        ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
+      rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+        false
+      ensure
+        (socket && socket.close)
+      end
+
+################################################################################
+
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @config = {}
