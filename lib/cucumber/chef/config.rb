@@ -27,6 +27,8 @@ module Cucumber
 
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
+        @stdout.sync = true
+
         config[:mode] = :user
       end
 
