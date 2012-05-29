@@ -64,8 +64,6 @@ module Cucumber
         bootstrap.config[:distro] = "ubuntu-#{@config[:knife][:ubuntu_release]}"
         bootstrap.config[:host_key_verify] = false
 
-        sleep(3)
-
         @stdout.puts("Running bootstrap for '#{server.public_ip_address}'.")
         bootstrap.run
 
