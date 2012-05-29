@@ -20,7 +20,7 @@ module Cucumber
         raise BootstrapError, "you must supply a 'template_file'" if !@config[:template_file]
         raise BootstrapError, "you must supply a 'host'" if !@config[:host]
         raise BootstrapError, "you must supply a 'ssh_user'" if !@config[:ssh_user]
-        raise BootstrapError, "you must supply a 'ssh_password' or 'identity_file'" if (!@config[:ssh_password] || !@config[:identity_file])
+        raise BootstrapError, "you must supply a 'ssh_password' or 'identity_file'" if (!@config[:ssh_password] && !@config[:identity_file])
 
         @stdout.puts("Preparing bootstrap for '#{@config[:host]}'.")
         @ssh.config[:host] = @config[:host]
