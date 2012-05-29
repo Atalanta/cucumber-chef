@@ -1,4 +1,6 @@
 bash -c '
+[ -f /.cucumber-chef-bootstrap ] && echo "Already bootstrapped!" && exit
+
 export DEBIAN_FRONTEND=noninteractive
 
 echo "127.0.0.1 <%= @config[:hostname] %>" >> /etc/hosts
@@ -54,4 +56,6 @@ sleep 12
 kill `jobs -p`
 sleep 3
 /etc/init.d/chef-server-webui start
+
+touch /.cucumber-chef-bootstrap
 '
