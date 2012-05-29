@@ -22,7 +22,3 @@ description "Platform for running acceptance and integration tests"
 run_list(
   "recipe[cucumber-chef]"
 )
-
-override_attributes "cucumber-chef" => {
-  "orgname" => "#{ENV["ORGNAME"]}"
-}
