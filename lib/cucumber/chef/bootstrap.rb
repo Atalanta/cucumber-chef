@@ -11,7 +11,7 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true
 
-        @ssh = Cucumber::Chef::SSH.new(stdout, stderr, stdin)
+        @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
         @config = Hash.new(nil)
         @config[:context] = Hash.new(nil)
       end
