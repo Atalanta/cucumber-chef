@@ -51,7 +51,7 @@ module Cucumber
             case event
             when :open then
               # args[0] : file metadata
-              puts "starting upload: #{args[0].local} -> #{args[0].remote} (#{args[0].size} bytes}"
+              puts "starting upload: #{args[0].local} -> #{args[0].remote} (#{args[0].size} bytes)"
             when :put then
               # args[0] : file metadata
               # args[1] : byte offset in remote file
@@ -76,7 +76,7 @@ module Cucumber
             case event
             when :open then
               # args[0] : file metadata
-              puts "starting download: #{args[0].remote} -> #{args[0].local} (#{args[0].size} bytes}"
+              puts "starting download: #{args[0].remote} -> #{args[0].local} (#{args[0].size} bytes)"
             when :get then
               # args[0] : file metadata
               # args[1] : byte offset in remote file
