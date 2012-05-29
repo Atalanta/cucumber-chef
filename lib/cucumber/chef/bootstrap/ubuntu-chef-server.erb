@@ -1,0 +1,57 @@
+bash -c '
+export DEBIAN_FRONTEND=noninteractive
+
+echo "127.0.0.1 <%= @config[:hostname] %>" >> /etc/hosts
+echo "<%= @config[:hostname] %>" > /etc/hostname
+hostname <%= @config[:hostname] %>
+
+echo "deb http://apt.opscode.com/ `lsb_release -cs`-0.10 main" | tee /etc/apt/sources.list.d/opscode.list
+mkdir -p /etc/apt/trusted.gpg.d
+gpg --fetch-key http://apt.opscode.com/packages@opscode.com.gpg.key
+gpg --export packages@opscode.com | tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null
+apt-get -q -y --force-yes update
+apt-get -q -y --force-yes -o Dpkg::Options::="--force-confnew" install opscode-keyring
+chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}/.gnupg
+apt-get -q -y upgrade
+
+apt-get -q -y install debconf-utils
+cat <<EOF | debconf-set-selections
+chef chef/chef_server_url string http://<%= @config[:chef_server] %>:4000
+chef-solr chef-solr/amqp_password password <%= @config[:amqp_password] %>
+chef-server-webui chef-server-webui/admin_password password <%= @config[:admin_password] %>
+EOF
+apt-get -q -y install chef chef-server
+
+mkdir -p ~/.chef
+cp /etc/chef/validation.pem /etc/chef/webui.pem ~/.chef
+
+apt-get -q -y install expect
+KNIFE_CONFIG_EXP_FILE="/tmp/knife-config.exp"
+cat <<EOF > ${KNIFE_CONFIG_EXP_FILE}
+#!/usr/bin/expect -f
+set timeout 10
+spawn knife configure -i
+expect "Overwrite ${HOME}/.chef/knife.rb" { send "Y\n" }
+expect "Where should I put the config file?" { send "\n" }
+expect "Please enter the chef server URL" { send "http://<%= @config[:chef_server] %>:4000\n" }
+expect "Please enter a clientname for the new client" { send "${SUDO_USER}\n" }
+expect "Please enter the existing admin clientname" { send "\n" }
+expect "Please enter the location of the existing admin client" { send "${HOME}/.chef/webui.pem\n" }
+expect "Please enter the validation clientname" { send "\n" }
+expect "Please enter the location of the validation key" { send "${HOME}/.chef/validation.pem\n" }
+expect "Please enter the path to a chef repository" { send "${HOME}/chef_repo\n" }
+interact
+EOF
+chmod +x ${KNIFE_CONFIG_EXP_FILE}
+${KNIFE_CONFIG_EXP_FILE}
+
+chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
+
+/etc/init.d/chef-server-webui stop
+sleep 3
+/usr/sbin/chef-server-webui &
+sleep 12
+kill `jobs -p`
+sleep 3
+/etc/init.d/chef-server-webui start
+'
