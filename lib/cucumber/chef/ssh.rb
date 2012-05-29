@@ -69,6 +69,7 @@ module Cucumber
       def options
         options = (options || {}).merge(:password => @config[:ssh_password]) if @config[:ssh_password]
         options = (options || {}).merge(:keys => @config[:identity_file]) if @config[:identity_file]
+        options = (options || {}).merge(:timeout => @config[:timeout]) if @config[:timeout]
         options = (options || {}).merge(:user_known_hosts_file  => '/dev/null') if !@config[:host_key_verify]
         options = (options || {}).merge(:proxy => proxy_command) if @config[:proxy]
 
