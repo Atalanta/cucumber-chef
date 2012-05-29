@@ -64,6 +64,21 @@ class CucumberChef < Thor
       bootstrap.config[:context][:amqp_password] = "p@ssw0rd1"
       bootstrap.config[:context][:admin_password] = "p@ssw0rd1"
       bootstrap.run
+
+      ssh = Cucumber::Chef::SSH.new
+      ssh.config[:host] = server.public_ip_address
+      ssh.config[:ssh_user] = "ubuntu"
+      ssh.config[:identity_file] = config[:knife][:identity_file]
+      local_path = File.join(Dir.pwd, ".cucumber-chef")
+      remote_path = ".chef"
+
+      FileUtils.mkdir_p(local_path)
+
+      files = %w( knife.rb ubuntu.pem validation.pem )
+      files.each do |file|
+        ssh.download(File.join(remote_path, file), File.join(local_path, file))
+      end
+
       exit
 
       provisioner = Cucumber::Chef::Provisioner.new(config)
