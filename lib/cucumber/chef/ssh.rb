@@ -7,8 +7,8 @@ module Cucumber
 
 ################################################################################
 
-      def self.ready?(hostname)
-        socket = TCPSocket.new(hostname, 22)
+      def self.ready?(host)
+        socket = TCPSocket.new(host, 22)
         ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
       rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
         false
@@ -20,22 +20,22 @@ module Cucumber
 
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
-        @config = {}
+        @config = Hash.new(nil)
       end
 
       def exec(command)
-        Net::SSH.start(@config[:hostname], @config[:ssh_user], options) do |ssh|
+        Net::SSH.start(@config[:host], @config[:ssh_user], options) do |ssh|
           channel = ssh.open_channel do |chan|
             chan.exec(command) do |ch, success|
               raise SSHError, "could not execute command" unless success
 
               ch.on_data do |c, data|
-                @stdout.print(data)
+                @stdout.print("#{@config[:host]} #{data}")
                 @stdout.flush
               end
 
               ch.on_extended_data do |c, type, data|
-                @stderr.print(data)
+                @stderr.print("#{@config[:host]} #{data}")
                 @stderr.flush
               end
 
@@ -46,7 +46,7 @@ module Cucumber
       end
 
       def upload(local, remote)
-        Net::SFTP.start(@config[:hostname], @config[:ssh_user], options) do |sftp|
+        Net::SFTP.start(@config[:host], @config[:ssh_user], options) do |sftp|
           sftp.upload!(local.to_s, remote.to_s)
         end
       end
@@ -61,7 +61,7 @@ module Cucumber
         command << ["-o", "UserKnownHostsFile=/dev/null"]
         command << ["-o", "StrictHostKeyChecking=no"]
         command << ["-i", @config[:identity_file]]
-        command << "#{@config[:ssh_user]}@#{@config[:hostname]}"
+        command << "#{@config[:ssh_user]}@#{@config[:host]}"
         command << "nc %h %p"
         command.compact.join(" ")
       end
