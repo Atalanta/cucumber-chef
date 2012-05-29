@@ -43,7 +43,7 @@ module Cucumber
       end
 
       def bootstrap(template_file)
-        bootstrap = Cucumber::Chef::Bootstrap.new
+        bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
         bootstrap.config[:host] = @server.public_ip_address
         bootstrap.config[:ssh_user] = "ubuntu"
         bootstrap.config[:use_sudo] = true
@@ -57,7 +57,7 @@ module Cucumber
       end
 
       def download_credentials
-        ssh = Cucumber::Chef::SSH.new
+        ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
         ssh.config[:host] = @server.public_ip_address
         ssh.config[:ssh_user] = "ubuntu"
         ssh.config[:identity_file] = @config[:knife][:identity_file]
