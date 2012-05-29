@@ -12,8 +12,10 @@ module Cucumber
       VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
 
       def initialize(config, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-        @stdout, @stderr, @stdin = stdout, stderr, stdin
         @config = config
+        @stdout, @stderr, @stdin = stdout, stderr, stdin
+        @stdout.sync = true
+
         @connection = Fog::Compute.new(:provider => 'AWS',
                                        :aws_access_key_id => @config[:knife][:aws_access_key_id],
                                        :aws_secret_access_key => @config[:knife][:aws_secret_access_key],

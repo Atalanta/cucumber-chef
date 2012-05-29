@@ -2,13 +2,15 @@ require "erubis"
 
 module Cucumber
   module Chef
-    class BootstrapError < Error ; end
+    class BootstrapError < Error; end
 
     class Bootstrap
       attr_accessor :stdout, :stderr, :stdin, :config
 
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
+        @stdout.sync = true
+
         @ssh = Cucumber::Chef::SSH.new(stdout, stderr, stdin)
         @config = Hash.new(nil)
         @config[:context] = Hash.new(nil)

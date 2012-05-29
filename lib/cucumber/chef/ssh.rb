@@ -1,6 +1,6 @@
 module Cucumber
   module Chef
-    class SSHError < Error ; end
+    class SSHError < Error; end
 
     class SSH
       attr_accessor :stdout, :stderr, :stdin, :config
@@ -20,6 +20,8 @@ module Cucumber
 
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
+        @stdout.sync = true
+
         @config = Hash.new(nil)
       end
 
