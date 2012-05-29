@@ -16,6 +16,8 @@ describe Cucumber::Chef::TestLab do
     permissions.size.should == 1
     permissions.first["fromPort"].should == 22
     permissions.first["toPort"].should == 22
+    permissions.first["fromPort"].should == 4000
+    permissions.first["toPort"].should == 4000
     permissions.first["fromPort"].should == 4040
     permissions.first["toPort"].should == 4040
   end

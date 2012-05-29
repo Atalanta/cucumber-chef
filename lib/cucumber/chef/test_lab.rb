@@ -193,6 +193,7 @@ module Cucumber
         unless @connection.security_groups.get(@config.security_group)
           @connection.create_security_group(@config.security_group, 'cucumber-chef test lab')
           @connection.security_groups.get(@config.security_group).authorize_port_range(22..22)
+          @connection.security_groups.get(@config.security_group).authorize_port_range(4000..4000)
           @connection.security_groups.get(@config.security_group).authorize_port_range(4040..4040)
         end
       end
