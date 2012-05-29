@@ -17,7 +17,7 @@ module Cucumber
       end
 
       def run_command(command)
-        output = %x(#{command})
+        output = %x(#{command} 2>&1)
         raise "run_command(#{command}) failed (#{$?})" if ($? != 0)
         output
       end
