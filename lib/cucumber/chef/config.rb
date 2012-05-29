@@ -34,6 +34,10 @@ module Cucumber
         config[:mode] == :test
       end
 
+      def mode
+        config[:mode]
+      end
+
       def [](key)
         config[key]
       end
