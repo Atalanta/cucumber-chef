@@ -1,6 +1,6 @@
 module Cucumber
   module Chef
-    class TestRunnerError < Error ; end
+    class TestRunnerError < Error; end
 
     class TestRunner
 
