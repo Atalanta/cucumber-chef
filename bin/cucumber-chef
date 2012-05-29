@@ -48,47 +48,15 @@ class CucumberChef < Thor
   desc "setup", "Setup Cucumber-Chef test lab in Amazon EC2"
   method_option :test, :type  => :boolean
   def setup
-    begin
-      config.verify
-      test_lab = Cucumber::Chef::TestLab.new(config)
-      server = test_lab.create
+    config.verify
+    test_lab = Cucumber::Chef::TestLab.new(config)
+    server = test_lab.create
 
-      bootstrap = Cucumber::Chef::Bootstrap.new
-      bootstrap.config[:host] = server.public_ip_address
-      bootstrap.config[:ssh_user] = "ubuntu"
-      bootstrap.config[:use_sudo] = true
-      bootstrap.config[:identity_file] = config[:knife][:identity_file]
-      bootstrap.config[:template_file] = File.join(File.dirname(__FILE__), "../lib/cucumber/chef/bootstrap/ubuntu-chef-server.erb")
-      bootstrap.config[:context][:hostname] = "cucumber-chef-test-lab"
-      bootstrap.config[:context][:chef_server] = server.public_ip_address
-      bootstrap.config[:context][:amqp_password] = "p@ssw0rd1"
-      bootstrap.config[:context][:admin_password] = "p@ssw0rd1"
-      bootstrap.run
+    provisioner = Cucumber::Chef::Provisioner.new(config, server)
+    provisioner.build
 
-      ssh = Cucumber::Chef::SSH.new
-      ssh.config[:host] = server.public_ip_address
-      ssh.config[:ssh_user] = "ubuntu"
-      ssh.config[:identity_file] = config[:knife][:identity_file]
-      local_path = File.join(Dir.pwd, ".cucumber-chef")
-      remote_path = ".chef"
-
-      FileUtils.mkdir_p(local_path)
-
-      files = %w( knife.rb ubuntu.pem validation.pem )
-      files.each do |file|
-        ssh.download(File.join(remote_path, file), File.join(local_path, file))
-      end
-
-      exit
-
-      provisioner = Cucumber::Chef::Provisioner.new(config)
-      provisioner.upload_cookbook
-      provisioner.upload_role
-      provisioner.bootstrap_node(server)
-
-    rescue Cucumber::Chef::Error => err
-      error(err.message)
-    end
+  rescue Cucumber::Chef::Error => e
+    error(e.message)
   end
 
   desc "teardown", "Teardown Cucumber-Chef test lab in Amazon EC2"
