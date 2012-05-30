@@ -35,7 +35,7 @@ module Cucumber
     private
 
       def bootstrap(template)
-        raise ProvisionerError, "you must have the environment variable 'OPSCODE_USER' or 'USER' set" if !@user
+        raise ProvisionerError("You must have the environment variable 'USER' set.") if !@user
 
         bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
         bootstrap.config[:host] = @server.public_ip_address

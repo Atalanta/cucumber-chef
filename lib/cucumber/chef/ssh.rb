@@ -30,7 +30,7 @@ module Cucumber
         Net::SSH.start(@config[:host], @config[:ssh_user], options) do |ssh|
           channel = ssh.open_channel do |chan|
             chan.exec(command) do |ch, success|
-              raise SSHError, "could not execute command" unless success
+              raise SSHError("Could not execute '#{command}'.") unless success
 
               ch.on_data do |c, data|
                 @stdout.print("#{@config[:host]} #{data}")
@@ -80,7 +80,7 @@ module Cucumber
     private
 
       def proxy_command
-        raise SSHError, "you must specify an identity file in order to proxy" if !@config[:identity_file]
+        raise SSHError("You must specify an identity file in order to SSH proxy.") if !@config[:identity_file]
 
         command = ["ssh"]
         command << ["-o", "UserKnownHostsFile=/dev/null"]
