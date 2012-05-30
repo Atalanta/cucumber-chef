@@ -34,12 +34,10 @@ module Cucumber
 
               ch.on_data do |c, data|
                 @stdout.print("#{@config[:host]} #{data}")
-                @stdout.flush
               end
 
               ch.on_extended_data do |c, type, data|
                 @stderr.print("#{@config[:host]} #{data}")
-                @stderr.flush
               end
 
             end
@@ -94,12 +92,12 @@ module Cucumber
       end
 
       def options
-        options = (options || {}).merge(:password => @config[:ssh_password]) if @config[:ssh_password]
-        options = (options || {}).merge(:keys => @config[:identity_file]) if @config[:identity_file]
-        options = (options || {}).merge(:timeout => @config[:timeout]) if @config[:timeout]
-        options = (options || {}).merge(:user_known_hosts_file  => '/dev/null') if !@config[:host_key_verify]
-        options = (options || {}).merge(:proxy => proxy_command) if @config[:proxy]
-
+        options = {}
+        options.merge!(:password => @config[:ssh_password]) if @config[:ssh_password]
+        options.merge!(:keys => @config[:identity_file]) if @config[:identity_file]
+        options.merge!(:timeout => @config[:timeout]) if @config[:timeout]
+        options.merge!(:user_known_hosts_file  => '/dev/null') if !@config[:host_key_verify]
+        options.merge!(:proxy => proxy_command) if @config[:proxy]
         options
       end
 
