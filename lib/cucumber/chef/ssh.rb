@@ -1,5 +1,6 @@
 module Cucumber
   module Chef
+
     class SSHError < Error; end
 
     class SSH
@@ -103,5 +104,6 @@ module Cucumber
       end
 
     end
+
   end
 end

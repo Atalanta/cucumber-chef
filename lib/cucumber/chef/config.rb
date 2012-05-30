@@ -2,7 +2,8 @@ require "ubuntu_ami"
 
 module Cucumber
   module Chef
-    class ConfigError < Error ; end
+
+    class ConfigError < Error; end
 
     class Config
       KEYS = %w[mode node_name chef_server_url client_key validation_key validation_client_name]
@@ -177,6 +178,8 @@ module Cucumber
       def knife_config
         self[:knife]
       end
+
     end
+
   end
 end

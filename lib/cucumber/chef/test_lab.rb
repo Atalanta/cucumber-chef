@@ -1,6 +1,7 @@
 module Cucumber
   module Chef
-    class TestLabError < Error ; end
+
+    class TestLabError < Error; end
 
     class TestLab
       attr_reader :connection, :server
@@ -201,5 +202,6 @@ module Cucumber
       end
 
     end
+
   end
 end
