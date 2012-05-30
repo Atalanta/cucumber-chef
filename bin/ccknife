@@ -9,6 +9,12 @@ else
 end
 
 knife_rb = Pathname.new(File.join(Dir.pwd, ".cucumber-chef/knife.rb")).expand_path
-command = [knife, ARGV, "-c #{knife_rb}", "2>&1"].flatten.compact.join(" ")
-puts command
-puts %x(#{command})
+if File.exists?(knife_rb)
+  command = [knife, ARGV, "-c #{knife_rb}", "2>&1"].flatten.compact.join(" ")
+  puts(command)
+  puts(%x(#{command}))
+  exit($?)
+else
+  puts("Could not find your Cucumber-Chef 'knife.rb'.  Did you setup your test lab?")
+  exit(255)
+end
