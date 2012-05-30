@@ -19,7 +19,7 @@ module Cucumber
       end
 
       def build
-        template = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/bootstrap/ubuntu-chef-server.erb")
+        template = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/templates/bootstrap/ubuntu-chef-server.erb")
         template = Pathname.new(template).expand_path
 
         bootstrap(template)
@@ -80,7 +80,8 @@ module Cucumber
       end
 
       def render_knife_rb
-        template = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/bootstrap/knife-rb.erb")
+        template = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/templates/chef/knife-rb.erb")
+        template = Pathname.new(template).expand_path
         knife_rb = Pathname.new(File.join(Dir.pwd, ".cucumber-chef/knife.rb")).expand_path
 
         context = { :chef_server => @server.public_ip_address }

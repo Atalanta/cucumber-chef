@@ -16,7 +16,7 @@ class CucumberChef < Thor
     end
 
     def generate_project_skeleton(project_dir)
-      template_dir = Pathname.new(__FILE__).parent.parent + 'lib' + 'cucumber' + 'chef' + 'templates'
+      template_dir = Pathname.new(File.join(__FILE__, "../../lib/cucumber/chef/templates/cucumber")).expand_path
 
       CucumberChef.source_root template_dir.realpath
       templates = {
@@ -72,8 +72,8 @@ class CucumberChef < Thor
   desc "project <project name>" , "Create a project template for testing an infrastructure"
   def project(project_name)
     @project = project_name
-    project_dir = Pathname.new(".") + "cucumber-chef" + @project
-    create_directory_structure(project_dir)
+    project_dir = Pathname.new(File.join(Dir.pwd, "cucumber-chef", @project)).expand_path
+    #create_directory_structure(project_dir)
     generate_project_skeleton(project_dir)
   end
 
