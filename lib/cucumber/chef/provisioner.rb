@@ -14,8 +14,8 @@ module Cucumber
         @stdout.sync = true
 
         @user = ENV['OPSCODE_USER'] || ENV['USER']
-        @cookbooks_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../cookbooks/"))
-        @roles_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../roles/"))
+        @cookbooks_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../chef_repo/cookbooks/"))
+        @roles_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../chef_repo/roles/"))
       end
 
       def build
