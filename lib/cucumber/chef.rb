@@ -15,7 +15,8 @@ require 'net/sftp'
 
 module Cucumber
   module Chef
-    class Error < StandardError ; end
+
+    class Error < StandardError; end
 
     autoload :Config, "cucumber/chef/config"
     autoload :Bootstrap, "cucumber/chef/bootstrap"
