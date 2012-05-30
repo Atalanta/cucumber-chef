@@ -12,6 +12,7 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true
 
+        @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
         @user = ENV['OPSCODE_USER'] || ENV['USER']
         @cookbooks_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../chef_repo/cookbooks/"))
         @roles_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../chef_repo/roles/"))
@@ -32,18 +33,6 @@ module Cucumber
 
 
     private
-
-      def run_command(command)
-        command = "#{command} 2>&1"
-        @stdout.puts("run_command(#{command})")
-        @stdout.puts(%x(#{command}))
-        raise ProvisionerError, "run_command(#{command}) failed! (#{$?})" if ($? != 0)
-      end
-
-      def knife_command(*args)
-        knife_rb = Pathname.new(File.join(Dir.pwd, ".cucumber-chef/knife.rb")).expand_path
-        "knife #{args.join(" ")} -c #{knife_rb}  --color -n"
-      end
 
       def bootstrap(template)
         raise ProvisionerError, "you must have the environment variable 'OPSCODE_USER' or 'USER' set" if !@user
@@ -90,15 +79,15 @@ module Cucumber
       end
 
       def upload_cookbook
-        run_command(knife_command("cookbook upload cucumber-chef", "-o", @cookbooks_path.expand_path))
+        @command.knife("cookbook upload cucumber-chef", "-o", @cookbooks_path.expand_path)
       end
 
       def upload_role
-        run_command(knife_command("role from file", @roles_path.join("test_lab.rb").expand_path))
+        @command.knife("role from file", @roles_path.join("test_lab.rb").expand_path)
       end
 
       def tag_node
-        run_command(knife_command("tag create cucumber-chef-test-lab", @config.mode))
+        @command.knife("tag create cucumber-chef-test-lab", @config.mode)
       end
 
     end
