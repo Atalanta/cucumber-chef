@@ -1,4 +1,4 @@
-require "digest"
+require "erubis"
 
 module Cucumber
   module Chef
@@ -13,16 +13,19 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true
 
+        @user = ENV['OPSCODE_USER'] || ENV['USER']
         @cookbooks_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../cookbooks/"))
         @roles_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../roles/"))
       end
 
       def build
-        template_file = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/bootstrap/ubuntu-chef-server.erb")
-        template_file = Pathname.new(template_file).expand_path
+        template = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/bootstrap/ubuntu-chef-server.erb")
+        template = Pathname.new(template).expand_path
 
-        bootstrap(template_file)
+        bootstrap(template)
         download_credentials
+        render_knife_rb
+
         upload_cookbook
         upload_role
         tag_node
@@ -39,20 +42,24 @@ module Cucumber
       end
 
       def knife_command(*args)
-        "knife #{args.join(" ")} -u ubuntu -k .cucumber-chef/ubuntu.pem -s http://#{@server.public_ip_address}:4000 --color -n"
+        knife_rb = Pathname.new(File.join(Dir.pwd, ".cucumber-chef/knife.rb")).expand_path
+        "knife #{args.join(" ")} -c #{knife_rb}  --color -n"
       end
 
-      def bootstrap(template_file)
+      def bootstrap(template)
+        raise ProvisionerError, "you must have the environment variable 'OPSCODE_USER' or 'USER' set" if !@user
+
         bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
         bootstrap.config[:host] = @server.public_ip_address
         bootstrap.config[:ssh_user] = "ubuntu"
         bootstrap.config[:use_sudo] = true
         bootstrap.config[:identity_file] = @config[:knife][:identity_file]
-        bootstrap.config[:template_file] = template_file
+        bootstrap.config[:template] = template
         bootstrap.config[:context][:hostname] = "cucumber-chef-test-lab"
         bootstrap.config[:context][:chef_server] = @server.public_ip_address
         bootstrap.config[:context][:amqp_password] = "p@ssw0rd1"
         bootstrap.config[:context][:admin_password] = "p@ssw0rd1"
+        bootstrap.config[:context][:user] = @user
         bootstrap.run
       end
 
@@ -66,9 +73,19 @@ module Cucumber
 
         FileUtils.mkdir_p(local_path)
 
-        files = [ "#{ssh.config[:ssh_user]}.pem" ]
+        files = [ "#{@user}.pem", "validation.pem" ]
         files.each do |file|
           ssh.download(File.join(remote_path, file), File.join(local_path, file))
+        end
+      end
+
+      def render_knife_rb
+        template = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/bootstrap/knife-rb.erb")
+        knife_rb = Pathname.new(File.join(Dir.pwd, ".cucumber-chef/knife.rb")).expand_path
+
+        context = { :chef_server => @server.public_ip_address }
+        File.open(knife_rb, 'w') do |f|
+          f.puts(Erubis::Eruby.new(IO.read(template).chomp).evaluate(:config => context))
         end
       end
 
