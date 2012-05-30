@@ -8,7 +8,7 @@ module Cucumber
 
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
-        @stdout.sync = true
+        @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @knife = (File.exists?("bin/knife") ? "bin/knife" : %x(command -v knife))
       end

@@ -10,7 +10,7 @@ module Cucumber
         @config = config
         @server = server
         @stdout, @stderr, @stdin = stdout, stderr, stdin
-        @stdout.sync = true
+        @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
         @user = ENV['OPSCODE_USER'] || ENV['USER']

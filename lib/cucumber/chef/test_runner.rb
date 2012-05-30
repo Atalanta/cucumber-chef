@@ -11,7 +11,7 @@ module Cucumber
         @config = config
         @project_dir = project_dir
         @stdout, @stderr, @stdin = stdout, stderr, stdin
-        @stdout.sync = true
+        @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @test_lab = Cucumber::Chef::TestLab.new(@config)
 

@@ -21,7 +21,7 @@ module Cucumber
 
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
-        @stdout.sync = true
+        @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @config = Hash.new(nil)
       end

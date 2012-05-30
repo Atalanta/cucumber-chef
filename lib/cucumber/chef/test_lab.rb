@@ -15,7 +15,7 @@ module Cucumber
       def initialize(config, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @config = config
         @stdout, @stderr, @stdin = stdout, stderr, stdin
-        @stdout.sync = true
+        @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @connection = Fog::Compute.new(:provider => 'AWS',
                                        :aws_access_key_id => @config[:knife][:aws_access_key_id],

@@ -8,7 +8,7 @@ module Cucumber
 
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
-        @stdout.sync = true
+        @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
         @config = Hash.new(nil)
