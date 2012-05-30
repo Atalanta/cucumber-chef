@@ -17,7 +17,7 @@ module Cucumber
       end
 
       def run
-        raise BootstrapError, "you must supply a 'template_file'" if !@config[:template_file]
+        raise BootstrapError, "you must supply a 'template'" if !@config[:template]
         raise BootstrapError, "you must supply a 'host'" if !@config[:host]
         raise BootstrapError, "you must supply a 'ssh_user'" if !@config[:ssh_user]
         raise BootstrapError, "you must supply a 'ssh_password' or 'identity_file'" if (!@config[:ssh_password] && !@config[:identity_file])
@@ -29,8 +29,8 @@ module Cucumber
         @ssh.config[:identity_file] = @config[:identity_file]
         @ssh.config[:timeout] = 5
 
-        @stdout.puts("Using template '#{@config[:template_file]}'.")
-        command = render_template(load_template(@config[:template_file]), @config[:context])
+        @stdout.puts("Using template '#{@config[:template]}'.")
+        command = render_template(load_template(@config[:template]), @config[:context])
         command = "sudo #{command}" if @config[:use_sudo]
 
         @stdout.puts("Running bootstrap for '#{@config[:host]}'.")
