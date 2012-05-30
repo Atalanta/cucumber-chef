@@ -89,7 +89,7 @@ module Cucumber
         command << ["-i", @config[:identity_file]]
         command << "#{@config[:ssh_user]}@#{@config[:host]}"
         command << "nc %h %p"
-        command.compact.join(" ")
+        command.flatten.compact.join(" ")
       end
 
       def options
