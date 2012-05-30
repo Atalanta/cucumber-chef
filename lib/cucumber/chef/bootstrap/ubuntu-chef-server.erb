@@ -47,6 +47,8 @@ EOF
 chmod +x ${KNIFE_CONFIG_EXP_FILE}
 ${KNIFE_CONFIG_EXP_FILE}
 
+knife client create <%= @config[:user] %> -d -a -f ${HOME}/.chef/<%= @config[:user] %>.pem
+
 chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
 
 /etc/init.d/chef-server-webui stop
