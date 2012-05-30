@@ -52,21 +52,11 @@ module Cucumber
           sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
             case event
             when :open then
-              # args[0] : file metadata
-              puts "starting upload: #{args[0].local} -> #{args[0].remote} (#{args[0].size} bytes)"
-            when :put then
-              # args[0] : file metadata
-              # args[1] : byte offset in remote file
-              # args[2] : data being written (as string)
-              puts "writing #{args[2].length} bytes to #{args[0].remote} starting at #{args[1]}"
-            when :close then
-              # args[0] : file metadata
-              puts "finished with #{args[0].remote}"
-            when :mkdir then
-              # args[0] : remote path name
-              puts "creating directory #{args[0]}"
+              @stdout.print("U:[#{args[0].local} -> #{@config[:host]}:#{args[0].remote}]")
+            when :put, :close, :mkdir then
+              @stdout.print(".")
             when :finish then
-              puts "all done!"
+              @stdout.print("done!\n")
             end
           end
         end
@@ -77,21 +67,11 @@ module Cucumber
           sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
             case event
             when :open then
-              # args[0] : file metadata
-              puts "starting download: #{args[0].remote} -> #{args[0].local} (#{args[0].size} bytes)"
-            when :get then
-              # args[0] : file metadata
-              # args[1] : byte offset in remote file
-              # args[2] : data that was received
-              puts "writing #{args[2].length} bytes to #{args[0].local} starting at #{args[1]}"
-            when :close then
-              # args[0] : file metadata
-              puts "finished with #{args[0].remote}"
-            when :mkdir then
-              # args[0] : local path name
-              puts "creating directory #{args[0]}"
+              @stdout.print("D:[#{@config[:host]}:#{args[0].remote} -> #{args[0].local}]")
+            when :get, :close, :mkdir then
+              @stdout.print(".")
             when :finish then
-              puts "all done!"
+              @stdout.print("done!\n")
             end
           end
         end
