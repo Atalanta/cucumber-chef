@@ -21,6 +21,7 @@ module Cucumber
     autoload :Bootstrap, "cucumber/chef/bootstrap"
     autoload :Provisioner, "cucumber/chef/provisioner"
     autoload :SSH, "cucumber/chef/ssh"
+    autoload :Template, "cucumber/chef/template"
     autoload :TestLab, "cucumber/chef/test_lab"
     autoload :TestRunner, "cucumber/chef/test_runner"
 

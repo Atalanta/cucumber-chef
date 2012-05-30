@@ -1,7 +1,6 @@
-require "erubis"
-
 module Cucumber
   module Chef
+
     class ProvisionerError < Error; end
 
     class Provisioner
@@ -86,7 +85,7 @@ module Cucumber
 
         context = { :chef_server => @server.public_ip_address }
         File.open(knife_rb, 'w') do |f|
-          f.puts(Erubis::Eruby.new(IO.read(template).chomp).evaluate(:config => context))
+          f.puts(Cucumber::Chef::Template.render(template, context))
         end
       end
 
@@ -103,5 +102,6 @@ module Cucumber
       end
 
     end
+
   end
 end

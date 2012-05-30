@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.licenses = ["Apache v2"]
 
   s.add_dependency "chef", "~> 0.10.8"
+  s.add_dependency "erubis", "~> 2.7.0"
   s.add_dependency "fog", ">= 0"
   s.add_dependency "cucumber", ">= 0"
   s.add_dependency "thor", ">= 0"

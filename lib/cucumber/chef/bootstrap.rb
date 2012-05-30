@@ -1,7 +1,6 @@
-require "erubis"
-
 module Cucumber
   module Chef
+
     class BootstrapError < Error; end
 
     class Bootstrap
@@ -30,7 +29,7 @@ module Cucumber
         @ssh.config[:timeout] = 5
 
         @stdout.puts("Using template '#{@config[:template]}'.")
-        command = render_template(load_template(@config[:template]), @config[:context])
+        command = Cucumber::Chef::Template.render(@config[:template], @config[:context])
         command = "sudo #{command}" if @config[:use_sudo]
 
         @stdout.puts("Running bootstrap for '#{@config[:host]}'.")
@@ -38,17 +37,7 @@ module Cucumber
         @stdout.puts("Finished bootstrap for '#{@config[:host]}'.")
       end
 
-
-    private
-
-      def load_template(template)
-        IO.read(template).chomp
-      end
-
-      def render_template(template, context)
-        Erubis::Eruby.new(template).evaluate(:config => context)
-      end
-
     end
+
   end
 end
