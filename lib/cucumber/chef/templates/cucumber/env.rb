@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'rspec/expectations'
 require 'chef'
 require 'cucumber/chef'
