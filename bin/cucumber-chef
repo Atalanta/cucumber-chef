@@ -102,14 +102,12 @@ class CucumberChef < Thor
 
     if (test_lab = Cucumber::Chef::TestLab.new)
       if test_lab.labs_exist?
-        ip = test_lab.labs_running.first.public_ip_address
-        key = File.expand_path(Cucumber::Chef::Config.aws[:identity_file])
-        puts("Attempting ssh connection to 'ubuntu@#{ip}' with identity '#{key}'.")
-        options = [ "-i", key,
-                    "-o", "UserKnownHostsFile=/dev/null",
-                    "-o", "StrictHostKeyChecking=no",
-                    "ubuntu@#{ip}" ]
-        Kernel.exec("ssh", *options)
+        ssh = Cucumber::Chef::SSH.new
+        ssh.config[:host] = test_lab.labs_running.first.public_ip_address
+        ssh.config[:ssh_user] = "ubuntu"
+        ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+        puts("Attempting ssh connection to '#{ssh.config[:ssh_user]}@#{ssh.config[:host]}' with identity '#{ssh.config[:identity_file]}'.")
+        ssh.console
       else
         puts("No test labs available to ssh to!")
       end
