@@ -39,6 +39,7 @@ module Cucumber
       def exec(command)
         Net::SSH.start(@config[:host], @config[:ssh_user], options) do |ssh|
           ssh.open_channel do |chan|
+            @stdout.puts("[#{@config[:host]}::SSH] exec(#{command})")
             chan.exec(command) do |ch, success|
               raise SSHError, "Could not execute '#{command}'." unless success
 
@@ -61,15 +62,15 @@ module Cucumber
           sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
             case event
             when :open
-              @stdout.puts("[#{@config[:host]}] upload(#{args[0].local} -> #{args[0].remote})")
+              @stdout.puts("[#{@config[:host]}::SFTP] upload(#{args[0].local} -> #{args[0].remote})")
             when :close
-              @stdout.puts("[#{@config[:host]}] close(#{args[0].remote})")
+              @stdout.puts("[#{@config[:host]}::SFTP] close(#{args[0].remote})")
             when :mkdir
-              @stdout.puts("[#{@config[:host]}] mkdir(#{args[0]})")
+              @stdout.puts("[#{@config[:host]}::SFTP] mkdir(#{args[0]})")
             when :put
-              @stdout.puts("[#{@config[:host]}] put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}")
+              @stdout.puts("[#{@config[:host]}::SFTP] put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}")
             when :finish
-              @stdout.puts("[#{@config[:host]}] finish")
+              @stdout.puts("[#{@config[:host]}::SFTP] finish")
             end
           end
         end
@@ -80,15 +81,15 @@ module Cucumber
           sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
             case event
             when :open
-              @stdout.puts("[#{@config[:host]}] download(#{args[0].remote} -> #{args[0].local})")
+              @stdout.puts("[#{@config[:host]}::SFTP] download(#{args[0].remote} -> #{args[0].local})")
             when :close
-              @stdout.puts("[#{@config[:host]}] close(#{args[0].local})")
+              @stdout.puts("[#{@config[:host]}::SFTP] close(#{args[0].local})")
             when :mkdir
-              @stdout.puts("[#{@config[:host]}] mkdir(#{args[0]})")
+              @stdout.puts("[#{@config[:host]}::SFTP] mkdir(#{args[0]})")
             when :get
-              @stdout.puts("[#{@config[:host]}] get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}")
+              @stdout.puts("[#{@config[:host]}::SFTP] get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}")
             when :finish
-              @stdout.puts("[#{@config[:host]}] finish")
+              @stdout.puts("[#{@config[:host]}::SFTP] finish")
             end
           end
         end
