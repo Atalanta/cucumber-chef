@@ -23,6 +23,8 @@ module Cucumber
         @stdout.puts("--------------------------------------------------------------------------------")
 
         raise CommandError("run(#{command}) failed! [#{$?}]") if ($? != exit_code)
+
+        output
       end
 
       def knife(*args)
