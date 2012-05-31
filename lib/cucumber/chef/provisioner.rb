@@ -55,7 +55,7 @@ module Cucumber
         ssh.config[:ssh_user] = "ubuntu"
         ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
         local_path = File.expand_path(File.join(Dir.pwd, ".cucumber-chef"))
-        remote_path = File.join("home", ssh.config[:ssh_user], ".chef")
+        remote_path = File.join("/", "home", ssh.config[:ssh_user], ".chef")
 
         FileUtils.mkdir_p(local_path)
 
@@ -76,15 +76,15 @@ module Cucumber
       end
 
       def upload_cookbook
-        @command.knife("cookbook upload cucumber-chef", "-o", @cookbooks_path.expand_path)
+        @command.knife("cookbook upload cucumber-chef", "-o", @cookbooks_path)
       end
 
       def upload_role
-        @command.knife("role from file", @roles_path.join("test_lab.rb").expand_path)
+        @command.knife("role from file", File.join(@roles_path, "test_lab.rb"))
       end
 
       def tag_node
-        @command.knife("tag create cucumber-chef-test-lab", Cucumber::Chef::Config.mode)
+        @command.knife("tag create cucumber-chef-test-lab", Cucumber::Chef::Config[:mode])
       end
 
     end
