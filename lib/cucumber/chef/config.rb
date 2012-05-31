@@ -6,8 +6,10 @@ module Cucumber
     class Config
       extend(Mixlib::Config)
 
-      KEYS = %w( mode provider ) if !defined?(KEYS)
-      PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file ) if !defined?(PROVIDER_AWS_KEYS)
+      KEYS = %w( mode provider ).map(&:to_sym) if !defined?(KEYS)
+      MODES = %w( user test ).map(&:to_sym) if !defined?(MODES)
+      PROVIDERS = %w( aws vagrant ).map(&:to_sym) if !defined?(PROVIDERS)
+      PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file ).map(&:to_sym) if !defined?(PROVIDER_AWS_KEYS)
 
 ################################################################################
 
@@ -51,14 +53,17 @@ module Cucumber
 ################################################################################
 
       def self.verify_keys
-        missing_keys = KEYS.select {|key| !self.key?(key.to_sym) }
+        missing_keys = KEYS.select{ |key| !self.key?(key.to_sym) }
         raise ConfigError("Configuration incomplete, missing configuration keys: #{missing_keys.join(", ")}") if missing_keys.count > 0
+
+        invalid_keys = KEYS.select{ |key| !eval("#{key.to_s.upcase}S").include?(self[key]) }
+        raise ConfigError("Configuration incomplete, invalid configuration keys: #{invalid_keys.join(", ")}") if invalid_keys.count > 0
       end
 
 ################################################################################
 
       def self.verify_provider_keys
-        missing_keys = eval("PROVIDER_#{self.provider.to_s.upcase}_KEYS.select {|key| !self[self[:provider].to_sym].key?(key.to_sym) }")
+        missing_keys = eval("PROVIDER_#{self[:provider].to_s.upcase}_KEYS").select{ |key| !self[self[:provider]].key?(key) }
         raise ConfigError("Configuration incomplete, missing provider configuration keys: #{missing_keys.join(", ")}") if missing_keys.count > 0
       end
 
