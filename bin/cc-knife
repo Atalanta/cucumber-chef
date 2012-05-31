@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-require 'pathname'
 
 # if we have bundler binstubs use that; otherwise attempt to detect
 if File.exists?("bin/knife")
@@ -8,7 +7,7 @@ else
   knife = %x(command -v knife).strip
 end
 
-knife_rb = Pathname.new(File.join(Dir.pwd, ".cucumber-chef/knife.rb")).expand_path
+knife_rb = File.expand_path(File.join(Dir.pwd, ".cucumber-chef/knife.rb"))
 if File.exists?(knife_rb)
   command = [knife, ARGV, "-c #{knife_rb}", "2>&1"].flatten.compact.join(" ")
   puts(command)

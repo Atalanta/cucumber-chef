@@ -1,4 +1,4 @@
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber-chef"))
+require 'cucumber-chef'
 
 SimpleCov.start do
   add_filter '/spec/'

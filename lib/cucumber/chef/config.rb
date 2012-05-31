@@ -1,6 +1,3 @@
-require "mixlib/config"
-require "ubuntu_ami"
-
 module Cucumber
   module Chef
 
@@ -9,6 +6,7 @@ module Cucumber
     class Config
       extend(Mixlib::Config)
 
+      KEYS = %w( mode provider ) if !defined?(KEYS)
       PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file ) if !defined?(PROVIDER_AWS_KEYS)
 
 ################################################################################
@@ -20,8 +18,7 @@ module Cucumber
 ################################################################################
 
       def self.load
-        config_file = File.join(Dir.pwd, ".cucumber-chef", "config.rb")
-        config_file = Pathname.new(config_file).expand_path
+        config_file = File.expand_path(File.join(Dir.pwd, ".cucumber-chef", "config.rb"))
         self.from_file(config_file)
         self.verify
         self
@@ -43,45 +40,35 @@ module Cucumber
         self.mode == :test
       end
 
-      def self.provider_config
-        case self.provider
-        when :aws
-          self.aws
-        when :vagrant
-          self.vagrant
-        end
-      end
-
 ################################################################################
 
       def self.verify
         self.verify_keys
-        self.verify_provider
+        self.verify_provider_keys
+        eval("self.verify_provider_#{self[:provider].to_s.downcase}")
       end
 
 ################################################################################
 
       def self.verify_keys
-        missing_keys = eval("PROVIDER_#{self.provider.to_s.upcase}_KEYS.select {|key| !self.provider_config.key?(key.to_sym) }")
-        raise ConfigError("Configuration incomplete, missing provider keys: #{missing_keys.join(", ")}") if missing_keys.count > 0
+        missing_keys = KEYS.select {|key| !self.key?(key.to_sym) }
+        raise ConfigError("Configuration incomplete, missing configuration keys: #{missing_keys.join(", ")}") if missing_keys.count > 0
       end
 
 ################################################################################
 
-      def self.verify_provider
-        case self.provider
-        when :aws
-          self.verify_provider_aws
-        when :vagrant
-          self.verify_provider_vagrant
-        end
+      def self.verify_provider_keys
+        missing_keys = eval("PROVIDER_#{self.provider.to_s.upcase}_KEYS.select {|key| !self[self[:provider].to_sym].key?(key.to_sym) }")
+        raise ConfigError("Configuration incomplete, missing provider configuration keys: #{missing_keys.join(", ")}") if missing_keys.count > 0
       end
 
+################################################################################
+
       def self.verify_provider_aws
-        if self.provider_config[:aws_access_key_id] && self.provider_config[:aws_secret_access_key]
+        if self[:aws][:aws_access_key_id] && self[:aws][:aws_secret_access_key]
           compute = Fog::Compute.new(:provider => 'AWS',
-                                     :aws_access_key_id => self.provider_config[:aws_access_key_id],
-                                     :aws_secret_access_key => self.provider_config[:aws_secret_access_key])
+                                     :aws_access_key_id => self[:aws][:aws_access_key_id],
+                                     :aws_secret_access_key => self[:aws][:aws_secret_access_key])
           compute.describe_availability_zones
         end
       rescue Fog::Service::Error => err
@@ -94,18 +81,18 @@ module Cucumber
 
 ################################################################################
 
-      def self.aws_image_id_proc
-        if self.aws[:aws_image_id]
-          return self.aws[:aws_image_id]
-        elsif (self.aws[:ubuntu_release] && self.aws[:region])
-          ami = Ubuntu.release(self.aws[:ubuntu_release]).amis.find do |ami|
-            ami.arch == (self.aws[:aws_instance_arch] || "i386") &&
-            ami.root_store == (self.aws[:aws_instance_disk_store] || "instance-store") &&
-            ami.region == self.aws[:region]
+      def self.aws_image_id
+        if self[:aws][:aws_image_id]
+          return self[:aws][:aws_image_id]
+        elsif (self[:aws][:ubuntu_release] && self[:aws][:region])
+          ami = Ubuntu.release(self[:aws][:ubuntu_release]).amis.find do |ami|
+            ami.arch == (self[:aws][:aws_instance_arch] || "i386") &&
+            ami.root_store == (self[:aws][:aws_instance_disk_store] || "instance-store") &&
+            ami.region == self[:aws][:region]
           end
-          return (ami.name rescue "")
+          return ami.name if ami
         end
-        nil
+        raise ConfigError("Could not find a valid AMI image ID.  Please check your configuration.")
       end
 
 ################################################################################

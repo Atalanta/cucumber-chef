@@ -1,0 +1,36 @@
+################################################################################
+# Cucumber-Chef
+################################################################################
+
+mode                            :user
+provider                        :aws
+
+
+################################################################################
+# Provider: AWS
+################################################################################
+
+aws[:aws_access_key_id]         = ENV['AWS_ACCESS_KEY_ID']
+aws[:aws_secret_access_key]     = ENV['AWS_SECRET_ACCESS_KEY']
+
+aws[:aws_ssh_key_id]            = ENV['AWS_SSH_KEY_ID'] || ENV['USER']
+aws[:identity_file]             = "#{ENV['HOME']}/.chef/#{user}.pem"
+
+#aws[:region]                    = "us-east-1"
+#aws[:availability_zone]         = "us-east-1a"
+
+#aws[:aws_image_id]              = "ami-339ca947"
+#aws[:ubuntu_release]            = "maverick"
+
+#aws[:aws_instance_arch]         = "i386"
+#aws[:aws_instance_disk_store]   = "instance-store"
+#aws[:aws_instance_type]         = "m1.small"
+
+#aws[:aws_security_group]        = "cucumber-chef"
+
+
+################################################################################
+# Provider: Vagrant
+################################################################################
+
+# TODO

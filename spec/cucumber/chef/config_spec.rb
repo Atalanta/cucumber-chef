@@ -1,8 +1,6 @@
-require "spec_helper"
+require 'spec_helper'
 
-VALID_AMIS = %w(ami-f3c59db6 ami-adc59de8 ami-a1c59de4 ami-afc59dea ami-0fac7566 ami-37af765e ami-8fac75e6 ami-0baf7662 ami-0dc6fe79 ami-e3c6fe97 ami-fbc6fe8f ami-edc6fe99 ami-1d154e58 ami-39154e7c ami-2b154e6e ami-3b154e7e ami-7b8f5712 ami-d38f57ba ami-098f5760 ami-d78f57be ami-d57942a1 ami-db7942af ami-df7942ab ami-c57942b1)
-
-VALID_RELEASES = %w(lucid maverick)
+VALID_RELEASES = %w(maverick)
 VALID_REGIONS = %w(us-west-1 us-east-1 eu-west-1)
 VALID_ARCHS = %w(i386 amd64)
 VALID_DISK_STORES = %w(instance-store ebs)
@@ -10,8 +8,8 @@ VALID_DISK_STORES = %w(instance-store ebs)
 describe Cucumber::Chef::Config do
 
   before(:all) do
-    Cucumber::Chef::Config.mode = :test
     @original_config = Cucumber::Chef::Config.hash_dup
+    Cucumber::Chef::Config.mode = :test
   end
 
   after(:each) do
@@ -39,9 +37,56 @@ describe Cucumber::Chef::Config do
     describe "Cucumber::Chef::Config[:aws] default values" do
 
       it "Cucumber::Chef::Config[:aws][:security_group] defaults to 'cucumber-chef'" do
-        Cucumber::Chef::Config[:aws][:security_group].should == 'cucumber-chef'
+        Cucumber::Chef::Config[:aws][:security_group].should == "cucumber-chef"
       end
 
+      it "Cucumber::Chef::Config[:aws][:ubuntu_release] defaults to 'maverick'" do
+        Cucumber::Chef::Config[:aws][:ubuntu_release].should == "maverick"
+      end
+
+      it "Cucumber::Chef::Config[:aws][:aws_instance_arch] defaults to 'i386'" do
+        Cucumber::Chef::Config[:aws][:aws_instance_arch].should == "i386"
+      end
+
+      it "Cucumber::Chef::Config[:aws][:aws_instance_disk_store] defaults to 'instance-store'" do
+        Cucumber::Chef::Config[:aws][:aws_instance_disk_store].should == "instance-store"
+      end
+
+      it "Cucumber::Chef::Config[:aws][:aws_instance_type] defaults to 'm1.small'" do
+        Cucumber::Chef::Config[:aws][:aws_instance_type].should == "m1.small"
+      end
+
+    end
+
+  end
+
+  describe "class method: aws_image_id" do
+
+    VALID_RELEASES.each do |release|
+      VALID_REGIONS.each do |region|
+        VALID_ARCHS.each do |arch|
+          VALID_DISK_STORES.each do |disk_store|
+
+            it "should return an ami_image_id if release='#{release}', region='#{region}', arch='#{arch}', disk_store='#{disk_store}'" do
+              Cucumber::Chef::Config[:aws][:ubuntu_release] = release
+              Cucumber::Chef::Config[:aws][:region] = region
+              Cucumber::Chef::Config[:aws][:aws_instance_arch] = arch
+              Cucumber::Chef::Config[:aws][:aws_instance_disk_store] = disk_store
+
+              expect{ Cucumber::Chef::Config.aws_image_id }.to_not raise_error(Cucumber::Chef::ConfigError)
+            end
+
+          end
+        end
+      end
+    end
+
+  end
+
+  describe "when configuration is invalid" do
+
+    it "should complain about missing configuration keys" do
+      Cucumber::Chef::Config[:provider] = nil
     end
 
   end

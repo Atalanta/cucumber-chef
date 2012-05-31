@@ -13,13 +13,12 @@ module Cucumber
 
         @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
         @user = ENV['OPSCODE_USER'] || ENV['USER']
-        @cookbooks_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../chef_repo/cookbooks/"))
-        @roles_path = Pathname.new(File.join(File.dirname(__FILE__), "../../../chef_repo/roles/"))
+        @cookbooks_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "cookbooks"))
+        @roles_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "roles"))
       end
 
       def build
-        template = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/templates/bootstrap/ubuntu-chef-server.erb")
-        template = Pathname.new(template).expand_path
+        template = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-chef-server.erb"))
 
         bootstrap(template)
         download_credentials
@@ -40,7 +39,7 @@ module Cucumber
         bootstrap.config[:host] = @server.public_ip_address
         bootstrap.config[:ssh_user] = "ubuntu"
         bootstrap.config[:use_sudo] = true
-        bootstrap.config[:identity_file] = Cucumber::Chef::Config.aws[:identity_file]
+        bootstrap.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
         bootstrap.config[:template] = template
         bootstrap.config[:context][:hostname] = "cucumber-chef-test-lab"
         bootstrap.config[:context][:chef_server] = @server.public_ip_address
@@ -54,9 +53,9 @@ module Cucumber
         ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
         ssh.config[:host] = @server.public_ip_address
         ssh.config[:ssh_user] = "ubuntu"
-        ssh.config[:identity_file] = Cucumber::Chef::Config.aws[:identity_file]
-        local_path = File.join(Dir.pwd, ".cucumber-chef")
-        remote_path = "/home/#{ssh.config[:ssh_user]}/.chef"
+        ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+        local_path = File.expand_path(File.join(Dir.pwd, ".cucumber-chef"))
+        remote_path = File.join("home", ssh.config[:ssh_user], ".chef")
 
         FileUtils.mkdir_p(local_path)
 
@@ -67,9 +66,8 @@ module Cucumber
       end
 
       def render_knife_rb
-        template = File.join(File.dirname(__FILE__), "../../../lib/cucumber/chef/templates/chef/knife-rb.erb")
-        template = Pathname.new(template).expand_path
-        knife_rb = Pathname.new(File.join(Dir.pwd, ".cucumber-chef/knife.rb")).expand_path
+        template = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "chef", "knife-rb.erb"))
+        knife_rb = File.expand_path(File.join(Dir.pwd, ".cucumber-chef", "knife.rb"))
 
         context = { :chef_server => @server.public_ip_address }
         File.open(knife_rb, 'w') do |f|

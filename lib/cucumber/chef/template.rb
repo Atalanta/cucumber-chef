@@ -1,4 +1,4 @@
-require "erubis"
+require 'erubis'
 
 module Cucumber
   module Chef

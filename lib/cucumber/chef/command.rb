@@ -28,7 +28,7 @@ module Cucumber
       end
 
       def knife(*args)
-        knife_rb = Pathname.new(File.join(Dir.pwd, ".cucumber-chef/knife.rb")).expand_path
+        knife_rb = File.expand_path(File.join(Dir.pwd, ".cucumber-chef", "knife.rb"))
         run("#{@knife} #{args.join(" ")} -c #{knife_rb}  --color -n")
       end
 

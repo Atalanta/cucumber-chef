@@ -17,10 +17,10 @@ module Cucumber
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @connection = Fog::Compute.new(:provider => 'AWS',
-                                       :aws_access_key_id => Cucumber::Chef::Config.aws[:aws_access_key_id],
-                                       :aws_secret_access_key => Cucumber::Chef::Config.aws[:aws_secret_access_key],
-                                       :region => Cucumber::Chef::Config.aws[:region])
-        ensure_security_group if Cucumber::Chef::Config.aws[:security_group] == "cucumber-chef"
+                                       :aws_access_key_id => Cucumber::Chef::Config[:aws][:aws_access_key_id],
+                                       :aws_secret_access_key => Cucumber::Chef::Config[:aws][:aws_secret_access_key],
+                                       :region => Cucumber::Chef::Config[:aws][:region])
+        ensure_security_group if Cucumber::Chef::Config[:aws][:security_group] == "cucumber-chef"
       end
 
 ################################################################################
@@ -31,13 +31,13 @@ module Cucumber
           @server = labs_running.first
         else
           server_definition = {
-            :image_id => Cucumber::Chef::Config.aws_image_id_proc,
-            :groups => Cucumber::Chef::Config.aws[:security_group],
-            :flavor_id => Cucumber::Chef::Config.aws[:aws_instance_type],
-            :key_name => Cucumber::Chef::Config.aws[:aws_ssh_key_id],
-            :availability_zone => Cucumber::Chef::Config.aws[:availability_zone],
-            :tags => { "purpose" => "cucumber-chef", "cucumber-chef" => Cucumber::Chef::Config.mode },
-            :identity_file => Cucumber::Chef::Config.aws[:identity_file]
+            :image_id => Cucumber::Chef::Config.aws_image_id,
+            :groups => Cucumber::Chef::Config[:aws][:security_group],
+            :flavor_id => Cucumber::Chef::Config[:aws][:aws_instance_type],
+            :key_name => Cucumber::Chef::Config[:aws][:aws_ssh_key_id],
+            :availability_zone => Cucumber::Chef::Config[:aws][:availability_zone],
+            :tags => { "purpose" => "cucumber-chef", "cucumber-chef" => Cucumber::Chef::Config[:mode] },
+            :identity_file => Cucumber::Chef::Config[:aws][:identity_file]
           }
           @server = @connection.servers.create(server_definition)
           @stdout.puts("Provisioning cucumber-chef test lab platform.")
@@ -154,28 +154,28 @@ module Cucumber
       end
 
       def labs
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config.mode.to_s && VALID_STATES.any?{|state| s.state == state}) }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && VALID_STATES.any?{|state| s.state == state}) }
       end
 
       def labs_running
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config.mode.to_s && RUNNING_STATES.any?{|state| s.state == state}) }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && RUNNING_STATES.any?{|state| s.state == state}) }
       end
 
       def labs_shutdown
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config.mode.to_s && SHUTDOWN_STATES.any?{|state| s.state == state}) }
+        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && SHUTDOWN_STATES.any?{|state| s.state == state}) }
       end
 
 ################################################################################
 
       def nodes
-        mode = Cucumber::Chef::Config.mode
+        mode = Cucumber::Chef::Config[:mode]
         command = Cucumber::Chef::Command.new(StringIO.new, StringIO.new, StringIO.new)
         output = command.knife("search node \"tags:#{mode} AND name:cucumber-chef*\"", "-a name", "-F json")
         JSON.parse(output)["rows"].collect{ |row| row["name"] }
       end
 
       def clients
-        mode = Cucumber::Chef::Config.mode
+        mode = Cucumber::Chef::Config[:mode]
         command = Cucumber::Chef::Command.new(StringIO.new, StringIO.new, StringIO.new)
         output = command.knife("search node \"name:cucumber-chef*\"", "-a name", "-F json")
         JSON.parse(output)["rows"].collect{ |row| row["name"] }
@@ -188,12 +188,12 @@ module Cucumber
         tag = @connection.tags.new
         tag.resource_id = @server.id
         tag.key = "cucumber-chef"
-        tag.value = Cucumber::Chef::Config.mode
+        tag.value = Cucumber::Chef::Config[:mode]
         tag.save
       end
 
       def ensure_security_group
-        security_group = Cucumber::Chef::Config.aws[:security_group]
+        security_group = Cucumber::Chef::Config[:aws][:security_group]
         unless @connection.security_groups.get(security_group)
           @connection.create_security_group(security_group, 'cucumber-chef test lab')
           @connection.security_groups.get(security_group).authorize_port_range(22..22)
