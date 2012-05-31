@@ -1,3 +1,5 @@
+require 'spec_helper'
+=begin
 require File.join(File.dirname(__FILE__), "../../spec_helper.rb")
 
 describe Cucumber::Chef::Provisioner do
@@ -83,3 +85,4 @@ describe Cucumber::Chef::Provisioner do
     end
   end
 end
+=end
