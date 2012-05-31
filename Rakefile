@@ -14,9 +14,13 @@ Cucumber::Rake::Task.new(:cucumber)
 
 ################################################################################
 
-require 'simplecov'
 desc "Run RSpec with code coverage"
 task :coverage do
   `rake spec COVERAGE=true`
-  `open coverage/index.html`
+  case RUBY_PLATFORM
+  when /darwin/
+    `open coverage/index.html`
+  when /linux/
+    `google-chrome coverage/index.html`
+  end
 end
