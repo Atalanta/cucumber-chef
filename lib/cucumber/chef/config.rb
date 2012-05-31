@@ -9,6 +9,7 @@ module Cucumber
       KEYS = %w( mode provider ).map(&:to_sym) if !defined?(KEYS)
       MODES = %w( user test ).map(&:to_sym) if !defined?(MODES)
       PROVIDERS = %w( aws vagrant ).map(&:to_sym) if !defined?(PROVIDERS)
+
       PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file ).map(&:to_sym) if !defined?(PROVIDER_AWS_KEYS)
 
 ################################################################################
@@ -28,18 +29,8 @@ module Cucumber
 
       def self.test
         self.load
-        self.mode = :test
+        self[:mode] = :test
         selfd
-      end
-
-################################################################################
-
-      def self.user?
-        self.mode == :user
-      end
-
-      def self.test?
-        self.mode == :test
       end
 
 ################################################################################
