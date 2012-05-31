@@ -27,6 +27,7 @@ module Cucumber
         upload_cookbook
         upload_role
         tag_node
+        add_node_role
       end
 
 
@@ -85,6 +86,10 @@ module Cucumber
 
       def tag_node
         @command.knife("tag create cucumber-chef-test-lab", Cucumber::Chef::Config[:mode])
+      end
+
+      def add_node_role
+        @command.knife("node run_list add", "cucumber-chef-test-lab", "\"role[test_lab]\"")
       end
 
     end

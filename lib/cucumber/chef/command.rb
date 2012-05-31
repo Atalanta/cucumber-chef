@@ -29,7 +29,7 @@ module Cucumber
 
       def knife(*args)
         knife_rb = File.expand_path(File.join(Dir.pwd, ".cucumber-chef", "knife.rb"))
-        run("#{@knife} #{args.join(" ")} -c #{knife_rb}  --color -n")
+        run("#{@knife} #{args.flatten.compact.join(" ")} -c #{knife_rb}  --color -n")
       end
 
     end
