@@ -20,7 +20,7 @@ module Cucumber
                                        :aws_access_key_id => Cucumber::Chef::Config[:aws][:aws_access_key_id],
                                        :aws_secret_access_key => Cucumber::Chef::Config[:aws][:aws_secret_access_key],
                                        :region => Cucumber::Chef::Config[:aws][:region])
-        ensure_security_group if Cucumber::Chef::Config[:aws][:security_group] == "cucumber-chef"
+        ensure_security_group
       end
 
 ################################################################################
@@ -77,21 +77,21 @@ module Cucumber
           end
         end
 
-        if (n.count > 0)
-          @stdout.puts("Destroying Chef Nodes:")
-          n.each do |node|
-            @stdout.puts("  * #{node.name}")
-            node.destroy
-          end
-        end
+#        if (n.count > 0)
+#          @stdout.puts("Destroying Chef Nodes:")
+#          n.each do |node|
+#            @stdout.puts("  * #{node.name}")
+#            node.destroy
+#          end
+#        end
 
-        if (c.count > 0)
-          @stdout.puts("Destroying Chef Clients:")
-          c.each do |client|
-            @stdout.puts("  * #{client.name}")
-            client.destroy
-          end
-        end
+#        if (c.count > 0)
+#          @stdout.puts("Destroying Chef Clients:")
+#          c.each do |client|
+#            @stdout.puts("  * #{client.name}")
+#            client.destroy
+#          end
+#        end
       end
 
 ################################################################################
