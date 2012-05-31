@@ -33,11 +33,11 @@ module Cucumber
               raise SSHError, "Could not execute '#{command}'." unless success
 
               ch.on_data do |c, data|
-                @stdout.print("#{@config[:host]} #{data}")
+                @stdout.print("[#{@config[:host]}] #{data}")
               end
 
               ch.on_extended_data do |c, type, data|
-                @stderr.print("#{@config[:host]} #{data}")
+                @stderr.print("[#{@config[:host]}] #{data}")
               end
 
             end
@@ -50,12 +50,16 @@ module Cucumber
         Net::SFTP.start(@config[:host], @config[:ssh_user], options) do |sftp|
           sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
             case event
-            when :open then
-              @stdout.print("U:[#{args[0].local} -> #{@config[:host]}:#{args[0].remote}]")
-            when :put, :close, :mkdir then
-              @stdout.print(".")
-            when :finish then
-              @stdout.print("done!\n")
+            when :open
+              @stdout.puts("[#{@config[:host]}] upload(#{args[0].local} -> #{args[0].remote})")
+            when :close
+              @stdout.puts("[#{@config[:host]}] close(#{args[0].remote})")
+            when :mkdir
+              @stdout.puts("[#{@config[:host]}] mkdir(#{args[0]})")
+            when :put
+              @stdout.puts("[#{@config[:host]}] put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}")
+            when :finish
+              @stdout.puts("[#{@config[:host]}] finish")
             end
           end
         end
@@ -65,12 +69,16 @@ module Cucumber
         Net::SFTP.start(@config[:host], @config[:ssh_user], options) do |sftp|
           sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
             case event
-            when :open then
-              @stdout.print("D:[#{@config[:host]}:#{args[0].remote} -> #{args[0].local}]")
-            when :get, :close, :mkdir then
-              @stdout.print(".")
-            when :finish then
-              @stdout.print("done!\n")
+            when :open
+              @stdout.puts("[#{@config[:host]}] download(#{args[0].remote} -> #{args[0].local})")
+            when :close
+              @stdout.puts("[#{@config[:host]}] close(#{args[0].local})")
+            when :mkdir
+              @stdout.puts("[#{@config[:host]}] mkdir(#{args[0]})")
+            when :get
+              @stdout.puts("[#{@config[:host]}] get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}")
+            when :finish
+              @stdout.puts("[#{@config[:host]}] finish")
             end
           end
         end
