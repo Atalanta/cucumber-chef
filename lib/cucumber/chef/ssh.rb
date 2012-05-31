@@ -26,6 +26,16 @@ module Cucumber
         @config = Hash.new(nil)
       end
 
+      def console
+        options = [ "ssh" ]
+        options << [ "-i", @config[:identity_file] ] if @config[:identity_file]
+        options << [ "-o", "UserKnownHostsFile=/dev/null" ]
+        options << [ "-o", "StrictHostKeyChecking=no" ]
+        options << "#{@config[:ssh_user]}@#{@config[:host]}"
+
+        Kernel.exec(*(options.flatten.compact))
+      end
+
       def exec(command)
         Net::SSH.start(@config[:host], @config[:ssh_user], options) do |ssh|
           channel = ssh.open_channel do |chan|
@@ -33,16 +43,16 @@ module Cucumber
               raise SSHError, "Could not execute '#{command}'." unless success
 
               ch.on_data do |c, data|
-                @stdout.print("[#{@config[:host]}] #{data}")
+                @stdout.puts("[#{@config[:host]}::STDOUT] #{data}")
               end
 
               ch.on_extended_data do |c, type, data|
-                @stderr.print("[#{@config[:host]}] #{data}")
+                @stderr.puts("[#{@config[:host]}::STDERR] #{data}")
               end
 
             end
+            chan.wait
           end
-          channel.wait
         end
       end
 
