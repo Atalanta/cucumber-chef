@@ -54,17 +54,17 @@ module Cucumber
 
       def self.verify_keys
         missing_keys = KEYS.select{ |key| !self.key?(key.to_sym) }
-        raise ConfigError("Configuration incomplete, missing configuration keys: #{missing_keys.join(", ")}") if missing_keys.count > 0
+        raise ConfigError, "Configuration incomplete, missing configuration keys: #{missing_keys.join(", ")}" if missing_keys.count > 0
 
         invalid_keys = KEYS.select{ |key| !eval("#{key.to_s.upcase}S").include?(self[key]) }
-        raise ConfigError("Configuration incomplete, invalid configuration keys: #{invalid_keys.join(", ")}") if invalid_keys.count > 0
+        raise ConfigError, "Configuration incomplete, invalid configuration keys: #{invalid_keys.join(", ")}" if invalid_keys.count > 0
       end
 
 ################################################################################
 
       def self.verify_provider_keys
         missing_keys = eval("PROVIDER_#{self[:provider].to_s.upcase}_KEYS").select{ |key| !self[self[:provider]].key?(key) }
-        raise ConfigError("Configuration incomplete, missing provider configuration keys: #{missing_keys.join(", ")}") if missing_keys.count > 0
+        raise ConfigError, "Configuration incomplete, missing provider configuration keys: #{missing_keys.join(", ")}" if missing_keys.count > 0
       end
 
 ################################################################################
@@ -77,11 +77,11 @@ module Cucumber
           compute.describe_availability_zones
         end
       rescue Fog::Service::Error => err
-        raise ConfigError("Invalid AWS credentials.  Please check your configuration.")
+        raise ConfigError, "Invalid AWS credentials.  Please check your configuration."
       end
 
       def self.verify_provider_vagrant
-        raise ConfigError("Not yet implemented.")
+        raise ConfigError, "Not yet implemented."
       end
 
 ################################################################################
@@ -97,7 +97,7 @@ module Cucumber
           end
           return ami.name if ami
         end
-        raise ConfigError("Could not find a valid AMI image ID.  Please check your configuration.")
+        raise ConfigError, "Could not find a valid AMI image ID.  Please check your configuration."
       end
 
 ################################################################################

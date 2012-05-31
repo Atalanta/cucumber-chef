@@ -87,6 +87,7 @@ describe Cucumber::Chef::Config do
 
     it "should complain about missing configuration keys" do
       Cucumber::Chef::Config[:provider] = nil
+      expect{ Cucumber::Chef::Config.verify_keys }.to raise_error(Cucumber::Chef::ConfigError)
     end
 
   end

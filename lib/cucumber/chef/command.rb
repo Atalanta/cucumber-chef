@@ -22,7 +22,7 @@ module Cucumber
         @stdout.puts(output)
         @stdout.puts("--------------------------------------------------------------------------------")
 
-        raise CommandError("run(#{command}) failed! [#{$?}]") if ($? != exit_code)
+        raise CommandError, "run(#{command}) failed! [#{$?}]" if ($? != exit_code)
 
         output
       end

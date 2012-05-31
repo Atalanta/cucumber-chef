@@ -16,10 +16,10 @@ module Cucumber
       end
 
       def run
-        raise BootstrapError("You must supply a 'template' option.") if !@config[:template]
-        raise BootstrapError("You must supply a 'host' option.") if !@config[:host]
-        raise BootstrapError("You must supply a 'ssh_user' option.") if !@config[:ssh_user]
-        raise BootstrapError("You must supply a 'ssh_password' or 'identity_file' option.") if (!@config[:ssh_password] && !@config[:identity_file])
+        raise BootstrapError, "You must supply a 'template' option." if !@config[:template]
+        raise BootstrapError, "You must supply a 'host' option." if !@config[:host]
+        raise BootstrapError, "You must supply a 'ssh_user' option." if !@config[:ssh_user]
+        raise BootstrapError, "You must supply a 'ssh_password' or 'identity_file' option." if (!@config[:ssh_password] && !@config[:identity_file])
 
         @stdout.puts("Preparing bootstrap for '#{@config[:host]}'.")
         @ssh.config[:host] = @config[:host]
