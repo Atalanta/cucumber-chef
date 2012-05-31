@@ -31,10 +31,8 @@ class CucumberChef < Thor
       end
     end
 
-    def config
-      @config ||= begin
-        options.test? ? Cucumber::Chef::Config.test_config : Cucumber::Chef::Config.new
-      end
+    def load_config
+      options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
     end
 
     def error(message)
@@ -48,11 +46,12 @@ class CucumberChef < Thor
   desc "setup", "Setup Cucumber-Chef test lab in Amazon EC2"
   method_option :test, :type  => :boolean
   def setup
-    config.verify
-    test_lab = Cucumber::Chef::TestLab.new(config)
+    load_config
+
+    test_lab = Cucumber::Chef::TestLab.new
     server = test_lab.create
 
-    provisioner = Cucumber::Chef::Provisioner.new(config, server)
+    provisioner = Cucumber::Chef::Provisioner.new(server)
     provisioner.build
 
   rescue Cucumber::Chef::Error => e
@@ -62,8 +61,9 @@ class CucumberChef < Thor
   desc "teardown", "Teardown Cucumber-Chef test lab in Amazon EC2"
   method_option :test, :type => :boolean
   def teardown
-    config.verify
-    test_lab = Cucumber::Chef::TestLab.new(config)
+    load_config
+
+    test_lab = Cucumber::Chef::TestLab.new
     test_lab.destroy
   end
 
@@ -73,29 +73,19 @@ class CucumberChef < Thor
   def project(project_name)
     @project = project_name
     project_dir = Pathname.new(File.join(Dir.pwd, "cucumber-chef", @project)).expand_path
-    #create_directory_structure(project_dir)
+    create_directory_structure(project_dir)
     generate_project_skeleton(project_dir)
-  end
-
-  desc "amis", "List available EC2 Ubuntu AMIs"
-  def amis
-    config.verify
-    requested = [@config[:knife][:aws_instance_arch], @config[:knife][:aws_instance_disk_store], @config[:knife][:region]].compact.join(', ')
-    puts("Available EC2 AMIs for Ubuntu Release '#{@config[:knife][:ubuntu_release]}' (#{requested}):")
-    Ubuntu.release(@config[:knife][:ubuntu_release]).amis.each do |ami|
-      puts "#{ami.region} #{ami.name} (#{ami.arch}, #{ami.root_store})"
-    end
   end
 
   desc "ssh", "SSH to running test lab"
   method_option :test, :type => :boolean
   def ssh
-    config.verify
+    load_config
 
-    if (test_lab = Cucumber::Chef::TestLab.new(config))
+    if (test_lab = Cucumber::Chef::TestLab.new)
       if test_lab.labs_exist?
         ip = test_lab.labs_running.first.public_ip_address
-        key = File.expand_path(@config[:knife][:identity_file])
+        key = File.expand_path(Cucumber::Chef::Config.aws[:identity_file])
         puts("Attempting ssh connection to 'ubuntu@#{ip}' with identity '#{key}'.")
         options = [ "-i", key,
                     "-o", "UserKnownHostsFile=/dev/null",
@@ -116,8 +106,9 @@ class CucumberChef < Thor
   desc "displayconfig", "Display the current config from knife.rb"
   method_option :test, :type  => :boolean
   def displayconfig
-    puts config.list.join("\n")
-    config.verify
+    load_config
+
+    puts Cucumber::Chef::Config.configuration.to_yaml
 
   rescue Cucumber::Chef::Error => err
     error(err.message)
@@ -126,8 +117,9 @@ class CucumberChef < Thor
   desc "info", "Display information about the current test labs"
   method_option :test, :type  => :boolean
   def info
-    config.verify
-    if (test_lab = Cucumber::Chef::TestLab.new(config))
+    load_config
+
+    if (test_lab = Cucumber::Chef::TestLab.new)
       test_lab.info
     end
 
@@ -135,28 +127,32 @@ class CucumberChef < Thor
     error(err.message)
   end
 
-  desc "upload <project name>", "Upload the cucumber-chef test suite <project name> to the test lab platform"
-  def upload(project_name)
-    project_dir = Pathname.new(".") + "cucumber-chef" + project_name
-    unless File.exists?(project_dir)
-      raise "Project dir '#{project_dir}' does not exist."
-    end
-    config.verify
-    runner = Cucumber::Chef::TestRunner.new(config, project_dir)
-    runner.reset_project
-    runner.upload_project
-  end
+#  desc "upload <project name>", "Upload the cucumber-chef test suite <project name> to the test lab platform"
+#  def upload(project_name)
+#    load_config
+#
+#    project_dir = Pathname.new(".") + "cucumber-chef" + project_name
+#    unless File.exists?(project_dir)
+#      raise "Project dir '#{project_dir}' does not exist."
+#    end
+#
+#    runner = Cucumber::Chef::TestRunner.new(project_dir)
+#    runner.reset_project
+#    runner.upload_project
+#  end
 
   desc "test <project name>", "Run the cucumber-chef test suite <project name> from a workstation."
   def test(project_name)
+    load_config
+
     project_dir = Pathname.new(".") + "cucumber-chef" + project_name
     unless File.exists?(project_dir)
       raise "Project directory '#{project_dir}' does not exist."
     else
       puts "Using project directory: #{project_dir}"
     end
-    config.verify
-    runner = Cucumber::Chef::TestRunner.new(config, project_dir)
+
+    runner = Cucumber::Chef::TestRunner.new(project_dir)
     runner.run
   end
 end

@@ -6,8 +6,7 @@ module Cucumber
     class Provisioner
       attr_accessor :stdout, :stderr, :stdin
 
-      def initialize(config, server, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-        @config = config
+      def initialize(server, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @server = server
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
@@ -41,7 +40,7 @@ module Cucumber
         bootstrap.config[:host] = @server.public_ip_address
         bootstrap.config[:ssh_user] = "ubuntu"
         bootstrap.config[:use_sudo] = true
-        bootstrap.config[:identity_file] = @config[:knife][:identity_file]
+        bootstrap.config[:identity_file] = Cucumber::Chef::Config.aws[:identity_file]
         bootstrap.config[:template] = template
         bootstrap.config[:context][:hostname] = "cucumber-chef-test-lab"
         bootstrap.config[:context][:chef_server] = @server.public_ip_address
@@ -55,7 +54,7 @@ module Cucumber
         ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
         ssh.config[:host] = @server.public_ip_address
         ssh.config[:ssh_user] = "ubuntu"
-        ssh.config[:identity_file] = @config[:knife][:identity_file]
+        ssh.config[:identity_file] = Cucumber::Chef::Config.aws[:identity_file]
         local_path = File.join(Dir.pwd, ".cucumber-chef")
         remote_path = "/home/#{ssh.config[:ssh_user]}/.chef"
 
@@ -87,7 +86,7 @@ module Cucumber
       end
 
       def tag_node
-        @command.knife("tag create cucumber-chef-test-lab", @config.mode)
+        @command.knife("tag create cucumber-chef-test-lab", Cucumber::Chef::Config.mode)
       end
 
     end

@@ -28,10 +28,9 @@ module Cucumber
         STDOUT.puts("\033[34m  * #{ip}: (LXC) '#{name}' #{message}\033[0m")
       end
 
-      def create_server(name, ip=nil, mac=nil)
-        ip = (ip || generate_ip)
-        mac = (mac || generate_mac)
-        @servers = (@servers || {}).merge(name => { :ip => ip, :mac => mac })
+      def create_server(name, attributes={})
+        defaults = { :ip => generate_ip, :mac => generate_mac, :persist => false }
+        @servers = (@servers || {}).merge(name => defaults).merge(name => attributes)
 
         log(name, ip, "Building")
 
@@ -111,18 +110,6 @@ module Cucumber
 
       def run_chef(name)
         run_remote_command(name, "/usr/bin/chef-client -j /etc/chef/attributes.json -N cucumber-chef-#{name}")
-      end
-
-      def databag_item_from_file(file)
-        ::Chef::JSONCompat.from_json(File.read(file))
-      end
-
-      def upload_databag_item(databag, item)
-        ::Chef::Config.from_file("/etc/chef/client.rb")
-        databag_item = ::Chef::DataBagItem.new
-        databag_item.data_bag(databag)
-        databag_item.raw_data = item
-        databag_item.save
       end
 
       def create_client_rb(name)
