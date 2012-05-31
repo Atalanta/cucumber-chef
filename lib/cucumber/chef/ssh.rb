@@ -38,7 +38,7 @@ module Cucumber
 
       def exec(command)
         Net::SSH.start(@config[:host], @config[:ssh_user], options) do |ssh|
-          channel = ssh.open_channel do |chan|
+          ssh.open_channel do |chan|
             chan.exec(command) do |ch, success|
               raise SSHError, "Could not execute '#{command}'." unless success
 
