@@ -13,16 +13,16 @@ World do
   CustomWorld.new
 end
 
-Before
-  list_containers.each do |container|
-    destroy_container(container)
+Before do
+  @servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
+    destroy_server(name)
   end
 
   set_chef_client(:orgname => "cucumber-chef")
 end
 
 After do |scenario|
-  list_containers.each do |container|
-    destroy_container(container)
+  @servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
+    destroy_server(name)
   end
 end

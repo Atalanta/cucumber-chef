@@ -3,8 +3,8 @@ bash -c '
 
 export DEBIAN_FRONTEND=noninteractive
 
-echo "127.0.0.1 <%= @config[:hostname] %>" >> /etc/hosts
-echo "<%= @config[:hostname] %>" > /etc/hostname
+echo "127.0.0.1 <%= @config[:hostname] %>" | tee -a /etc/hosts
+echo "<%= @config[:hostname] %>" | tee /etc/hostname
 hostname <%= @config[:hostname] %>
 
 echo "deb http://apt.opscode.com/ `lsb_release -cs`-0.10 main" | tee /etc/apt/sources.list.d/opscode.list

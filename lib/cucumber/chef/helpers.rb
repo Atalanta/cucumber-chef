@@ -11,7 +11,7 @@ module Cucumber
       end
 
       def run_remote_command(name, command)
-        output = %x(ssh #{@servers[name][:ip]} '#{command}' 2>&1)
+        output = %x(ssh #{$servers[name][:ip]} '#{command}' 2>&1)
         raise "run_remote_command(#{command}) failed (#{$?})" if ($? != 0)
         output
       end
@@ -29,21 +29,26 @@ module Cucumber
       end
 
       def create_server(name, attributes={})
-        defaults = { :ip => generate_ip, :mac => generate_mac, :persist => false }
-        @servers = (@servers || {}).merge(name => defaults).merge(name => attributes)
+        if attributes[:persist]
+          attributes = $servers[name]
+        else
+          attributes = { :ip => generate_ip, :mac => generate_mac, :persist => false }.merge(attributes)
+        end
+        $servers = ($servers || {}).merge(name => attributes)
 
-        log(name, ip, "Building")
+        log(name, $servers[name][:ip], "Building")
 
         create_dhcp_config
         create_network_config(name)
         create_container(name)
         create_client_rb(name)
-        sleep(1) until Cucumber::Chef::SSH.ready?(ip)
+        sleep(1) until Cucumber::Chef::SSH.ready?($servers[name][:ip])
 
-        log(name, ip, "Ready")
+        log(name, $servers[name][:ip], "Ready")
       end
 
       def destroy_server(name)
+        log(name, $servers[name][:ip], "Destroy")
         destroy_container(name)
       end
 
@@ -138,7 +143,7 @@ module Cucumber
           f.puts("lxc.network.flags = up")
           f.puts("lxc.network.link = br0")
           f.puts("lxc.network.name = eth0")
-          f.puts("lxc.network.hwaddr = #{@servers[name][:mac]}")
+          f.puts("lxc.network.hwaddr = #{$servers[name][:mac]}")
           f.puts("lxc.network.ipv4 = 0.0.0.0")
         end
       end
@@ -155,7 +160,7 @@ module Cucumber
           f.puts("subnet 192.168.0.0 netmask 255.255.0.0 {")
           f.puts("  range 192.168.255.1 192.168.255.100;")
           f.puts("}")
-          @servers.each do |key, value|
+          $servers.each do |key, value|
             f.puts("")
             f.puts("host #{key} {")
             f.puts("  hardware ethernet #{value[:mac]};")
