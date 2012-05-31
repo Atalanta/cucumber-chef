@@ -24,7 +24,7 @@ describe Cucumber::Chef::Config do
     load File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "spec_helper.rb"))
   end
 
-  context "with default values" do
+  describe "Cucumber::Chef::Config default values" do
 
     it "Cucumber::Chef::Config[:mode] defaults to :user" do
       Cucumber::Chef::Config[:mode].should == :user
@@ -34,7 +34,7 @@ describe Cucumber::Chef::Config do
       Cucumber::Chef::Config[:provider].should == :aws
     end
 
-    describe "Cucumber::Chef::Config[:aws] default values" do
+    context "Cucumber::Chef::Config[:aws] default values" do
 
       it "Cucumber::Chef::Config[:aws][:security_group] defaults to 'cucumber-chef'" do
         Cucumber::Chef::Config[:aws][:security_group].should == "cucumber-chef"
@@ -62,9 +62,10 @@ describe Cucumber::Chef::Config do
 
   describe "class method: aws_image_id" do
 
-    it "should return ami_image_id if set" do
-      Cucumber::Chef::Config[:aws][:aws_image_id] = "ami-12345678"
-      Cucumber::Chef::Config.aws_image_id.should == "ami-12345678"
+    it "should return ami_image_id if Cucumber::Chef::Config[:aws][:aws_image_id] is set" do
+      aws_image_id = "ami-12345678"
+      Cucumber::Chef::Config[:aws][:aws_image_id] = aws_image_id
+      Cucumber::Chef::Config.aws_image_id.should == aws_image_id
     end
 
     VALID_RELEASES.each do |release|
@@ -88,7 +89,7 @@ describe Cucumber::Chef::Config do
 
   end
 
-  context "with valid configuration" do
+  describe "when configuration is valid" do
 
     it "should allow changing providers" do
       Cucumber::Chef::Config[:provider] = :aws
@@ -122,7 +123,7 @@ describe Cucumber::Chef::Config do
 
   end
 
-  context "with invalid configuration" do
+  describe "when configuration is invalid" do
 
     it "should complain about missing configuration keys" do
       Cucumber::Chef::Config[:provider] = nil
@@ -140,7 +141,7 @@ describe Cucumber::Chef::Config do
       expect{ Cucumber::Chef::Config.verify_keys }.to raise_error(Cucumber::Chef::ConfigError)
     end
 
-    context "when provider is aws" do
+    describe "when provider is aws" do
 
       it "should complain about missing provider configuration keys" do
         Cucumber::Chef::Config[:provider] = :aws
