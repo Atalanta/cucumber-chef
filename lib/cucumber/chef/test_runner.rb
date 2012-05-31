@@ -13,11 +13,11 @@ module Cucumber
         @test_lab = Cucumber::Chef::TestLab.new(@stdout, @stderr, @stdin)
 
         @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
-        @ssh.config[:hostname] = @test_lab.labs_running.first.public_ip_address
+        @ssh.config[:host] = @test_lab.labs_running.first.public_ip_address
         @ssh.config[:ssh_user] = "ubuntu"
-        @ssh.config[:identity_file] = File.expand_path(Cucumber::Chef::Config[:aws][:identity_file])
+        @ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
 
-        puts("Cucumber-Chef Test Runner Initalized!")
+        @stdout.puts("Cucumber-Chef Test Runner Initalized!")
       end
 
       def run
