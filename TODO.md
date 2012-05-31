@@ -1,24 +1,24 @@
 
 ## TODO
 
-* TODO Vagrant LXC Basebox
-* TODO Various OS baseboxes
-* TODO Make it easy to use OSC server
-* TODO Provide a libvirt capability
-* TODO Ship a release candidate
-* TODO Write test for cucumber-chef ssh
-* TODO Write tests for the stuff pulled from cucumber-nagios
-* TODO Make recipes food-critic compliant
-* TODO Fork ubuntu ami to 'amy'
-* TODO Merge Zach's changes
+* Vagrant LXC Basebox
+* Various OS baseboxes
+* Make it easy to use OSC server
+* Provide a libvirt capability
+* Ship a release candidate
+* Write test for cucumber-chef ssh
+* Write tests for the stuff pulled from cucumber-nagios
+* Make recipes food-critic compliant
+* Fork ubuntu ami to 'amy'
+* Merge Zach's changes
 
 ## DONE
 
-* DONE RC branch
-* DONE Go through the bugs
+* RC branch
+* Go through the bugs
 
 ## IDEAS
 
-* IDEA Move from thor to mixlib cli?
-* IDEA Make recipes use chef-solo?
-* IDEA Make it easy to use chef-solo
+* Move from thor to mixlib cli?
+* Make recipes use chef-solo?
+* Make it easy to use chef-solo
