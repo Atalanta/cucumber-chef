@@ -16,7 +16,7 @@ module Cucumber
       end
 
       def run
-        raise BootstrapError, "You must supply a 'template' option." if !@config[:template]
+        raise BootstrapError, "You must supply a 'template_file' option." if !@config[:template_file]
         raise BootstrapError, "You must supply a 'host' option." if !@config[:host]
         raise BootstrapError, "You must supply a 'ssh_user' option." if !@config[:ssh_user]
         raise BootstrapError, "You must supply a 'ssh_password' or 'identity_file' option." if (!@config[:ssh_password] && !@config[:identity_file])
@@ -28,8 +28,8 @@ module Cucumber
         @ssh.config[:identity_file] = @config[:identity_file]
         @ssh.config[:timeout] = 5
 
-        @stdout.puts("Using template '#{@config[:template]}'.")
-        command = Cucumber::Chef::Template.render(@config[:template], @config[:context])
+        @stdout.puts("Using template_file '#{@config[:template_file]}'.")
+        command = Cucumber::Chef::Template.render(@config[:template_file], @config[:context])
         command = "sudo #{command}" if @config[:use_sudo]
 
         @stdout.puts("Running bootstrap for '#{@config[:host]}'.")

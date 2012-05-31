@@ -18,9 +18,9 @@ module Cucumber
       end
 
       def build
-        template = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-chef-server.erb"))
+        template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-chef-server.erb"))
 
-        bootstrap(template)
+        bootstrap(template_file)
         download_credentials
         render_knife_rb
 
@@ -33,7 +33,7 @@ module Cucumber
 
     private
 
-      def bootstrap(template)
+      def bootstrap(template_file)
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !@user
 
         bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
@@ -41,7 +41,7 @@ module Cucumber
         bootstrap.config[:ssh_user] = "ubuntu"
         bootstrap.config[:use_sudo] = true
         bootstrap.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
-        bootstrap.config[:template] = template
+        bootstrap.config[:template_file] = template_file
         bootstrap.config[:context][:hostname] = "cucumber-chef-test-lab"
         bootstrap.config[:context][:chef_server] = @server.public_ip_address
         bootstrap.config[:context][:amqp_password] = "p@ssw0rd1"
@@ -67,12 +67,12 @@ module Cucumber
       end
 
       def render_knife_rb
-        template = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "chef", "knife-rb.erb"))
+        template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "chef", "knife-rb.erb"))
         knife_rb = File.expand_path(File.join(Dir.pwd, ".cucumber-chef", "knife.rb"))
 
         context = { :chef_server => @server.public_ip_address }
         File.open(knife_rb, 'w') do |f|
-          f.puts(Cucumber::Chef::Template.render(template, context))
+          f.puts(Cucumber::Chef::Template.render(template_file, context))
         end
       end
 
