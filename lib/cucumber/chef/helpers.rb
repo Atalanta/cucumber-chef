@@ -128,7 +128,7 @@ module Cucumber
 ################################################################################
 
       def lxc_rootfs(name)
-        File.join("/var/lib/lxc", name, "rootfs")
+        File.join("/", "var", "lib", "lxc", name, "rootfs")
       end
 
       def create_network_config(name)
