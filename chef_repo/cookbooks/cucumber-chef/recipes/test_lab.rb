@@ -43,6 +43,8 @@ end
     owner user
     group user
     mode "0700"
+
+    not_if { File.directory?(File.join(home_dir, ".ssh")) }
   end
 
   template "#{home_dir}/.ssh/config" do
@@ -50,6 +52,8 @@ end
     owner user
     group user
     mode "0600"
+
+    not_if { File.exists?(File.join(home_dir, ".ssh", "config")) }
   end
 
   template "#{home_dir}/.gemrc" do
@@ -57,7 +61,11 @@ end
     owner user
     group user
     mode "0644"
+
+    not_if { File.exists?(File.join(home_dir, ".gemrc")) }
   end
 
-  execute "ssh-keygen -q -N '' -f #{home_dir}/.ssh/id_rsa"
+  execute "ssh-keygen -q -N '' -f #{home_dir}/.ssh/id_rsa" do
+    not_if { File.exists?(File.join(home_dir, ".ssh", "id_rsa")) }
+  end
 end

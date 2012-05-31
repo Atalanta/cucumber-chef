@@ -70,13 +70,20 @@ execute "/etc/init.d/networking restart" do
 end
 
 # create the cgroup device
-directory "/cgroup"
+directory "/cgroup" do
+  not_if { File.directory?(File.join("/", "cgroup")) }
+end
 
 mount "/cgroup" do
   device "cgroup"
   fstype "cgroup"
   pass 0
   action [:mount, :enable]
+
+  not_if do
+    %x(mount | grep "cgroup")
+    ($? == 0)
+  end
 end
 
 # create a configuration directory for lxc
@@ -89,19 +96,30 @@ arch = (%x(arch).include?("i686") ? "i386" : "amd64")
 
 template "/etc/lxc/initializer" do
   source "lxc-initializer-config.erb"
+
+  not_if { File.exists?("/etc/lxc/initializer") }
 end
 
 distros.each do |distro|
-  cache_rootfs = "/var/cache/lxc/#{distro}/rootfs-#{arch}"
+  cache_rootfs = File.join("/", "var", "cache", "lxc", distro, "rootfs-#{arch}")
+  initializer_rootfs = File.join("/", "var", "lib", "lxc", "initializer", "rootfs")
 
-  execute "lxc-create -n initializer -f /etc/lxc/initializer -t #{distro}"
+  execute "lxc-create -n initializer -f /etc/lxc/initializer -t #{distro}" do
+    not_if { File.directory?(cache_rootfs) }
+  end
 
-  execute "lxc-destroy -n initializer"
+  execute "lxc-destroy -n initializer" do
+    only_if { File.directory?(initializer_rootfs) }
+  end
 
   template "#{cache_rootfs}#{install_chef_sh}" do
     source "lxc-install-chef.erb"
     mode "0755"
+
+    not_if { File.exists?(File.join(cache_rootfs, install_chef_sh)) }
   end
 
-  execute "chroot #{cache_rootfs} /bin/bash -c '#{install_chef_sh}'"
+  execute "chroot #{cache_rootfs} /bin/bash -c '#{install_chef_sh}'" do
+    not_if { File.exists?(File.join(cache_rootfs, "opt", "opscode", "bin", "chef-client")) }
+  end
 end
