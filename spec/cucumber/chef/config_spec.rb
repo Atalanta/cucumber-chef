@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), "../../spec_helper.rb")
+require "spec_helper"
 
 VALID_AMIS = %w(ami-f3c59db6 ami-adc59de8 ami-a1c59de4 ami-afc59dea ami-0fac7566 ami-37af765e ami-8fac75e6 ami-0baf7662 ami-0dc6fe79 ami-e3c6fe97 ami-fbc6fe8f ami-edc6fe99 ami-1d154e58 ami-39154e7c ami-2b154e6e ami-3b154e7e ami-7b8f5712 ami-d38f57ba ami-098f5760 ami-d78f57be ami-d57942a1 ami-db7942af ami-df7942ab ami-c57942b1)
 
@@ -8,59 +8,60 @@ VALID_ARCHS = %w(i386 amd64)
 VALID_DISK_STORES = %w(instance-store ebs)
 
 describe Cucumber::Chef::Config do
+
   before(:all) do
-    @orgname = ENV["ORGNAME"]
-    @opscode_user = ENV["OPSCODE_USER"]
+    Cucumber::Chef::Config.mode = :test
+    @original_config = Cucumber::Chef::Config.hash_dup
   end
 
   after(:each) do
-    ENV["ORGNAME"] = @orgname
-    ENV["OPSCODE_USER"] = @opscode_user
+    Cucumber::Chef::Config.configuration = @original_config
   end
 
-  subject { Cucumber::Chef::Config.new(StringIO.new, StringIO.new, StringIO.new) }
+  describe "default values" do
 
+    before(:each) do
+      load File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "config.rb"))
+    end
 
+    after(:each) do
+      load File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "spec_helper.rb"))
+    end
+
+    it "Cucumber::Chef::Config[:mode] defaults to :user" do
+      Cucumber::Chef::Config[:mode].should == :user
+    end
+
+    it "Cucumber::Chef::Config[:provider] defaults to :aws" do
+      Cucumber::Chef::Config[:provider].should == :aws
+    end
+
+    describe "Cucumber::Chef::Config[:aws] default values" do
+
+      it "Cucumber::Chef::Config[:aws][:security_group] defaults to 'cucumber-chef'" do
+        Cucumber::Chef::Config[:aws][:security_group].should == 'cucumber-chef'
+      end
+
+    end
+
+  end
+
+end
+
+=begin
   describe "verification" do
-    describe "when ORGNAME is not set" do
-      it "should raise" do
-        ENV["ORGNAME"] = ""
-        expect {
-          subject.verify
-        }.to raise_error(Cucumber::Chef::ConfigError, /ORGNAME/)
-      end
-    end
-
-    describe "when OPSCODE_USER is not set" do
-      it "should raise" do
-        ENV["OPSCODE_USER"] = ""
-        expect {
-          subject.verify
-        }.to raise_error(Cucumber::Chef::ConfigError, /OPSCODE_USER/)
-      end
-    end
 
     describe "when configuration is invalid" do
       it "should complain about missing keys" do
-        subject.config[:chef_server_url] = nil
-        subject.config[:knife][:aws_access_key_id] = nil
+        subject.aws[:aws_access_key_id] = nil
         expect {
           subject.verify
-        }.to raise_error(Cucumber::Chef::ConfigError, /chef_server_url.*aws_access_key_id/)
-      end
-
-      describe "when node name is invalid" do
-        it "should raise" do
-          ENV["OPSCODE_USER"] = "REALLYBOGUSORGNAME"
-          expect {
-            subject.verify
-          }.to raise_error(Cucumber::Chef::ConfigError, /Opscode platform credentials/)
-        end
+        }.to raise_error(Cucumber::Chef::ConfigError, /aws_access_key_id/)
       end
 
       describe "when aws_access_key_id is empty" do
         it "should raise" do
-          subject.config[:knife][:aws_access_key_id] = "bogus"
+          subject.aws[:aws_access_key_id] = "bogus"
           expect {
             subject.verify
           }.to raise_error(Cucumber::Chef::ConfigError, /AWS credentials/)
@@ -75,51 +76,32 @@ describe Cucumber::Chef::Config do
     end
   end
 
-  describe "when knife.rb is missing" do
-    it "should raise" do
-      begin
-        # Handle case of local .chef directory for gem development
-        chef_dir = (File.exist?('.chef') ? Pathname('.chef') : Pathname("~/.chef")).expand_path
-        (chef_dir + "knife.rb").rename(chef_dir + "knife.rb.bak")
-        config_file = chef_dir + "knife.rb"
-        expect { subject.config }.to raise_error(Cucumber::Chef::ConfigError)
-      ensure
-        (chef_dir + "knife.rb.bak").rename(chef_dir + "knife.rb")
-      end
-    end
-  end
-
   describe "when configuration is valid" do
 
     it "should list the configuration values" do
-      output = subject.list.join("\n")
-      output.should match(/node_name:/)
-      output.should match(/knife\[:aws_secret_access_key\]:/)
-    end
-
-    it "should return the configuration values" do
-      subject[:node_name].should == @opscode_user
+      output = subject.inspect
+      output.should match(/:aws_secret_access_key/)
     end
 
     it "should allow setting configuration values" do
-      subject[:mode] = :blah
-      subject[:mode].should == :blah
+      subject.mode = :blah
+      subject.mode.should == :blah
 
-      subject[:knife][:aws_access_key_id] = "bogus"
-      subject[:knife][:aws_access_key_id].should == "bogus"
+      subject.aws[:aws_access_key_id] = "bogus"
+      subject.aws[:aws_access_key_id].should == "bogus"
     end
 
     it "should provide a method for getting a test mode configuration" do
-      config = Cucumber::Chef::Config.test_config(StringIO.new, StringIO.new, StringIO.new)
-      config[:mode].should == :test
+      config = Cucumber::Chef::Config.test
+      config.mode.should == :test
     end
 
     it "should know it is in test mode" do
-      Cucumber::Chef::Config.test_config.test_mode?.should be
+      Cucumber::Chef::Config.test.test?.should be
     end
 
     it "should know it is not in test_mode" do
-      Cucumber::Chef::Config.new.test_mode?.should_not be
+      Cucumber::Chef::Config.load.test?.should_not be
     end
 
     describe "and an ami is specified" do
@@ -225,3 +207,4 @@ describe Cucumber::Chef::Config do
     end
   end
 end
+=end

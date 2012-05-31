@@ -1,4 +1,5 @@
 .chef/**
+.cucumber-chef/**
 coverage
 rdoc
 doc

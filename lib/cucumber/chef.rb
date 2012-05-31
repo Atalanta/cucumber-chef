@@ -1,12 +1,13 @@
-require 'readline'
-require 'socket'
-require 'stringio'
+require "pathname"
+require "readline"
+require "socket"
+require "stringio"
 
-require 'fog'
-require 'json'
-require 'net/ssh/multi'
-require 'net/ssh/proxy/command'
-require 'net/sftp'
+require "fog"
+require "json"
+require "net/ssh"
+require "net/ssh/proxy/command"
+require "net/sftp"
 
 module Cucumber
   module Chef

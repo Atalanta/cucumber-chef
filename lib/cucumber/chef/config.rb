@@ -9,7 +9,7 @@ module Cucumber
     class Config
       extend(Mixlib::Config)
 
-      PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file )
+      PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file ) if !defined?(PROVIDER_AWS_KEYS)
 
 ################################################################################
 
