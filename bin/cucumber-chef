@@ -128,8 +128,8 @@ class CucumberChef < Thor
 
     puts Cucumber::Chef::Config.configuration.to_yaml
 
-  rescue Cucumber::Chef::Error => err
-    error(err.message)
+  rescue Cucumber::Chef::Error => e
+    error(e.message)
   end
 
   desc "info", "Display information about the current test labs"

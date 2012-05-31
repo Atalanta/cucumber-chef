@@ -30,7 +30,7 @@ module Cucumber
       def self.test
         self.load
         self[:mode] = :test
-        selfd
+        self
       end
 
 ################################################################################
@@ -44,7 +44,7 @@ module Cucumber
 ################################################################################
 
       def self.verify_keys
-        missing_keys = KEYS.select{ |key| !self.key?(key.to_sym) }
+        missing_keys = KEYS.select{ |key| !self[key.to_sym] }
         raise ConfigError, "Configuration incomplete, missing configuration keys: #{missing_keys.join(", ")}" if missing_keys.count > 0
 
         invalid_keys = KEYS.select{ |key| !eval("#{key.to_s.upcase}S").include?(self[key]) }
