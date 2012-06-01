@@ -1,4 +1,4 @@
-module Cucumber::Chef::Helpers::Chef
+module Cucumber::Chef::Helpers::ChefClient
 
   # call this in a Before hook
   def chef_set_client_config(config={})
