@@ -1,11 +1,14 @@
-Feature: Example feature for <%= @project %>
-  So that I can be learn how to use cucumber-chef
-  As an infrastructure developer
-  I can run an example feature that doesn't do much
+Feature: Do awesome stuff with <%= @project %>
+  In order to <express the business reason for the existence of the <%= @project %> project>
+  As a <kind of stakeholder>
+  I want to <do something of value>
 
-Scenario: Example scenario for <%= @project %>
-  Given I have a remote server
-  And I apply the <%= @project %> role/recipe
-  And run Chef
-  When I connect to the remote server from the test server
-  Then the <% @project %> server behaves as it should
+Background:
+  * a new server has been provisiomed
+  * the <%= @project %> role has been applied
+  * Chef has been run
+
+Scenario: Concrete examples embodying this feature
+  Given <some initial state> 
+  When <I tickle/prod/poke/frob>
+  Then <the resulting state should be as I want>
