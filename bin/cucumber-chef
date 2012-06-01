@@ -128,7 +128,7 @@ class CucumberChef < Thor
     puts "Not implemented.  For now, find the IP of your test lab using the info task, and connect manually."
   end
 
-  desc "displayconfig", "Display the current config from knife.rb"
+  desc "displayconfig", "Display the current cucumber-chef config"
   method_option :test, :type  => :boolean
   def displayconfig
     load_config
