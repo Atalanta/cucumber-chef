@@ -83,6 +83,9 @@ class CucumberChef < Thor
 
     test_lab = Cucumber::Chef::TestLab.new
     test_lab.destroy
+
+  rescue Cucumber::Chef::Error => e
+    error(e)
   end
 
 ################################################################################
@@ -93,6 +96,9 @@ class CucumberChef < Thor
     project_dir = File.expand_path(File.join(Dir.pwd, "cucumber-chef", @project))
     create_directory_structure(project_dir)
     generate_project_skeleton(project_dir)
+
+  rescue Cucumber::Chef::Error => e
+    error(e)
   end
 
   desc "ssh", "SSH to running test lab"
@@ -112,6 +118,9 @@ class CucumberChef < Thor
         puts("No test labs available to ssh to!")
       end
     end
+
+  rescue Cucumber::Chef::Error => e
+    error(e)
   end
 
   desc "connect", "Connect to a container in your test lab"
@@ -170,7 +179,11 @@ class CucumberChef < Thor
 
     runner = Cucumber::Chef::TestRunner.new(project_dir)
     runner.run
+
+  rescue Cucumber::Chef::Error => e
+    error(e)
   end
+
 end
 
 CucumberChef.start

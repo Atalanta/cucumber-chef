@@ -25,6 +25,8 @@ module Cucumber
         self.from_file(config_file)
         self.verify
         self
+      rescue Errno::ENOENT
+        raise ConfigError, "Could not find your Cucumber-Chef configuration file; did you run 'cucumber-chef init'?"
       end
 
       def self.test
