@@ -24,6 +24,7 @@ module Cucumber
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @config = Hash.new(nil)
+        @config[:formatter] = true
       end
 
       def console
@@ -39,16 +40,16 @@ module Cucumber
       def exec(command)
         Net::SSH.start(@config[:host], @config[:ssh_user], options) do |ssh|
           ssh.open_channel do |chan|
-            @stdout.puts("[#{@config[:host]}::SSH] exec(#{command})")
+            @stdout.puts(format("exec(#{command})", "SSH"))
             chan.exec(command) do |ch, success|
               raise SSHError, "Could not execute '#{command}'." unless success
 
               ch.on_data do |c, data|
-                @stdout.puts("[#{@config[:host]}::STDOUT] #{data}")
+                @stdout.puts(format(data, "STDOUT"))
               end
 
               ch.on_extended_data do |c, type, data|
-                @stderr.puts("[#{@config[:host]}::STDERR] #{data}")
+                @stderr.puts(format(data, "STDERR"))
               end
 
             end
@@ -62,15 +63,15 @@ module Cucumber
           sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
             case event
             when :open
-              @stdout.puts("[#{@config[:host]}::SFTP] upload(#{args[0].local} -> #{args[0].remote})")
+              @stdout.puts(format("upload(#{args[0].local} -> #{args[0].remote})", "SFTP"))
             when :close
-              @stdout.puts("[#{@config[:host]}::SFTP] close(#{args[0].remote})")
+              @stdout.puts(format("close(#{args[0].remote})", "SFTP"))
             when :mkdir
-              @stdout.puts("[#{@config[:host]}::SFTP] mkdir(#{args[0]})")
+              @stdout.puts(format("mkdir(#{args[0]})", "SFTP"))
             when :put
-              @stdout.puts("[#{@config[:host]}::SFTP] put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}")
+              @stdout.puts(format("put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}", "SFTP"))
             when :finish
-              @stdout.puts("[#{@config[:host]}::SFTP] finish")
+              @stdout.puts(format("finish", "SFTP"))
             end
           end
         end
@@ -81,15 +82,15 @@ module Cucumber
           sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
             case event
             when :open
-              @stdout.puts("[#{@config[:host]}::SFTP] download(#{args[0].remote} -> #{args[0].local})")
+              @stdout.puts(format("download(#{args[0].remote} -> #{args[0].local})", "SFTP"))
             when :close
-              @stdout.puts("[#{@config[:host]}::SFTP] close(#{args[0].local})")
+              @stdout.puts(format("close(#{args[0].local})", "SFTP"))
             when :mkdir
-              @stdout.puts("[#{@config[:host]}::SFTP] mkdir(#{args[0]})")
+              @stdout.puts(format("mkdir(#{args[0]})", "SFTP"))
             when :get
-              @stdout.puts("[#{@config[:host]}::SFTP] get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}")
+              @stdout.puts(format("get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}", "SFTP"))
             when :finish
-              @stdout.puts("[#{@config[:host]}::SFTP] finish")
+              @stdout.puts(format("finish", "SFTP"))
             end
           end
         end
@@ -97,6 +98,12 @@ module Cucumber
 
 
     private
+
+      def format(message, subsystem=nil)
+        subsystem = [ "::", subsystem ].join if subsystem
+        message = [ "[", @config[:host], subsystem, "]", " ", message ].join if @config[:formatter]
+        message
+      end
 
       def proxy_command
         raise SSHError, "You must specify an identity file in order to SSH proxy." if !@config[:identity_file]

@@ -25,7 +25,9 @@ module Cucumber
         upload_project
         project_path = File.join('/home/ubuntu', File.basename(@project_dir), 'features')
         command = "sudo cucumber -c -v -b #{project_path}"
+        @ssh.config[:formatter] = false
         @ssh.exec(command)
+        @ssh.config[:formatter] = true
       end
 
 
