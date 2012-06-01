@@ -1,37 +1,26 @@
+require 'cucumber/chef/helpers/command'
+
+include Cucumber::Chef::Helpers::Command
+
 module Cucumber
   module Chef
     module Helpers
 
 ################################################################################
 
-      def run_chroot_command(name, command)
-        output = %x(chroot #{lxc_rootfs(name)} /bin/bash -c '#{command}' 2>&1)
-        raise "run_chroot_command(#{command}) failed (#{$?})" if ($? != 0)
-        output
-      end
-
-      def run_remote_command(name, command)
-        output = %x(ssh #{$servers[name][:ip]} '#{command}' 2>&1)
-        raise "run_remote_command(#{command}) failed (#{$?})" if ($? != 0)
-        output
-      end
-
-      def run_command(command)
-        output = %x(#{command} 2>&1)
-        raise "run_command(#{command}) failed (#{$?})" if ($? != 0)
-        output
-      end
 
 ################################################################################
 
       def log(name, ip, message)
         STDOUT.puts("\033[34m  * #{ip}: (LXC) '#{name}' #{message}\033[0m")
+        STDOUT.flush if STDOUT.respond_to?(:flush)
       end
 
       def create_server(name, attributes={})
-        if attributes[:persist]
+        if (attributes[:persist] && $servers[name])
           attributes = $servers[name]
         else
+          destroy_container(name) if container_exists?(name)
           attributes = { :ip => generate_ip, :mac => generate_mac, :persist => false }.merge(attributes)
         end
         $servers = ($servers || {}).merge(name => attributes)
@@ -59,7 +48,7 @@ module Cucumber
 ################################################################################
 
       def create_container(name)
-        unless File.exists?(lxc_rootfs(name))
+        unless container_exists?(name)
           run_command("lxc-create -n #{name} -f /etc/lxc/#{name} -t ubuntu 2>&1")
           run_command("mkdir -p #{lxc_rootfs(name)}/root/.ssh/ 2>&1")
           run_command("chmod 0700 #{lxc_rootfs(name)}/root/.ssh/ 2>&1")
@@ -70,9 +59,13 @@ module Cucumber
 
       def destroy_container(name)
         stop_container(name)
-        if File.exists?(lxc_rootfs(name))
+        if container_exists?(name)
           run_command("lxc-destroy -n #{name} 2>&1")
         end
+      end
+
+      def container_exists?(name)
+        (File.directory?(lxc_rootfs(name)) ? true : false)
       end
 
       def start_container(name)
@@ -206,6 +199,8 @@ module Cucumber
         end
         mac
       end
+
+################################################################################
 
     end
   end
