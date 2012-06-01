@@ -26,11 +26,6 @@ Before do
     end
   end
 
-  # destroy any non-persistent containers before we start this scenario
-  $servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
-    server_destroy(name)
-  end
-
   # for Opscode Hosted chef-server use this:
   #chef_set_client_config(:orgname => "cucumber-chef")
 
@@ -39,8 +34,8 @@ Before do
                          :validation_client_name => "chef-validator")
 end
 
-# cleanup non-persistent lxc containers on exit
-Kernel.at_exit do
+After do |scenario|
+  # cleanup non-persistent lxc containers on exit
   $servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
     server_destroy(name)
   end
