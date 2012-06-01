@@ -40,7 +40,7 @@ class CucumberChef < Thor
       }
 
       templates.each do |filename, destination|
-        template(filename, project_dir + destination)
+        template(filename, File.join(project_dir, destination))
       end
     end
 
