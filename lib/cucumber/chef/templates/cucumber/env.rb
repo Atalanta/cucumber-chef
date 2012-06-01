@@ -18,11 +18,11 @@ $servers = Hash.new(nil)
 Before do
   # cleanup previous lxc containers on first run
   if ($servers.size == 0)
-    STDOUT.puts("$servers.size == 0")
+    STDOUT.puts("  * Destroying All LXC Containers")
     STDOUT.flush if STDOUT.respond_to?(:flush)
 
-    servers.each do |server|
-      server_destroy(container)
+    servers.each do |name|
+      server_destroy(name)
     end
   end
 
