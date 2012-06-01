@@ -10,10 +10,11 @@ module Cucumber::Chef::Helpers::Chef
 
   # call this before chef_run_client
   def chef_set_client_attributes(name, attributes={})
-    @chef_client_attributes.merge!(:tags => ["cucumber-chef-container"])
+    @chef_client_attributes = attributes.merge(:tags => ["cucumber-chef-container"])
   end
 
   def chef_run_client(name)
+    chef_config_client(name)
     command_run_remote(name, "/usr/bin/chef-client -j /etc/chef/attributes.json -N cucumber-chef-#{name}")
   end
 
