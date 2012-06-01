@@ -57,12 +57,12 @@ class CucumberChef < Thor
 
 ################################################################################
 
-  desc "init", "Initalize Cucumber-Chef configuration"
+  desc "init", "Initalize cucumber-chef configuration"
   def init
     initalize_config
   end
 
-  desc "setup", "Setup Cucumber-Chef test lab in Amazon EC2"
+  desc "setup", "Setup cucumber-chef test lab in Amazon EC2"
   method_option :test, :type  => :boolean
   def setup
     load_config
@@ -77,7 +77,7 @@ class CucumberChef < Thor
     error(e.message)
   end
 
-  desc "teardown", "Teardown Cucumber-Chef test lab in Amazon EC2"
+  desc "teardown", "Teardown cucumber-chef test lab in Amazon EC2"
   method_option :test, :type => :boolean
   def teardown
     load_config
