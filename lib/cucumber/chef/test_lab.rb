@@ -49,8 +49,6 @@ module Cucumber
           tag_server
         end
 
-        info
-
         @stdout.print("Waiting for sshd...")
         begin
           @stdout.print(".")
