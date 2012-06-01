@@ -6,164 +6,81 @@ Cucumber-chef begins with a very simple premise.  If we are framing our infrastr
 
 Cucumber-chef provides a framework to make it easier to do test-driven development for infrastructure.  It does this by providing a test infrastructure, which we call the "test lab", within which a number of different scenarios can be set up, and against which Cucumber features can we run.  From the outset, Cucumber-chef's design was to provide a fast, lightweight and cheap way to fire up virtual machines for testing.  At present this is achieved using Linux Containers on Amazon EC2.  Supporting alternative provisioning backends is planned, which will allow the user to opt to test using local machines, alternative cloud providers, and ultimatey alternative virtualization technologies.
 
+For node convergence, Cucumber-Chef uses the open-source Chef server.  It can be configured to use Hosted Chef or Private Chef.  Supoprt for Chef-solo will be included in a future relase.
+
 As you might have guessed from the name, we're going to write high level acceptance tests using Cucumber.  Cucumber-Chef provides step definitions and helper methods to make it easy to provision and manage machines with Chef, and then build end-to-end tests.
 
 ## Getting Started
 
-Getting started with Cucumber-Chef is a simple, three step process:
+*LISTEN UP*
+
+Here's the headline:
+
+With a /single command/ Cucumber-Chef will provision a machine, set up an open source Chef server, bootstrap it to support the creation of Linux containers, set up an environment from which to run tests, and automatically configure your system to use it.
+
+This means getting started with Cucumber-Chef is a simple, two step process.
 
 1) Install Cucumber-Chef
-2) Integrate with Hosted Chef and Amazon EC2
-3) Run cucumber-chef setup
+2) `Run cucumber-chef init`
 
-### 1) Installing Cucumber-Chef
+### Installing Cucumber-Chef
 
-Installing Cucumber-Chef is simple.  It's distributed as a RubyGem, so you can simply run:
+Cucumber-Chef is distributed as a RubyGem.  To install it you have two options - stable or development.
+
+#### Installing the stable version
+
+Simply install from RubyGems:
 
     $ gem install cucumber-chef
 
+Depending on your local setup (ie whether you're using RVM or rbenv, or distribution-provided Ruby), you may need to run this with superuser privileges.
+
+#### Installing the development version
+
+If you want to try a development version, simply clone this repo, and build the gem yourself:
+
+    $ git clone git://github.com/Atalanta/cucumber-chef
+    $ cd cucumber-chef
+    $ bundle
+    $ rake build
+    $ gem install pkg/cucumber-chef-VERSION.gem
+    
+Again, depending on your local setup (ie whether you're using RVM or rbenv, or distribution-provided Ruby), you may need to run parts of this process with superuser privileges.
+
+### Running `cucumber-chef init`
+
+Cucumber-Chef ships with an initialization task, which will interactively generate configuration file.  This requires you to have, and know your Amazon Web Services credntials.  On completion of the interactive configuration, it will provision a machine on EC2, and set up the entire infrastructure, using Chef.
+
+Cucumber-Chef doesn't demand where you keep your configuration file.  By default, the config will be created in `~/.cucumber-chef`, but this can be overridden.  Cucumber-Chef is clever enough to find your config, so it's all cool.
+
+The two obvious places to keep this config, are in the top level of your Chef repository, or in a dedicated Cucumber-Chef repository, but you're free to do whatever works for you.
+
+You can view and verify the current config at any time by running `cucumber-chef displayconfig`.  If Cucumber-Chef thinks your config is incorrect, or incomplete, it'll tell you.
+
+## Using Cucumber-Chef
+
 Once installed, you can run `cucumber-chef` on the command line to get an overview of the tasks it can carry out.
 
-    $ cucumber-chef
-    Tasks:
-      cucumber-chef amis                    # List available EC2 Ubuntu AMIs
-      cucumber-chef connect                 # Connect to a container in your test lab
-      cucumber-chef destroy                 # Destroy running test labs
-      cucumber-chef displayconfig           # Display the current config from knife.rb
-      cucumber-chef help [TASK]             # Describe available tasks or one specific task
-      cucumber-chef info                    # Display information about the current test labs
-      cucumber-chef project <project name>  # Create a project template for testing an infrastructure
-      cucumber-chef setup                   # Set up a cucumber-chef test lab in Amazon EC2
-      cucumber-chef ssh                     # SSH to running test lab
-      cucumber-chef test <project name>     # Run the cucumber-chef test suite <project name> from a workstation.
-      cucumber-chef upload <project name>   # Upload the cucumber-chef test suite <project name> to the test lab platform
+$ cucumber-chef
+Tasks:
+  cucumber-chef connect                 # Connect to a container in your test lab
+  cucumber-chef displayconfig           # Display the current cucumber-chef config
+  cucumber-chef help [TASK]             # Describe available tasks or one specific task
+  cucumber-chef info                    # Display information about the current test labs
+  cucumber-chef init                    # Initalize Cucumber-Chef configuration
+  cucumber-chef project <project name>  # Create a project template for testing an infrastructure
+  cucumber-chef setup                   # Setup Cucumber-Chef test lab in Amazon EC2
+  cucumber-chef ssh                     # SSH to running test lab
+  cucumber-chef teardown                # Teardown Cucumber-Chef test lab in Amazon EC2
+  cucumber-chef test <project name>     # Run the cucumber-chef test suite <project name> from a workstation.
 
-### 2) Integrate with Hosted Chef and Amazon EC2
-
-In its current incarnation, Cucumber-Chef makes two important assumptions.  Firstly, it assumes you're using Opscode Hosted Chef rather than your own Chef server.  Secondly, it assume that you are comfortable with using Amazon's EC2 service for providing the 'bare metal' on which we set up the test lab.  Removing these assumptions, to support Chef Solo, or your own Open Source Chef server is high on the list of priorities.
-
-Cucumber-chef is tightly integrated with Chef - it uses your knife.rb for credentials, and any cucumber-chef-specific configuration goes in knife.rb under the cucumber-chef namespace.
-
-On installation, the first thing you should do is run:
-
-    $ cucumber-chef displayconfig
-
-This will look for your knife.rb, and extract the relevant sections, check them, and display them on the screen.  If any entries are missing, it will alert you.
-
-We recommended keeping your knife.rb inside your organization's Chef repository, inside the `.chef` directory, and use environment variables to specify username, organization name and cloud provider credentials.  When run, Cucumber-chef will search for a directory called `.chef` in your current directory, and then carry on going up the directory tree until it finds one.  In practice this means that if you stay within the chef-repo directory for the organization on which you're working, Cucumber-chef will use the knife.rb in that repo; if you're elsewhere in the filesystem rooted in your home directory, and have `.chef` in your home directory, Cucumber-chef will use that.  Otherwise you'll need to either change into a directory where a `.chef` can be found, or copy, creatre or link accordingly.  In most cases we anticipate that you'll be inside the chef-repo of your organisation, and the documentation is written from this perspective.
-
-#### 2a) Refactor 'knife.rb'
-
-If you haven't already, refactor your knife.rb to look like this:
-
-    current_dir  = File.dirname(__FILE__)
-    user         = ENV['OPSCODE_USER'] || ENV['USER']
-
-    log_level               :info
-    log_location            STDOUT
-    node_name               "#{user}"
-    client_key              "#{ENV['HOME']}/.chef/#{user}.pem"
-    validation_client_name  "#{ENV['ORGNAME']}-validator"
-    validation_key          "#{ENV['HOME']}/.chef/#{ENV['ORGNAME']}-validator.pem"
-    chef_server_url         "https://api.opscode.com/organizations/#{ENV['ORGNAME']}"
-    cache_type              'BasicFile'
-    cookbook_path           ["#{current_dir}/../cookbooks"]
-    verbose_logging         true
-    cache_options(:path => "#{ENV['HOME']}/.chef/checksums")
-
-Now set your Hosted Chef username and organization name using environment variables:
-
-    $ export OPSCODE_USER="platform_user_name"
-    $ export ORGNAME="platform_organization"
-
-Now put your validator and client keys in $HOME/.chef.  Verify that everything still works:
-
-    $ knife client list
-
-If you get results back, we're in business.
-
-#### 2b) Configure AWS EC2 Settings in 'knife.rb'
-
-Now add the EC2 configuration:
-
-    # Knife EC2 Details
-    # -----------------
-    knife[:aws_access_key_id]         = ENV['AWS_ACCESS_KEY_ID']
-    knife[:aws_secret_access_key]     = ENV['AWS_SECRET_ACCESS_KEY']
-    # -----------------
-    knife[:aws_ssh_key_id]            = ENV['AWS_SSH_KEY_ID'] || user
-    knife[:identity_file]             = "#{ENV['HOME']}/.chef/#{user}.pem"
-    # -----------------
-    knife[:region]                    = "us-west-2"
-    knife[:availability_zone]         = "us-west-2a"
-    # -----------------
-    #knife[:aws_security_group]        = "my-uber-group" # default: "cucumber-chef"
-    # -----------------
-    #knife[:aws_image_id]              = "ami-76fd7146"
-    knife[:ubuntu_release]            = "maverick"
-    # -----------------
-    #knife[:aws_instance_arch]         = "amd64" # default: "i386"
-    #knife[:aws_instance_disk_store]   = "ebs" # default: "instance-store"
-    #knife[:aws_instance_type]         = "t1.micro" # default: "m1.small"
-
-Note that right now Cucumber-Chef only supports Ubuntu-based test labs and LXC containers.  We have plans to support RHEL test labs and LXC containers in the near future.
-
-The previous long term support (LTS) version of Ubuntu, Lucid, shipped with an old version of Linux Containers, which lacked some key capabilities, and as such, the host OS defaults to the next version - Maverick.  This will provide Lucid containers.  We plan to move quickly to using the latest LTS version, as Maverick is now end-of-life.  For now, the tested approach is to set `ubuntu_release` to `maverick`.  Other configurations are not yet supported.
-
-Now set your AWS EC2 environment variables:
-
-    $ export AWS_ACCESS_KEY_ID="SEKRITKEY"
-    $ export AWS_SECRET_ACCESS_KEY="rEeLySeKrItKeY"
-    $ export AWS_SSH_KEY_ID="your_aws_pem_filename_minus_extension"
-
-    AWS_ACCESS_KEY_ID:
-      Under "Sign-In Credentials", your AWS "User name"
-    AWS_SECRET_ACCESS_KEY:
-      Under "Access Credentials", your AWS "Access Key"
-    AWS_SSH_KEY_ID:
-      The ID is the name of the key file from when you created it.  For instance
-      if your key was named KeyId.pem when you downloaded it, this would be KeyId
-
-And then ensure your AWS ssh key is in place.
-
-Now check your config again, with cucumber-chef display config.  If you get no complaints, you're ready to set up a test lab.
-
-##### 'aws_image_id' and 'aws_instance_type'
-
-You can specify an AMI in your EC2 configuration either directly with the `:aws_image_id` parameter or by setting the `:ubuntu_release` parameter:
-
-    knife[:ubuntu_release] = "maverick"
-
-You can also set the additional parameters:
-
-    knife[:aws_instance_arch] = "amd64"
-    knife[:aws_instance_disk_store] = "ebs"
-
-`:aws_instance_arch` takes the values "i386" or "amd64" and defaults to "i386"
-`:aws_instance_disk_store` takes the values "instance-store" and "ebs" and defaults to "instance-store".
-
-If you want to specify an instance type for your test lab use the `:aws_instance_type` setting (default is "m1.small"):
-
-    knife[:aws_instance_type] = "m1.large"
-
-##### AWS Security Group
-
-By default `cucumber-chef` will use a security group "cucumber-chef", creating it if it doesn't exist. You can specify another security group with the configuration setting `:aws_security_group`.
-
-    knife[:aws_security_group] = "my-existing-security-group"
-
-### 3) Run 'cucumber-chef' Setup
-
-
-    $ cucumber-chef setup
-
-This command will set up a complete test lab environment, As long as you've provided valid AWS and Opscode credentials, it will do this automatically.  The process takes about 15 minutes, after which you'll have a fully funtioning platform available for you to use.  Let's just quickly review what that means.  You will have an EC2 machine, fully managed by Chef, and providing the following:
+After tunning set up, which takes about 15 minutes, you'll have a fully funtioning platform available for you to use.  Let's just quickly review what that means.  You will have an EC2 machine, fully managed by Chef, and providing the following:
 
 * The ability to provision LXC containers
 * The ability to run tests against LXC containers
-* A dedicated container for certain kinds of testing scenarios
+* A dedicated environment for certain kinds of testing scenarios
 
-The next stage is to set up a project.  A project is simply a directory structure for containing your cucumber features and steps, already set up with an appropriate environment to make use of the step definitions provided with cucumber-chef.  We think it makes most sense to have this in your organisation's chef repo.  Cucumber-chef provides a task which will create a the directory for you, and populate it with a README and an example feature and step.
+The next stage is to set up a project.  A project is simply a directory structure for containing your cucumber features and steps, already set up with an appropriate environment to make use of the step definitions provided with Cucumber-Chef.  Cucumber-chef provides a task which will create a the directory for you, and populate it with a README and an example feature and step.  These represent futher documentation, and provide a model and steps to get you up and running with your testing as quickly as possible.
 
 
     $ cd /path/to/chef-repo
@@ -194,10 +111,10 @@ Once you've got your test lab set up, and you've generated a project, it's time 
 All containers operate off a bridged interface on the test-lab.  All outbound, non-local traffic from the LXC containers are NAT'd through the test-lab and off to the outside world.  This bridged interface on the test-lab is configured as follows:
 
     IP Address: 192.168.255.254
-    Netmask: 255.255.0.0
+    Netmask: 255.255.255.0
     Broadcast: 192.168.255.255
 
-You are free to use any IP in this class B network, with the exception of the test-lab itself, which is at `192.168.255.254`.
+You are free to use any IP in this /24, with the exception of the test-lab itself, which is at `192.168.255.254`.
 
 ### Test Helpers
 
@@ -245,7 +162,7 @@ This method configures the chef-client's `client.rb` file.  Currently you can sp
 
 ## Running Tests
 
-You can write the tests and Chef code wherever you like.  We're assuming you prefer working on your local machine, and checking into version control.  But we don't really care.  When it's time to run tests, cucumber-chef provides a task which handles this:
+You can write the tests and Chef code wherever you like.  We're assuming you prefer working on your local machine, and checking into version control.  But we don't really care.  When it's time to run tests, Cucumber-Chef provides a task which handles this:
 
     $ cucumber-chef test myproject
 
@@ -255,7 +172,7 @@ Running the test task will upload your current project to the test lab, and run 
 
     $ cucumber-chef info
 
-At present, Cucumber-Chef only allows one test lab per AWS account and Opscode Hosted Chef account.
+At present, Cucumber-Chef only allows one test lab per AWS account.  In practice, this has not been a constraint.  LXC is incredibly lightweight, and a large number of containers can be provisioned on even a small EC2 instance.
 
 ### Example Test Run
 
