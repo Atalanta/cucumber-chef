@@ -18,7 +18,7 @@ module Cucumber
       end
 
       def build
-        template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-chef-server.erb"))
+        template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-maverick-test-lab.erb"))
 
         bootstrap(template_file)
         download_credentials
