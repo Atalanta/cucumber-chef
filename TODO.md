@@ -11,6 +11,10 @@
 * Make recipes food-critic compliant
 * Fork ubuntu ami to 'amy'
 * Merge Zach's changes
+* Get cukes passing
+* Improve cuke coverage to include all functionality described in the help task
+* Plug into Relish
+* Refactor ssh and connect into one ssh task that takes an optional container
 
 ## DONE
 
