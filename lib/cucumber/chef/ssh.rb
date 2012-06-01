@@ -40,7 +40,7 @@ module Cucumber
       def exec(command)
         Net::SSH.start(@config[:host], @config[:ssh_user], options) do |ssh|
           ssh.open_channel do |chan|
-            @stdout.puts(format("exec(#{command})", "SSH"))
+            @stdout.puts(format("exec(#{command})", "SSH", true))
             chan.exec(command) do |ch, success|
               raise SSHError, "Could not execute '#{command}'." unless success
 
@@ -99,9 +99,9 @@ module Cucumber
 
     private
 
-      def format(message, subsystem=nil)
+      def format(message, subsystem=nil, force=false)
         subsystem = [ "::", subsystem ].join if subsystem
-        message = [ "[", @config[:host], subsystem, "]", " ", message ].join if @config[:formatter]
+        message = [ "[", @config[:host], subsystem, "]", " ", message ].join if (force || @config[:formatter])
         message
       end
 
