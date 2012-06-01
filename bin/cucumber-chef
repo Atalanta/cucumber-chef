@@ -31,7 +31,7 @@ class CucumberChef < Thor
     def generate_project_skeleton(project_dir)
       template_dir = File.expand_path(File.join(__FILE__, "..", "..", "lib", "cucumber", "chef", "templates", "cucumber"))
 
-      CucumberChef.source_root template_dir.realpath
+      CucumberChef.source_root template_dir
       templates = {
         "readme.erb" => 'README',
         "example_feature.erb" => 'features/example.feature',

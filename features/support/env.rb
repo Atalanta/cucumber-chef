@@ -4,9 +4,7 @@ $: << File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'lib'))
 $: << File.expand_path(File.dirname(__FILE__))
 
 require 'rspec/expectations'
-require 'chef'
 require 'cucumber/chef'
-require 'cucumber/nagios/steps'
 
 class CustomWorld
   include Cucumber::Chef
