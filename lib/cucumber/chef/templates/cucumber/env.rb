@@ -37,6 +37,8 @@ Before do
 end
 
 After do |scenario|
+  Kernel.exit if scenario.failed?
+
   # cleanup non-persistent lxc containers on exit
   $servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
     server_destroy(name)
