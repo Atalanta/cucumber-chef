@@ -26,6 +26,7 @@ module Cucumber::Chef::Helpers::Server
 
   def server_destroy(name)
     log(name, $servers[name][:ip], "Destroy") if $servers[name]
+
     container_destroy(name)
   end
 

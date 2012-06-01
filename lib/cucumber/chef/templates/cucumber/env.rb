@@ -1,5 +1,4 @@
 require 'rspec/expectations'
-#require 'chef'
 require 'cucumber/chef'
 require 'cucumber/chef/steps'
 require 'cucumber/chef/helpers'
@@ -16,6 +15,9 @@ end
 $servers = Hash.new(nil)
 
 Before do
+  knife_rb = File.expand_path(File.join(ENV["HOME"], ".chef", "knife.rb"))
+  Chef::Config.from_file(knife_rb)
+
   # cleanup previous lxc containers on first run
   if ($servers.size == 0)
     STDOUT.puts("  * Destroying All LXC Containers")

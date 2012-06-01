@@ -16,6 +16,8 @@ module Cucumber::Chef::Helpers::Container
     if container_exists?(name)
       container_stop(name)
       command_run_local("lxc-destroy -n #{name} 2>&1")
+      chef_server_node_destroy(name)
+      chef_server_client_destroy(name)
     end
   end
 

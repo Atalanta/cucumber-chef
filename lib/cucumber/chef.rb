@@ -2,6 +2,7 @@ require 'readline'
 require 'socket'
 require 'stringio'
 
+require 'chef'
 require 'fog'
 require 'json'
 require 'mixlib/config'
