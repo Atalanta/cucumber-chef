@@ -1,38 +1,40 @@
 module Cucumber::Chef::Helpers::Chef
 
   # call this in a Before hook
-  def set_chef_client(attributes={})
-    @chef_client = { :log_level => :debug,
-                     :log_location => "/var/log/chef.log",
-                     :chef_server_url => "https://api.opscode.com/organizations/#{attributes[:orgname]}",
-                     :validation_client_name => "#{attributes[:orgname]}-validator" }.merge(attributes)
+  def chef_set_client_config(config={})
+    @chef_client_config = { :log_level => :debug,
+                            :log_location => "/var/log/chef.log",
+                            :chef_server_url => "https://api.opscode.com/organizations/#{config[:orgname]}",
+                            :validation_client_name => "#{config[:orgname]}-validator" }.merge(config)
   end
 
-  # call this before run_chef
-  def set_chef_client_attributes(name, attributes={})
-    attributes.merge!(:tags => ["cucumber-chef-container"])
-    attributes_json = File.join("/", lxc_rootfs(name), "etc", "chef", "attributes.json")
-    FileUtils.mkdir_p(File.dirname(attributes_json))
-    File.open(attributes_json, 'w') do |f|
-      f.puts(attributes.to_json)
-    end
+  # call this before chef_run_client
+  def chef_set_client_attributes(name, attributes={})
+    @chef_client_attributes.merge!(:tags => ["cucumber-chef-container"])
   end
 
-  def run_chef(name)
-    run_remote_command(name, "/usr/bin/chef-client -j /etc/chef/attributes.json -N cucumber-chef-#{name}")
+  def chef_run_client(name)
+    command_run_remote(name, "/usr/bin/chef-client -j /etc/chef/attributes.json -N cucumber-chef-#{name}")
   end
 
-  def create_client_rb(name)
-    client_rb = File.join("/", lxc_rootfs(name), "etc/chef/client.rb")
+  def chef_config_client(name)
+    client_rb = File.join("/", container_root(name), "etc/chef/client.rb")
     FileUtils.mkdir_p(File.dirname(client_rb))
     File.open(client_rb, 'w') do |f|
-      f.puts("log_level               :#{@chef_client[:log_level]}")
-      f.puts("log_location            \"#{@chef_client[:log_location]}\"")
-      f.puts("chef_server_url         \"#{@chef_client[:chef_server_url]}\"")
-      f.puts("validation_client_name  \"#{@chef_client[:validation_client_name]}\"")
+      f.puts("log_level               :#{@chef_client_config[:log_level]}")
+      f.puts("log_location            \"#{@chef_client_config[:log_location]}\"")
+      f.puts("chef_server_url         \"#{@chef_client_config[:chef_server_url]}\"")
+      f.puts("validation_client_name  \"#{@chef_client_config[:validation_client_name]}\"")
       f.puts("node_name               \"cucumber-chef-#{name}\"")
     end
-    run_command("cp /etc/chef/validation.pem #{lxc_rootfs(name)}/etc/chef/ 2>&1")
+
+    attributes_json = File.join("/", container_root(name), "etc", "chef", "attributes.json")
+    FileUtils.mkdir_p(File.dirname(attributes_json))
+    File.open(attributes_json, 'w') do |f|
+      f.puts(@chef_client_attributes.to_json)
+    end
+
+    command_run_local("cp /etc/chef/validation.pem #{container_root(name)}/etc/chef/ 2>&1")
   end
 
 end

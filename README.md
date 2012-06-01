@@ -205,40 +205,43 @@ You are free to use any IP in this class B network, with the exception of the te
 
 There are several methods you will need to call in your step definitions to leverage Cucumber-Chef.  This is a brief overview of them and what they do.
 
-* `create_server(name, ip=nil, mac=nil)`
+* `server_create(name, attributes={})`
 
-This method will create an LXC container (i.e. server) using the supplied `name` and start it up.  Both the `ip` address and `mac` address are optional parameters.  Under normal conditions you won't need to ever specify the MAC address or, in all likelihood, the IP address unless you are creating multi-server scenarios and require fixed addresses so you can test communication between the servers.  If you do not specify an IP address one is randomly chosen and assigned to the server for the duration of the scenario.  You can fetch this IP at any time through the `@servers` instance variable using this syntax `@servers[name][:ip]`.  The MAC address can also be fetched using `@servers[name][:mac]`.
+This method will create an LXC container (i.e. server) using the supplied `name` and start it up.  `attributes` are optional; currently you can specify `:ip`, `:mac` and `:persist` for attributes.  You can also assign data to any other keys not used by Cucumber-Chef and access them later on in other scenarios.  In all likelihood, under normal conditions you will not need to assign a specific IP address or MAC address unless you are creating a multi-server scenario test and require fixed addresses on servers due to the nature of your tests.  If you do not specify an IP address or MAC address then they are randomly generated and assigned to the server for the duration of the scenario, unless you mark the server as persistant in which case it will retain the initially assigned IP and MAC address for the duration of the test run.  You can fetch attributes at any time through the `$servers` global variable using this syntax `$servers[name][attribute]`.  For example to get the IP address one would use `$servers[name][:ip]`; for the MAC address you would use `$servers[name][:mac]`.
 
-* `set_chef_client_attributes(name, attributes={})`
+* `chef_set_client_attributes(name, attributes={})`
 
-This method will output the supplied `attributes` to the server `name`.  These attributes are rendered as JSON and passed to the chef-client when the `run_chef` method is called.
+This method will assign the supplied chef-client `attributes` to the server `name`.  These attributes are rendered as JSON and passed to the chef-client when the `chef_run_client` method is called.
 
-* `run_chef(name)`
+* `chef_run_client(name)`
 
-This method executes the chef-client on the server `name`.  The JSON rendered by `set_chef_client_attributes` is passed to the chef-client as well.  Currently the node_name is rendered as `cucumber-chef-#{name}`.
+This method executes the chef-client on the server `name`.  The JSON rendered by `chef_set_client_attributes` is passed to the chef-client as well.  Currently the node_name is rendered as `cucumber-chef-#{name}`.
 
 ##### Examples
 
     Given /^a newly bootstrapped server$/ do
-      create_server("devopserver")
+      server_create("devopserver")
     end
 
     When /^the devops users recipe is applied$/ do
-      set_chef_client_attributes("devopserver", :run_list => ["recipe[users::devops]"])
-      run_chef("devopserver")
+      chef_set_client_attributes("devopserver", :run_list => ["recipe[users::devops]"])
+      chef_run_client("devopserver")
     end
 
 #### Cucumber Before Hook Centric Helpers
 
-* `set_chef_client(attributes={})`
+* `chef_set_client_config(config={})`
 
-This method configures the base attributes used to render the chef-client's `client.rb` file.  Currently you can specify `:orgname`, `:log_level`, `:log_location`, `:chef_server_url` and `:validation_client_name`.
+This method configures the chef-client's `client.rb` file.  Currently you can specify `:orgname`, `:log_level`, `:log_location`, `:chef_server_url` and `:validation_client_name`.
 
 ##### Examples
 
-    Before do
-      set_chef_client(:orgname => "cucumber-chef")
-    end
+    # for Opscode Hosted chef-server use this:
+    #chef_set_client_config(:orgname => "cucumber-chef")
+
+    # for Opscode OS chef-server on the Cucumber-Chef test lab use this:
+    chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
+                           :validation_client_name => "chef-validator")
 
 ## Running Tests
 

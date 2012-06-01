@@ -1,6 +1,6 @@
 module Cucumber::Chef::Helpers::TestLab
 
-  def create_dhcp_config
+  def test_lab_config_dhcpd
     dhcpd_lxc_config = File.join("/etc/dhcp3/lxc.conf")
     File.open(dhcpd_lxc_config, 'w') do |f|
       f.puts("option subnet-mask 255.255.0.0;")
@@ -20,7 +20,7 @@ module Cucumber::Chef::Helpers::TestLab
         f.puts("}")
       end
     end
-    run_command("service dhcp3-server restart")
+    command_run_local("service dhcp3-server restart")
   end
 
 end

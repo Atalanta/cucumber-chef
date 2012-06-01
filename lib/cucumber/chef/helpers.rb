@@ -4,7 +4,7 @@ module Cucumber
 
       require 'cucumber/chef/helpers/chef'
       require 'cucumber/chef/helpers/command'
-      require 'cucumber/chef/helpers/lxc'
+      require 'cucumber/chef/helpers/container'
       require 'cucumber/chef/helpers/server'
       require 'cucumber/chef/helpers/test_lab'
       require 'cucumber/chef/helpers/utility'
@@ -12,7 +12,7 @@ module Cucumber
       def self.included(base)
         base.send(:include, Cucumber::Chef::Helpers::Chef)
         base.send(:include, Cucumber::Chef::Helpers::Command)
-        base.send(:include, Cucumber::Chef::Helpers::LXC)
+        base.send(:include, Cucumber::Chef::Helpers::Container)
         base.send(:include, Cucumber::Chef::Helpers::Server)
         base.send(:include, Cucumber::Chef::Helpers::TestLab)
         base.send(:include, Cucumber::Chef::Helpers::Utility)
