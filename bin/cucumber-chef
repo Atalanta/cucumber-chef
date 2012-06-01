@@ -15,9 +15,10 @@ class CucumberChef < Thor
 
     def initalize_config
       source_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber", "chef", "templates", "cucumber-chef"))
-      destination_dir = File.expand_path(File.join(Dir.pwd, ".cucumber-chef"))
-      CucumberChef.source_root(source_dir)
+      destination_dir = File.expand_path(File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
       FileUtils.mkdir_p(destination_dir)
+
+      CucumberChef.source_root(source_dir)
 
       templates = {
         "config-rb.erb" => "config.rb"

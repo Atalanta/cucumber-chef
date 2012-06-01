@@ -21,12 +21,12 @@ module Cucumber
 ################################################################################
 
       def self.load
-        config_file = File.expand_path(File.join(Dir.pwd, ".cucumber-chef", "config.rb"))
-        self.from_file(config_file)
+        config_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "config.rb")
+        self.from_file(config_rb)
         self.verify
         self
-      rescue Errno::ENOENT
-        raise ConfigError, "Could not find your Cucumber-Chef configuration file; did you run 'cucumber-chef init'?"
+      rescue Errno::ENOENT, UtilityError
+        raise ConfigError, "Could not find your cucumber-chef configuration file; did you run 'cucumber-chef init'?"
       end
 
       def self.test

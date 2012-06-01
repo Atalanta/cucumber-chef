@@ -1,13 +1,11 @@
 #!/usr/bin/env ruby
+require 'cucumber-chef'
 
 # if we have bundler binstubs use that; otherwise attempt to detect
-if File.exists?("bin/knife")
-  knife = "bin/knife"
-else
-  knife = %x(command -v knife).strip
-end
+knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
+knife = %x(command -v knife).strip unless knife
 
-knife_rb = File.expand_path(File.join(Dir.pwd, ".cucumber-chef/knife.rb"))
+knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
 if File.exists?(knife_rb)
   command = [knife, ARGV, "-c #{knife_rb}", "2>&1"].flatten.compact.join(" ")
   puts(command)

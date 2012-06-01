@@ -15,7 +15,7 @@ end
 $servers = Hash.new(nil)
 
 Before do
-  knife_rb = File.expand_path(File.join(ENV["HOME"], ".chef", "knife.rb"))
+  knife_rb = Cucumber::Chef.locate(:file, ".chef", "knife.rb")
   Chef::Config.from_file(knife_rb)
 
   # cleanup previous lxc containers on first run

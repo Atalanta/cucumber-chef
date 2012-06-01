@@ -25,6 +25,9 @@ module Cucumber
     autoload :TestLab, 'cucumber/chef/test_lab'
     autoload :TestRunner, 'cucumber/chef/test_runner'
 
+    require 'cucumber/chef/utility'
+    extend(Cucumber::Chef::Utility)
+
   end
 end
 
