@@ -4,7 +4,7 @@ module Cucumber
     class UtilityError < Error; end
 
     module Utility
-
+      
       def locate(type, *args)
         pwd = Dir.pwd.split(File::SEPARATOR)
         (pwd.length - 1).downto(0) do |i|
@@ -27,6 +27,21 @@ module Cucumber
         File.expand_path(File.join(parent[0..(parent.length - 2)]))
       end
 
+      def spin_wheel
+        spinning_chars = %w[| / - \\]
+        count = 0
+        spinner = Thread.new do
+          while count do
+            print spinning_chars[(count+=1) % spinning_chars.length]
+            sleep 0.5
+            print "\b"
+          end
+        end
+        yield.tap do
+          count = false
+          spinner.join
+        end
+      end
     end
 
   end
