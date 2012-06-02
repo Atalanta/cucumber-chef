@@ -201,6 +201,8 @@ module Cucumber
           security_group.authorize_port_range(22..22)
           security_group.authorize_port_range(4000..4000)
           security_group.authorize_port_range(4040..4040)
+        else
+          raise TestLabError, "Could not find an existing or create a new AWS security group."
         end
       end
 
