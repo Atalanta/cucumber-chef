@@ -44,6 +44,8 @@ EOF
   end
 end
 
+service "apparmor"
+
 # configure dhcp3-server for lxc
 bash "configure dhcp3-server" do
   code <<-EOH
