@@ -32,7 +32,7 @@ module Cucumber
         else
           server_definition = {
             :image_id => Cucumber::Chef::Config.aws_image_id,
-            :groups => Cucumber::Chef::Config[:aws][:security_group],
+            :groups => Cucumber::Chef::Config[:aws][:aws_security_group],
             :flavor_id => Cucumber::Chef::Config[:aws][:aws_instance_type],
             :key_name => Cucumber::Chef::Config[:aws][:aws_ssh_key_id],
             :availability_zone => Cucumber::Chef::Config[:aws][:availability_zone],
@@ -43,7 +43,7 @@ module Cucumber
           @stdout.puts("Provisioning cucumber-chef test lab platform.")
 
           @stdout.print("Waiting for instance...")
-          @server.wait_for { ready? }
+          @server.wait_for { self.send(:print, "."); ready? }
           @stdout.puts("OK!\n")
 
           tag_server
@@ -52,9 +52,17 @@ module Cucumber
         @stdout.print("Waiting for sshd...")
         begin
           @stdout.print(".")
+          @stdout.flush
           sleep(1)
         end until Cucumber::Chef::SSH.ready?(@server.public_ip_address)
         @stdout.puts("OK!\n")
+
+        @stdout.print("Waiting for 20 seconds...")
+        20.downto(1) do
+          @stdout.print(".")
+          sleep(1)
+        end
+        @stdout.print("done.\n")
 
         @stdout.puts("Instance provisioned!")
 
@@ -63,33 +71,17 @@ module Cucumber
 
 
       def destroy
-        l = labs
-        n = nodes
-        c = clients
-
-        if (l.count > 0)
+        @stdout.puts("----------------------------------------------------------------------------")
+        if ((l = labs).count > 0)
           @stdout.puts("Destroying Servers:")
           l.each do |server|
             @stdout.puts("  * #{server.public_ip_address}")
             server.destroy
           end
+        else
+          @stdout.puts("There are no cucumber-chef test labs to destroy!")
         end
-
-#        if (n.count > 0)
-#          @stdout.puts("Destroying Chef Nodes:")
-#          n.each do |node|
-#            @stdout.puts("  * #{node.name}")
-#            node.destroy
-#          end
-#        end
-
-#        if (c.count > 0)
-#          @stdout.puts("Destroying Chef Clients:")
-#          c.each do |client|
-#            @stdout.puts("  * #{client.name}")
-#            client.destroy
-#          end
-#        end
+        @stdout.puts("----------------------------------------------------------------------------")
       end
 
 ################################################################################
@@ -124,25 +116,7 @@ module Cucumber
             end
           end
         else
-          @stdout.puts("There are no test labs to display information for!")
-        end
-        @stdout.puts("----------------------------------------------------------------------------")
-        if ((n = nodes).count > 0)
-          @stdout.puts("Chef Nodes:")
-          n.each do |node|
-            @stdout.puts("  * #{node}")
-          end
-        else
-          @stdout.puts("There are no chef nodes to display information for!")
-        end
-        @stdout.puts("----------------------------------------------------------------------------")
-        if ((c = clients).count > 0)
-          @stdout.puts("Chef Clients:")
-          c.each do |client|
-            @stdout.puts("  * #{client}")
-          end
-        else
-          @stdout.puts("There are no chef clients to display information for!")
+          @stdout.puts("There are no cucumber-chef test labs to display information for!")
         end
         @stdout.puts("----------------------------------------------------------------------------")
       end
