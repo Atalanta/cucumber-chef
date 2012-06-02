@@ -1,5 +1,3 @@
-user         = ENV['OPSCODE_USER'] || ENV['USER']
-
 ################################################################################
 # Cucumber-Chef
 ################################################################################
@@ -12,11 +10,11 @@ provider                        :aws
 # Provider: AWS
 ################################################################################
 
-aws[:aws_access_key_id]         = ENV['AWS_ACCESS_KEY_ID']
-aws[:aws_secret_access_key]     = ENV['AWS_SECRET_ACCESS_KEY']
+aws[:aws_access_key_id]         = <%= @aws_access_key %>
+aws[:aws_secret_access_key]     = <%= @aws_secret_access_key %>
 
-aws[:aws_ssh_key_id]            = ENV['AWS_SSH_KEY_ID'] || user
-aws[:identity_file]             = "#{ENV['HOME']}/.chef/#{user}.pem"
+aws[:aws_ssh_key_id]            = <%= @aws_ssh_id %>
+aws[:identity_file]             = <%= File.join(@aws_ssh_key_dir, @aws_ssh_key) %>
 
 #aws[:region]                    = "us-east-1"
 #aws[:availability_zone]         = "us-east-1a"

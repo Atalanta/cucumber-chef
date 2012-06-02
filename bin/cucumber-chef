@@ -14,6 +14,12 @@ class CucumberChef < Thor
     end
 
     def initalize_config
+
+      @aws_access_key = ask "What is your AWS Access Key?"
+      @aws_secret_access_key = ask "What is your AWS Secret Access Key?"
+      @aws_ssh_id = ask "What is your AWS ssh key ID?"
+      @aws_ssh_key = ask "What is the name of the ssh key file you use for EC2?"
+      @aws_ssh_key_dir = ask "And, finally, where do you keep it?"
       source_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber", "chef", "templates", "cucumber-chef"))
       destination_dir = File.expand_path(File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
       FileUtils.mkdir_p(destination_dir)
