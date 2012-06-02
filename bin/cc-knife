@@ -3,7 +3,7 @@ require 'cucumber-chef'
 
 # if we have bundler binstubs use that; otherwise attempt to detect
 knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
-knife = %x( /usr/bin/env knife ).strip unless knife
+knife = "/usr/bin/env knife" unless knife
 
 knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
 if File.exists?(knife_rb)
