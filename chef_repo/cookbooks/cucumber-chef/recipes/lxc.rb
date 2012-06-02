@@ -21,6 +21,29 @@
   package p
 end
 
+# modify mode on rndc.key so dhcp3-server can read it
+file "/etc/bind/rndc.key" do
+  mode 0644
+
+  not_if { ("%o" % File.stat("/etc/bind/rndc.key").mode) == "100644" }
+end
+
+bash "configure apparmor so dhcp3-server can access rndc.key" do
+  code <<-EOH
+cat <<EOF >> /etc/apparmor.d/local/usr.sbin.dhcpd3
+/etc/bind/ r,
+/etc/bind/** r,
+EOF
+  EOH
+
+  notifies :restart, "service[apparmor]", :immediately
+
+  not_if do
+    %x(cat /etc/apparmor.d/local/usr.sbin.dhcpd3 | grep "\/etc\/bind\/")
+    ($? == 0)
+  end
+end
+
 # configure dhcp3-server for lxc
 bash "configure dhcp3-server" do
   code <<-EOH
@@ -38,6 +61,11 @@ log-facility local7;
 include "/etc/dhcp3/lxc.conf";
 EOF
   EOH
+
+  not_if do
+    %x(cat /etc/dhcp3/dhcpd.conf | grep "\/etc\/dhcp3\/lxc\.conf")
+    ($? == 0)
+  end
 end
 
 # configure bridge-utils for lxc
