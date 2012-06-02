@@ -59,5 +59,9 @@ kill `jobs -p`
 sleep 3
 /etc/init.d/chef-server-webui start
 
+cat <<EOF > /etc/chef/first-boot.json
+<%= { "run_list" => "role[test_lab]" }.to_json %>
+EOF
+
 touch /.cucumber-chef-bootstrap
 '
