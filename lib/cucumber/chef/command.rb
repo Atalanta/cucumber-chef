@@ -10,7 +10,8 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @knife = (File.exists?("bin/knife") ? "bin/knife" : "/usr/bin/env knife")
+        @knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
+        @knife = "/usr/bin/env knife" unless @knife
       end
 
       def run(command, exit_code=0)
