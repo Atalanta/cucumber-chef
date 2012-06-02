@@ -36,8 +36,8 @@ describe Cucumber::Chef::Config do
 
     context "Cucumber::Chef::Config[:aws] default values" do
 
-      it "Cucumber::Chef::Config[:aws][:security_group] defaults to 'cucumber-chef'" do
-        Cucumber::Chef::Config[:aws][:security_group].should == "cucumber-chef"
+      it "Cucumber::Chef::Config[:aws][:aws_security_group] defaults to 'cucumber-chef'" do
+        Cucumber::Chef::Config[:aws][:aws_security_group].should == "cucumber-chef"
       end
 
       it "Cucumber::Chef::Config[:aws][:ubuntu_release] defaults to 'maverick'" do
