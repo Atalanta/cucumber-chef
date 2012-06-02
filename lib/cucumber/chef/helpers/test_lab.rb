@@ -11,6 +11,12 @@ module Cucumber::Chef::Helpers::TestLab
       f.puts("")
       f.puts("subnet 192.168.0.0 netmask 255.255.0.0 {")
       f.puts("  range 192.168.255.1 192.168.255.100;")
+      f.puts("")
+      f.puts("  zone cucumber-chef.org. {")
+      f.puts("    primary 192.168.255.254;")
+      f.puts("    key \"rndc-key\";")
+      f.puts("  }")
+      f.puts("")
       f.puts("}")
       $servers.each do |key, value|
         f.puts("")

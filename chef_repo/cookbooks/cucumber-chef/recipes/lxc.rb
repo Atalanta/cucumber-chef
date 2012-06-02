@@ -17,7 +17,7 @@
 #
 
 
-%w(lxc bridge-utils debootstrap dhcp3-server).each do |p|
+%w(lxc bridge-utils debootstrap dhcp3-server bind9).each do |p|
   package p
 end
 
@@ -26,9 +26,13 @@ bash "configure dhcp3-server" do
   code <<-EOH
 cat <<EOF > /etc/dhcp3/dhcpd.conf
 ddns-update-style none;
+include "/etc/bind/rndc.key";
 
 default-lease-time 600;
 max-lease-time 7200;
+
+authoritative;
+
 log-facility local7;
 
 include "/etc/dhcp3/lxc.conf";
