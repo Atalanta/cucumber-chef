@@ -10,9 +10,11 @@ module Cucumber::Chef::Helpers::Server
       attributes = $servers[name]
     else
       container_destroy(name) if container_exists?(name)
-      attributes = { :ip => generate_ip, :mac => generate_mac, :persist => false }.merge(attributes)
+      attributes = { :ip => generate_ip,
+                     :mac => generate_mac,
+                     :persist => false }.merge(attributes)
     end
-    $servers = ($servers || {}).merge(name => attributes)
+    $servers = ($servers || Hash.new(nil)).merge(name => attributes)
 
     log(name, $servers[name][:ip], "Building") if $servers[name]
 
