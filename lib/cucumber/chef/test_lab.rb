@@ -191,12 +191,16 @@ module Cucumber
       end
 
       def ensure_security_group
-        security_group = Cucumber::Chef::Config[:aws][:security_group]
-        unless @connection.security_groups.get(security_group)
-          @connection.create_security_group(security_group, 'cucumber-chef test lab')
-          @connection.security_groups.get(security_group).authorize_port_range(22..22)
-          @connection.security_groups.get(security_group).authorize_port_range(4000..4000)
-          @connection.security_groups.get(security_group).authorize_port_range(4040..4040)
+        security_group_name = Cucumber::Chef::Config[:aws][:aws_security_group]
+        if (security_group = @connection.security_groups.get(security_group_name))
+          ports = security_group.ip_permissions.collect{ |entry| entry["fromPort"] }
+          security_group.authorize_port_range(22..22) if !ports.include?(22)
+          security_group.authorize_port_range(4000..4000) if !ports.include?(4000)
+          security_group.authorize_port_range(4040..4040) if !ports.include?(4040)
+        elsif (security_group = @connection.security_groups.new(:name => security_group_name, :description => "cucumber-chef test lab")).save
+          security_group.authorize_port_range(22..22)
+          security_group.authorize_port_range(4000..4000)
+          security_group.authorize_port_range(4040..4040)
         end
       end
 
