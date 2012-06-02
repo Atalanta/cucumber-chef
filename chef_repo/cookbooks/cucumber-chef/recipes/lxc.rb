@@ -17,58 +17,13 @@
 #
 
 
-%w(lxc bridge-utils debootstrap dhcp3-server bind9).each do |p|
+%w( lxc bridge-utils debootstrap dhcp3-server bind9 ntpdate ntp ).each do |p|
   package p
 end
 
-# modify mode on rndc.key so dhcp3-server can read it
-file "/etc/bind/rndc.key" do
-  mode 0644
-
-  not_if { ("%o" % File.stat("/etc/bind/rndc.key").mode) == "100644" }
-end
-
-bash "configure apparmor so dhcp3-server can access rndc.key" do
-  code <<-EOH
-cat <<EOF >> /etc/apparmor.d/local/usr.sbin.dhcpd3
-/etc/bind/ r,
-/etc/bind/** r,
-EOF
-  EOH
-
-  notifies :restart, "service[apparmor]", :immediately
-
-  not_if do
-    %x(cat /etc/apparmor.d/local/usr.sbin.dhcpd3 | grep "\/etc\/bind\/")
-    ($? == 0)
-  end
-end
-
 service "apparmor"
-
-# configure dhcp3-server for lxc
-bash "configure dhcp3-server" do
-  code <<-EOH
-cat <<EOF > /etc/dhcp3/dhcpd.conf
-ddns-update-style none;
-include "/etc/bind/rndc.key";
-
-default-lease-time 600;
-max-lease-time 7200;
-
-authoritative;
-
-log-facility local7;
-
-include "/etc/dhcp3/lxc.conf";
-EOF
-  EOH
-
-  not_if do
-    %x(cat /etc/dhcp3/dhcpd.conf | grep "\/etc\/dhcp3\/lxc\.conf")
-    ($? == 0)
-  end
-end
+service "dhcp3-server"
+service "networking"
 
 # configure bridge-utils for lxc
 bash "configure bridge-utils" do
@@ -95,12 +50,69 @@ end
 
 # enable nat'ing of all outbound traffic
 execute "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE" do
+  notifies :restart, "service[networking]", :immediately
+
   not_if "ip link ls dev br0"
 end
 
-# restart the network so our changes take immediate effect
-execute "/etc/init.d/networking restart" do
-  not_if "ip link ls dev br0"
+bash "configure apparmor so dhcp3-server can access rndc.key" do
+  code <<-EOH
+cat <<EOF >> /etc/apparmor.d/local/usr.sbin.dhcpd3
+/etc/bind/ r,
+/etc/bind/** r,
+EOF
+  EOH
+
+  notifies :restart, "service[apparmor]", :immediately
+  notifies :restart, "service[dhcp3-server]"
+
+  not_if do
+    %x(cat /etc/apparmor.d/local/usr.sbin.dhcpd3 | grep "\/etc\/bind\/")
+    ($? == 0)
+  end
+end
+
+# modify mode on rndc.key so dhcp3-server can read it
+file "/etc/bind/rndc.key" do
+  mode 0644
+
+  notifies :restart, "service[dhcp3-server]"
+
+  not_if { ("%o" % File.stat("/etc/bind/rndc.key").mode) == "100644" }
+end
+
+execute "touch /etc/dhcp3/lxc.conf" do
+  notifies :restart, "service[dhcp3-server]"
+
+  not_if { File.exists?("/etc/dhcp3/lxc.conf") }
+end
+
+# configure dhcp3-server for lxc
+template "/etc/dhcp3/dhcpd.conf" do
+  source "dhcpd-conf.erb"
+  owner "root"
+  group "root"
+  mode "0644"
+
+  notifies :restart, "service[dhcp3-server]"
+
+  not_if do
+    %x(cat /etc/dhcp3/dhcpd.conf | grep "\/etc\/dhcp3\/lxc\.conf")
+    ($? == 0)
+  end
+end
+
+bash "configure dhcp3-server listener interface" do
+  code <<-EOH
+sed -i 's/INTERFACES=""/INTERFACES="br0"/' /etc/default/dhcp3-server
+  EOH
+
+  notifies :restart, "service[dhcp3-server]"
+
+  not_if do
+    %x(cat /etc/default/dhcp3-server | grep "INTERFACES=\"br0\"")
+    ($? == 0)
+  end
 end
 
 # create the cgroup device
@@ -125,8 +137,8 @@ directory "/etc/lxc"
 
 # load the chef client into our distro lxc cache
 install_chef_sh = "/tmp/install-chef.sh"
-distros = %w(ubuntu)
-arch = (%x(arch).include?("i686") ? "i386" : "amd64")
+distros = %w( ubuntu )
+arch = (%x( arch ).include?("i686") ? "i386" : "amd64")
 
 template "/etc/lxc/initializer" do
   source "lxc-initializer-config.erb"

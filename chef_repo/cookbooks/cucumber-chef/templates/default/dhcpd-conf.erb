@@ -1,0 +1,34 @@
+include "/etc/bind/rndc.key";
+
+ddns-update-style interim;
+log-facility local7;
+default-lease-time 600;
+max-lease-time 7200;
+authoritative;
+
+option routers 192.168.255.254;
+option subnet-mask 255.255.0.0;
+option broadcast-address 192.168.255.255;
+option domain-name-servers 192.168.255.254, 8.8.8.8, 8.8.4.4;
+option ntp-servers 192.168.255.254;
+
+option domain-name "cucumber-chef.org.";
+ddns-domainname "cucumber-chef.org.";
+ddns-rev-domainname "in-addr.arpa.";
+
+subnet 192.168.0.0 netmask 255.255.0.0 {
+  range 192.168.255.1 192.168.255.100;
+
+  zone cucumber-chef.org. {
+    primary 127.0.0.1;
+    key "rndc-key";
+  }
+
+  zone 255.168.192.in-addr.arpa. {
+    primary 127.0.0.1;
+    key "rndc-key";
+  }
+
+}
+
+include "/etc/dhcp3/lxc.conf";

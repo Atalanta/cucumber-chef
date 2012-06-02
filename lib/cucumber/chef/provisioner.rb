@@ -101,7 +101,7 @@ module Cucumber
         @ssh.config[:ssh_user] = "ubuntu"
         @ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
 
-        command = "/usr/bin/chef-client -j /etc/chef/first-boot.json"
+        command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
         command = "sudo #{command}"
         @ssh.exec(command)
       end

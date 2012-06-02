@@ -44,7 +44,7 @@ module Cucumber
 
           @stdout.print("Waiting for instance...")
           @server.wait_for { self.send(:print, "."); ready? }
-          @stdout.puts("OK!\n")
+          @stdout.puts("done.\n")
 
           tag_server
         end
@@ -55,7 +55,7 @@ module Cucumber
           @stdout.flush
           sleep(1)
         end until Cucumber::Chef::SSH.ready?(@server.public_ip_address)
-        @stdout.puts("OK!\n")
+        @stdout.puts("done.\n")
 
         @stdout.print("Waiting for 20 seconds...")
         20.downto(1) do

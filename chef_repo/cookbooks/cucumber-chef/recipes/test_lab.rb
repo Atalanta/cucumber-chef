@@ -17,7 +17,7 @@
 #
 
 
-%w(build-essential wget ruby-full ruby-dev libxml2-dev libxslt1-dev).each do |p|
+%w( build-essential wget chkconfig ruby-full ruby-dev libxml2-dev libxslt1-dev ).each do |p|
   package p
 end
 
@@ -37,8 +37,9 @@ end
   end
 end
 
-%w(root ubuntu).each do |user|
+%w( root ubuntu ).each do |user|
   home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
+
   directory "#{home_dir}/.ssh" do
     owner user
     group user
