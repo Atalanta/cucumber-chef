@@ -98,11 +98,11 @@ module Cucumber
       mode      :user
       provider  :aws
 
-      aws       Hash[ :security_group => "cucumber-chef",
-                      :ubuntu_release => "maverick",
+      aws       Hash[ :ubuntu_release => "maverick",
                       :aws_instance_arch => "i386",
                       :aws_instance_disk_store => "instance-store",
-                      :aws_instance_type => "m1.small" ]
+                      :aws_instance_type => "m1.small",
+                      :aws_security_group => "cucumber-chef" ]
 
       vagrant   Hash.new
 
