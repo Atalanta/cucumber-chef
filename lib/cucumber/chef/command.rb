@@ -10,7 +10,7 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @knife = (File.exists?("bin/knife") ? "bin/knife" : %x(command -v knife))
+        @knife = (File.exists?("bin/knife") ? "bin/knife" : %x( /usr/bin/env knife ).strip)
       end
 
       def run(command, exit_code=0)
