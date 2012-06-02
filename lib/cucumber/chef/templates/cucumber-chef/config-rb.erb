@@ -10,14 +10,14 @@ provider                        :aws
 # Provider: AWS
 ################################################################################
 
-aws[:aws_access_key_id]         = <%= @aws_access_key %>
-aws[:aws_secret_access_key]     = <%= @aws_secret_access_key %>
+aws[:aws_access_key_id]         = "<%= @aws_access_key %>"
+aws[:aws_secret_access_key]     = "<%= @aws_secret_access_key %>"
 
-aws[:aws_ssh_key_id]            = <%= @aws_ssh_id %>
-aws[:identity_file]             = <%= File.join(@aws_ssh_key_dir, @aws_ssh_key) %>
+aws[:aws_ssh_key_id]            = "<%= @aws_ssh_id %>"
+aws[:identity_file]             = "<%= File.join(@aws_ssh_key_dir, @aws_ssh_key) %>"
 
-#aws[:region]                    = "us-east-1"
-#aws[:availability_zone]         = "us-east-1a"
+aws[:region]                    = "<%= @region %>-1"
+aws[:availability_zone]         = "<%= @region %>-1a"
 
 #aws[:aws_image_id]              = "ami-339ca947"
 #aws[:ubuntu_release]            = "maverick"

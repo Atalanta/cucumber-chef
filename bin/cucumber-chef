@@ -14,17 +14,14 @@ class CucumberChef < Thor
     end
 
     def initalize_config
-
-      @aws_access_key = ask "What is your AWS Access Key?"
-      @aws_secret_access_key = ask "What is your AWS Secret Access Key?"
-      @aws_ssh_id = ask "What is your AWS ssh key ID?"
-      @aws_ssh_key = ask "What is the name of the ssh key file you use for EC2?"
-      @aws_ssh_key_dir = ask "And, finally, where do you keep it?"
+ 
       source_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber", "chef", "templates", "cucumber-chef"))
       destination_dir = File.expand_path(File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
       FileUtils.mkdir_p(destination_dir)
 
       CucumberChef.source_root(source_dir)
+
+      get_aws_credentials
 
       templates = {
         "config-rb.erb" => "config.rb"
@@ -33,6 +30,8 @@ class CucumberChef < Thor
       templates.each do |source, destination|
         template(source, File.join(destination_dir, destination))
       end
+      puts
+      say "Ucanhaz Cucumber-Chef now! Rock on.", :green
     end
 
     def generate_project_skeleton(project_dir)
@@ -58,6 +57,47 @@ class CucumberChef < Thor
     def error(message)
       warn message
       exit 255
+    end
+
+    def get_aws_credentials
+      say "OHAI!", :magenta
+      puts
+      say "Cucumber-Chef uses Amazon Web Services to build a test lab for automated infrastructure testing."
+      say "I need a few details before I can set up your test lab for you."
+      puts
+      say "We're going to use symmetric keys to authenticate with the AWS API."
+      say "First, I need your access key."
+      say "Your access key identifies you as you make API calls.  It's not a secret."
+      say "You can find it under 'Access Credentials', on https://aws-portal.amazon.com/gp/aws/securityCredentials"
+      puts
+      @aws_access_key = ask "What is your AWS Access Key?", :bold
+      puts
+      say "Now I need your secret access key.  This *is* a secret.  The clue's in the name."
+      say "This is just a string of characters used to create the digital signature included in your API requests."
+      say "You can also find this under 'Access Credentials', on https://aws-portal.amazon.com/gp/aws/securityCredentials"
+      puts
+      @aws_secret_access_key = ask "What is your AWS Secret Access Key?", :bold
+      puts
+      say "Right. Now I need to know about the ssh key pair you want to use to connect to EC2 machines."
+      say "I need the name of the key pair. You can see this on the AWS management console, under Network & Security > Key Pairs"
+      puts
+      @aws_ssh_id = ask "What is your AWS Key Pair called?", :bold
+      puts
+      say "I also need to know what the ssh key is called - the actual name of the file on your local machine, eg #{@aws_ssh_id}.pem"
+      puts
+      @aws_ssh_key = ask "What's the filename of your ssh key?", :bold
+      puts
+      say "And, finally, I need to know where you keep it, on the file system. Often this is ~/.ssh"
+      puts
+      @aws_ssh_key_dir = ask "What directory contains your ssh key?", :bold
+      puts
+      say "OK, nearly there. AWS uses different keys depending on which region you use."
+      say "For example, 'us-east', 'us-west', or 'eu-west'"
+      puts
+      @region = ask "Which region are you using?", :bold
+      puts
+      say "Awesome.  Thank you!"
+      puts
     end
   end
 
