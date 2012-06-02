@@ -15,7 +15,7 @@ module Cucumber::Chef::Helpers::ChefClient
 
   def chef_run_client(name)
     chef_config_client(name)
-    command_run_remote(name, "/usr/bin/chef-client -j /etc/chef/attributes.json -N cucumber-chef-#{name}")
+    command_run_remote(name, "/usr/bin/chef-client -j /etc/chef/attributes.json -N #{name}")
   end
 
   def chef_config_client(name)
@@ -26,7 +26,7 @@ module Cucumber::Chef::Helpers::ChefClient
       f.puts("log_location            \"#{@chef_client_config[:log_location]}\"")
       f.puts("chef_server_url         \"#{@chef_client_config[:chef_server_url]}\"")
       f.puts("validation_client_name  \"#{@chef_client_config[:validation_client_name]}\"")
-      f.puts("node_name               \"cucumber-chef-#{name}\"")
+      f.puts("node_name               \"#{name}\"")
     end
 
     attributes_json = File.join("/", container_root(name), "etc", "chef", "attributes.json")
