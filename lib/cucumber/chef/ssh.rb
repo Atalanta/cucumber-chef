@@ -10,7 +10,7 @@ module Cucumber
 
       def self.ready?(host)
         socket = TCPSocket.new(host, 22)
-        ((IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
+        ((::IO.select([socket], nil, nil, 1) && socket.gets) ? true : false)
       rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
         false
       ensure
