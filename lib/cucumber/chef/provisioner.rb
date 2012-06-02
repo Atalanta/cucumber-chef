@@ -12,6 +12,7 @@ module Cucumber
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
+
         @user = ENV['OPSCODE_USER'] || ENV['USER']
         @cookbooks_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "cookbooks"))
         @roles_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "roles"))
@@ -28,6 +29,8 @@ module Cucumber
         upload_role
         tag_node
         add_node_role
+
+        chef_first_run
       end
 
 
@@ -90,6 +93,17 @@ module Cucumber
 
       def add_node_role
         @command.knife("node run_list add", "cucumber-chef-test-lab", "\"role[test_lab]\"")
+      end
+
+      def chef_first_run
+        @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
+        @ssh.config[:host] = @server.public_ip_address
+        @ssh.config[:ssh_user] = "ubuntu"
+        @ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+
+        command = "/usr/bin/chef-client -j /etc/chef/first-boot.json"
+        command = "sudo #{command}"
+        @ssh.exec(command)
       end
 
     end
