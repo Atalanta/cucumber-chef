@@ -1,1 +1,1 @@
-require 'cucumber/chef' # compat
+require 'cucumber/chef'
