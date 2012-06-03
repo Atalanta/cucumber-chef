@@ -1,19 +1,23 @@
-Given /^I have a remote server$/ do
+Given /^a new server has been provisioned$/ do
+  server_create(<%= @project %>)
+end
+
+And /^the <%= @project %> role has been applied$/ do
+  chef_set_client_attributes(<%= @project %>, :run_list => ["role[<%= @project %>]"])
+end
+
+And /^Chef has been run$/ do
+  chef_run_client(<%= @project %>)
+end
+
+Given /^some initial state$/ do
   pending # express the regexp above with the code you wish you had
 end
 
-Given /^I apply the <%= @project %> role\/recipe$/ do
+When /^tickle$/ do
   pending # express the regexp above with the code you wish you had
 end
 
-Given /^run Chef$/ do
-  pending # express the regexp above with the code you wish you had
-end
-
-When /^I connect to the remote server from the test server$/ do
-  pending # express the regexp above with the code you wish you had
-end
-
-Then /^the <%= @project %> server behaves as it should$/ do
+Then /^resulting state$/ do
   pending # express the regexp above with the code you wish you had
 end
