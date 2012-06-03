@@ -1,7 +1,7 @@
 require 'rspec/expectations'
 require 'cucumber/chef'
-require 'cucumber/chef/steps'
 require 'cucumber/chef/helpers'
+require 'cucumber/chef/steps'
 require 'cucumber/chef/version'
 
 class CustomWorld
