@@ -28,13 +28,17 @@ module Cucumber
       end
 
       def console
-        options = [ "ssh" ]
-        options << [ "-i", @config[:identity_file] ] if @config[:identity_file]
-        options << [ "-o", "UserKnownHostsFile=/dev/null" ]
-        options << [ "-o", "StrictHostKeyChecking=no" ]
-        options << "#{@config[:ssh_user]}@#{@config[:host]}"
-
-        Kernel.exec(*(options.flatten.compact))
+        command = [ "ssh" ]
+        command << [ "-q" ]
+        command << [ "-o", "UserKnownHostsFile=/dev/null" ]
+        command << [ "-o", "StrictHostKeyChecking=no" ]
+        command << [ "-o", "KeepAlive=yes" ]
+        command << [ "-o", "ServerAliveInterval=60" ]
+        command << [ "-i", @config[:identity_file] ] if @config[:identity_file]
+        command << [ "-o", "ProxyCommand='#{proxy_command}'" ] if @config[:proxy]
+        command << "#{@config[:ssh_user]}@#{@config[:host]}"
+        command = command.flatten.compact.join(" ")
+        Kernel.exec(command)
       end
 
       def exec(command)
@@ -109,10 +113,13 @@ module Cucumber
         raise SSHError, "You must specify an identity file in order to SSH proxy." if !@config[:identity_file]
 
         command = ["ssh"]
-        command << ["-o", "UserKnownHostsFile=/dev/null"]
-        command << ["-o", "StrictHostKeyChecking=no"]
-        command << ["-i", @config[:identity_file]]
-        command << "#{@config[:ssh_user]}@#{@config[:host]}"
+        command << [ "-q" ]
+        command << [ "-o", "UserKnownHostsFile=/dev/null" ]
+        command << [ "-o", "StrictHostKeyChecking=no" ]
+        command << [ "-o", "KeepAlive=yes" ]
+        command << [ "-o", "ServerAliveInterval=60" ]
+        command << [ "-i", @config[:proxy_identity_file] ] if @config[:proxy_identity_file]
+        command << "#{@config[:proxy_ssh_user]}@#{@config[:proxy_host]}"
         command << "nc %h %p"
         command.flatten.compact.join(" ")
       end

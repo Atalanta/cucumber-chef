@@ -55,8 +55,8 @@ class CucumberChef < Thor
     end
 
     def error(message)
-      warn message, :red
-      exit 255
+      puts(set_color(message, :red, :bold))
+      exit(255)
     end
 
     def get_aws_credentials
@@ -177,31 +177,45 @@ class CucumberChef < Thor
     error(e)
   end
 
-  desc "ssh", "SSH to running test lab"
+  desc "ssh [container]", "SSH to cucumber-chef test lab or LXC [container] if specified"
   method_option :test, :type => :boolean
-  def ssh
+  def ssh(*args)
     load_config
 
     if (test_lab = Cucumber::Chef::TestLab.new)
       if test_lab.labs_exist?
         ssh = Cucumber::Chef::SSH.new
-        ssh.config[:host] = test_lab.labs_running.first.public_ip_address
-        ssh.config[:ssh_user] = "ubuntu"
-        ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
-        puts("Attempting ssh connection to '#{ssh.config[:ssh_user]}@#{ssh.config[:host]}' with identity '#{ssh.config[:identity_file]}'.")
-        ssh.console
+
+        if args.size == 0
+          ssh.config[:host] = test_lab.labs_running.first.public_ip_address
+          ssh.config[:ssh_user] = "ubuntu"
+          ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+
+          puts([set_color("Attempting SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
+          ssh.console
+        else
+          container = args[0]
+
+          ssh.config[:proxy] = true
+          ssh.config[:proxy_host] = test_lab.labs_running.first.public_ip_address
+          ssh.config[:proxy_ssh_user] = "ubuntu"
+          ssh.config[:proxy_identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+
+          ssh.config[:host] = container
+          ssh.config[:ssh_user] = "root"
+          ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+
+          puts([set_color("Attempting SSH connection to cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
+          ssh.console
+        end
+
       else
-        say "No test labs available to ssh to!", :red
+        puts(set_color("No test labs available to ssh to!", :red, true))
       end
     end
 
   rescue Cucumber::Chef::Error => e
     error(e)
-  end
-
-  desc "connect", "Connect to a container in your test lab"
-  def connect
-    say "Not implemented.  For now, find the IP of your test lab using the info task, and connect manually.", :red
   end
 
   desc "displayconfig", "Display the current cucumber-chef config"
@@ -224,8 +238,8 @@ class CucumberChef < Thor
       test_lab.info
     end
 
-  rescue Cucumber::Chef::Error => err
-    error(err.message)
+  rescue Cucumber::Chef::Error => e
+    error(e.message)
   end
 
   desc "test <project name>", "Run the cucumber-chef test suite <project name> from a workstation."
