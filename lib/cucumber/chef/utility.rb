@@ -4,7 +4,7 @@ module Cucumber
     class UtilityError < Error; end
 
     module Utility
-      
+
       def locate(type, *args)
         pwd = Dir.pwd.split(File::SEPARATOR)
         (pwd.length - 1).downto(0) do |i|
@@ -42,6 +42,17 @@ module Cucumber
           spinner.join
         end
       end
+
+      def generate_do_not_edit_warning(message=nil)
+        warning = []
+        warning << "#"
+        warning << "# WARNING: Automatically generate file; DO NOT EDIT!"
+        warning << [ "# Cucumber-Chef v#{Cucumber::Chef::VERSION}", message ].compact.join(" ")
+        warning << "# Generated on #{Time.now.utc}"
+        warning << "#"
+        warning.join("\n")
+      end
+
     end
 
   end

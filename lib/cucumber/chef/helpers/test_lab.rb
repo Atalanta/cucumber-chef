@@ -3,6 +3,7 @@ module Cucumber::Chef::Helpers::TestLab
   def test_lab_config_dhcpd
     dhcpd_lxc_config = File.join("/etc/dhcp3/lxc.conf")
     File.open(dhcpd_lxc_config, 'w') do |f|
+      f.puts(Cucumber::Chef.generate_do_not_edit_warning("LXC DHCPD Configuration"))
       $servers.each do |key, value|
         f.puts("")
         f.puts("host #{key} {")

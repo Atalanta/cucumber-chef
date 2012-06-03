@@ -22,6 +22,8 @@ module Cucumber::Chef::Helpers::ChefClient
     client_rb = File.join("/", container_root(name), "etc/chef/client.rb")
     FileUtils.mkdir_p(File.dirname(client_rb))
     File.open(client_rb, 'w') do |f|
+      f.puts(Cucumber::Chef.generate_do_not_edit_warning("Chef Client Configuration"))
+      f.puts("")
       f.puts("log_level               :#{@chef_client_config[:log_level]}")
       f.puts("log_location            \"#{@chef_client_config[:log_location]}\"")
       f.puts("chef_server_url         \"#{@chef_client_config[:chef_server_url]}\"")

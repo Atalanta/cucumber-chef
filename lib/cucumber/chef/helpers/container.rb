@@ -42,6 +42,8 @@ module Cucumber::Chef::Helpers::Container
   def container_config_network(name)
     lxc_network_config = File.join("/etc/lxc", name)
     File.open(lxc_network_config, 'w') do |f|
+      f.puts(Cucumber::Chef.generate_do_not_edit_warning("LXC Container Configuration"))
+      f.puts("")
       f.puts("lxc.network.type = veth")
       f.puts("lxc.network.flags = up")
       f.puts("lxc.network.link = br0")
