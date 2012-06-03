@@ -197,7 +197,7 @@ execute "configure dhcp3-server listener interface" do
   notifies :restart, "service[dhcp3-server]"
 
   not_if do
-    %x( cat /etc/default/dhcp3-server | grep "INTERFACES=\"br0\"" )
+    %x( cat /etc/default/dhcp3-server | grep "INTERFACES=\\\"br0\\\"" )
     ($? == 0)
   end
 end
