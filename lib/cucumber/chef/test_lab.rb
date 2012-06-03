@@ -114,6 +114,8 @@ module Cucumber
             lab.tags.to_hash.each do |k,v|
               @stdout.puts("  #{k}: #{v}")
             end
+            @stdout.puts("Chef-Server WebUI:")
+            @stdout.puts("  http://#{lab.public_ip_address}:4040/")
           end
         else
           @stdout.puts("There are no cucumber-chef test labs to display information for!")
