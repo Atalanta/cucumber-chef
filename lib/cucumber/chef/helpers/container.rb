@@ -8,6 +8,7 @@ module Cucumber::Chef::Helpers::Container
       command_run_local("mkdir -p #{container_root(name)}/root/.ssh/ 2>&1")
       command_run_local("chmod 0700 #{container_root(name)}/root/.ssh/ 2>&1")
       command_run_local("cat /root/.ssh/id_rsa.pub > #{container_root(name)}/root/.ssh/authorized_keys 2>&1")
+      command_run_local("cat /home/ubuntu/.ssh/id_rsa.pub >> #{container_root(name)}/root/.ssh/authorized_keys 2>&1")
     end
     container_start(name)
   end
