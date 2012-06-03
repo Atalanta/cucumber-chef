@@ -1,34 +1,42 @@
-include "/etc/bind/rndc.key";
+#
+# WARNING: Automatically generated file; DO NOT EDIT!
+# Cucumber-Chef v<%= node["cucumber_chef"]["version"] %> DHCPD Configuration
+# Generated on <%= Time.now.utc.to_s %>
+#
 
-ddns-update-style interim;
 log-facility local7;
-default-lease-time 600;
-max-lease-time 7200;
 authoritative;
 
-option routers 192.168.255.254;
-option subnet-mask 255.255.0.0;
-option broadcast-address 192.168.255.255;
-option domain-name-servers 192.168.255.254, 8.8.8.8, 8.8.4.4;
-option ntp-servers 192.168.255.254;
-
-option domain-name "cucumber-chef.org.";
-ddns-domainname "cucumber-chef.org.";
+ddns-updates on;
+ddns-update-style interim;
+ddns-domainname "test-lab.";
 ddns-rev-domainname "in-addr.arpa.";
+ignore client-updates;
+update-static-leases on;
 
-subnet 192.168.0.0 netmask 255.255.0.0 {
-  range 192.168.255.1 192.168.255.100;
+default-lease-time 600;
+max-lease-time 7200;
 
-  zone cucumber-chef.org. {
-    primary 127.0.0.1;
-    key "rndc-key";
-  }
+include "/etc/bind/rndc.key";
 
-  zone 255.168.192.in-addr.arpa. {
-    primary 127.0.0.1;
-    key "rndc-key";
-  }
-
+zone 168.192.in-addr.arpa. {
+  primary 127.0.0.1;
+  key "rndc-key";
 }
 
-include "/etc/dhcp3/lxc.conf";
+zone test-lab. {
+  primary 127.0.0.1;
+  key "rndc-key";
+}
+
+subnet 192.168.0.0 netmask 255.255.0.0 {
+  option routers 192.168.255.254;
+  option subnet-mask 255.255.0.0;
+  option broadcast-address 192.168.255.255;
+  option domain-name-servers 192.168.255.254, 8.8.8.8, 8.8.4.4;
+  option ntp-servers 192.168.255.254;
+
+  range 192.168.255.1 192.168.255.100;
+}
+
+include "/etc/dhcp3/test-lab.conf";

@@ -31,7 +31,7 @@ ruby setup.rb --no-format-executable
   EOH
 end
 
-%w(rspec cucumber-chef).each do |g|
+%w( rspec cucumber-chef ).each do |g|
   gem_package g do
     gem_binary("/usr/bin/gem")
   end
@@ -40,7 +40,8 @@ end
 %w( root ubuntu ).each do |user|
   home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
 
-  directory "#{home_dir}/.ssh" do
+  directory "create .ssh directory for #{user}" do
+    path "#{home_dir}/.ssh"
     owner user
     group user
     mode "0700"
@@ -48,7 +49,8 @@ end
     not_if { File.directory?(File.join(home_dir, ".ssh")) }
   end
 
-  template "#{home_dir}/.ssh/config" do
+  template "create ssh config for #{user}" do
+    path "#{home_dir}/.ssh/config"
     source "ssh-config.erb"
     owner user
     group user
@@ -57,7 +59,8 @@ end
     not_if { File.exists?(File.join(home_dir, ".ssh", "config")) }
   end
 
-  template "#{home_dir}/.gemrc" do
+  template "create .gemrc for #{user}" do
+    path "#{home_dir}/.gemrc"
     source "gemrc.erb"
     owner user
     group user
@@ -66,7 +69,26 @@ end
     not_if { File.exists?(File.join(home_dir, ".gemrc")) }
   end
 
-  execute "ssh-keygen -q -N '' -f #{home_dir}/.ssh/id_rsa" do
+  execute "generate ssh keypair for #{user}" do
+    command "ssh-keygen -q -N '' -f #{home_dir}/.ssh/id_rsa"
+
     not_if { File.exists?(File.join(home_dir, ".ssh", "id_rsa")) }
   end
+end
+
+file "remove update-motd" do
+  path "/etc/motd"
+  action :delete
+
+  only_if { File.exists?("/etc/motd") && File.symlink?("/etc/motd") }
+end
+
+template "install cucumber-chef motd" do
+  path "/etc/motd"
+  source "motd.erb"
+  owner "root"
+  group "root"
+  mode "0644"
+
+  not_if { File.exists?("/etc/motd") && !File.symlink?("/etc/motd") }
 end
