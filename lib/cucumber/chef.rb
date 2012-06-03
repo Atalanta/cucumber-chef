@@ -32,7 +32,6 @@ module Cucumber
 end
 
 begin
-  require 'cucumber/chef/version'
 rescue LoadError => e
   dep = e.message.split.last
   puts "You don't appear to have #{dep} installed."
