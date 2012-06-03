@@ -74,6 +74,18 @@ end
 
     not_if { File.exists?(File.join(home_dir, ".ssh", "id_rsa")) }
   end
+
+  file "ensure ssh private key ownership for #{user}" do
+    path "#{home_dir}/.ssh/id_rsa"
+    owner user
+    group user
+  end
+
+  file "ensure ssh public key ownership for #{user}" do
+    path "#{home_dir}/.ssh/id_rsa.pub"
+    owner user
+    group user
+  end
 end
 
 file "remove update-motd" do
