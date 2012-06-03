@@ -81,7 +81,8 @@ file "/etc/bind/rndc.key" do
   not_if { ("%o" % File.stat("/etc/bind/rndc.key").mode) == "100644" }
 end
 
-execute "touch /etc/dhcp3/lxc.conf" do
+file "/etc/dhcp3/lxc.conf" do
+  action :touch
   notifies :restart, "service[dhcp3-server]"
 
   not_if { File.exists?("/etc/dhcp3/lxc.conf") }
@@ -102,10 +103,19 @@ template "/etc/dhcp3/dhcpd.conf" do
   end
 end
 
-bash "configure dhcp3-server listener interface" do
-  code <<-EOH
-sed -i 's/INTERFACES=""/INTERFACES="br0"/' /etc/default/dhcp3-server
-  EOH
+execute "add local bind to dhclient" do
+  command "sed -i 's/#prepend domain-name-servers 127.0.0.1;/prepend domain-name-servers 127.0.0.1;/' /etc/dhcp3/dhclient.conf"
+
+  notifies :restart, "service[networking]"
+
+  only_if do
+    %x(cat /etc/dhcp3/dhclient.conf | grep "#prepend domain-name-servers 127.0.0.1;")
+    ($? == 0)
+  end
+end
+
+execute "configure dhcp3-server listener interface" do
+  command "sed -i 's/INTERFACES=\"\"/INTERFACES=\"br0\"/' /etc/default/dhcp3-server"
 
   notifies :restart, "service[dhcp3-server]"
 
