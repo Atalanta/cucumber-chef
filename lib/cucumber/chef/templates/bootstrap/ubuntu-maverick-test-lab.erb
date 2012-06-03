@@ -3,7 +3,7 @@ bash -c '
 
 export DEBIAN_FRONTEND=noninteractive
 
-echo "127.0.0.1 <%= @config[:hostname] %>" | tee -a /etc/hosts
+sed -i "s/127.0.0.1 localhost/127.0.0.1 <%= @config[:hostname] %> <%= @config[:hostname].split(".")[0] %> localhost/" /etc/hosts
 echo "<%= @config[:hostname] %>" | tee /etc/hostname
 hostname <%= @config[:hostname] %>
 
@@ -61,7 +61,7 @@ chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
 
 nc -w 1 127.0.0.1 4040
 if [ $? -ne 0 ]; then
-  service chef-server-webui stop && sleep 3
+  /etc/init.d/chef-server-webui stop && sleep 3
   /usr/sbin/chef-server-webui -e production &
   while true; do
     nc -w 1 127.0.0.1 4040
@@ -71,11 +71,11 @@ if [ $? -ne 0 ]; then
     sleep 1
   done
   kill `jobs -p` && sleep 3
-  service chef-server-webui start && sleep 3
+  /etc/init.d/chef-server-webui start && sleep 3
 fi
 
 if [ ! -f /etc/chef/client.pem ]; then
-  service chef-client restart
+  /etc/init.d/chef-client restart
   echo -n "Waiting on client.pem to appear..."
   i="0"
   until [ -f /etc/chef/client.pem ]; do
@@ -84,7 +84,7 @@ if [ ! -f /etc/chef/client.pem ]; then
     echo -n "."
     if [ $i -gt 60 ]; then
       echo -n "restart-chef-client"
-      service chef-client restart
+      /etc/init.d/chef-client restart
       i="0"
     fi
   done
@@ -92,7 +92,7 @@ if [ ! -f /etc/chef/client.pem ]; then
 fi
 
 cat <<EOF > /etc/chef/first-boot.json
-<%= { "run_list" => "role[test_lab]" }.to_json %>
+<%= @config[:attributes].to_json %>
 EOF
 
 touch /.cucumber-chef-bootstrap
