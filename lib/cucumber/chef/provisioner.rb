@@ -6,6 +6,9 @@ module Cucumber
     class Provisioner
       attr_accessor :stdout, :stderr, :stdin
 
+      HOSTNAME = "cucumber-chef.test-lab"
+      PASSWORD = "p@ssw0rd1"
+
       def initialize(server, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @server = server
         @stdout, @stderr, @stdin = stdout, stderr, stdin
@@ -39,17 +42,25 @@ module Cucumber
       def bootstrap(template_file)
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !@user
 
+        attributes = {
+          "run_list" => "role[test_lab]",
+          "cucumber_chef" => {
+            "version" => Cucumber::Chef::VERSION
+          }
+        }
+
         bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
         bootstrap.config[:host] = @server.public_ip_address
         bootstrap.config[:ssh_user] = "ubuntu"
         bootstrap.config[:use_sudo] = true
         bootstrap.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
         bootstrap.config[:template_file] = template_file
-        bootstrap.config[:context][:hostname] = "cucumber-chef-test-lab"
+        bootstrap.config[:context][:hostname] = HOSTNAME
         bootstrap.config[:context][:chef_server] = @server.public_ip_address
-        bootstrap.config[:context][:amqp_password] = "p@ssw0rd1"
-        bootstrap.config[:context][:admin_password] = "p@ssw0rd1"
+        bootstrap.config[:context][:amqp_password] = PASSWORD
+        bootstrap.config[:context][:admin_password] = PASSWORD
         bootstrap.config[:context][:user] = @user
+        bootstrap.config[:context][:attributes] = attributes
         bootstrap.run
       end
 
@@ -88,11 +99,11 @@ module Cucumber
       end
 
       def tag_node
-        @command.knife("tag create cucumber-chef-test-lab", Cucumber::Chef::Config[:mode])
+        @command.knife("tag create", HOSTNAME, Cucumber::Chef::Config[:mode])
       end
 
       def add_node_role
-        @command.knife("node run_list add", "cucumber-chef-test-lab", "\"role[test_lab]\"")
+        @command.knife("node run_list add", HOSTNAME, "\"role[test_lab]\"")
       end
 
       def chef_first_run
