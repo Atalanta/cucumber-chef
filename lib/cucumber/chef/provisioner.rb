@@ -14,6 +14,11 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
+        @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
+        @ssh.config[:host] = @server.public_ip_address
+        @ssh.config[:ssh_user] = "ubuntu"
+        @ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+
         @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
 
         @user = ENV['OPSCODE_USER'] || ENV['USER']
@@ -25,7 +30,7 @@ module Cucumber
         template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-maverick-test-lab.erb"))
 
         bootstrap(template_file)
-        download_credentials
+        download_chef_credentials
         render_knife_rb
 
         upload_cookbook
@@ -34,6 +39,8 @@ module Cucumber
         add_node_role
 
         chef_first_run
+
+        download_proxy_ssh_credentials
       end
 
 
@@ -64,25 +71,31 @@ module Cucumber
         bootstrap.run
       end
 
-      def download_credentials
-        ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
-        ssh.config[:host] = @server.public_ip_address
-        ssh.config[:ssh_user] = "ubuntu"
-        ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
-        local_path = File.expand_path(File.join(Dir.pwd, ".cucumber-chef"))
-        remote_path = File.join("/", "home", ssh.config[:ssh_user], ".chef")
-
-        FileUtils.mkdir_p(local_path)
+      def download_chef_credentials
+        local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
+        remote_path = File.join("/", "home", @ssh.config[:ssh_user], ".chef")
 
         files = [ "#{@user}.pem", "validation.pem" ]
         files.each do |file|
-          ssh.download(File.join(remote_path, file), File.join(local_path, file))
+          @ssh.download(File.join(remote_path, file), File.join(local_path, file))
+        end
+      end
+
+      def download_proxy_ssh_credentials
+        local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
+        remote_path = File.join("/", "home", @ssh.config[:ssh_user], ".ssh")
+
+        files = { "id_rsa" => "id_rsa-ubuntu" }
+        files.each do |remote_file, local_file|
+          local = File.join(local_path, local_file)
+          @ssh.download(File.join(remote_path, remote_file), local)
+          File.chmod(0600, local)
         end
       end
 
       def render_knife_rb
         template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "chef", "knife-rb.erb"))
-        knife_rb = File.expand_path(File.join(Dir.pwd, ".cucumber-chef", "knife.rb"))
+        knife_rb = File.expand_path(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "knife.rb"))
 
         context = { :chef_server => @server.public_ip_address }
         File.open(knife_rb, 'w') do |f|
