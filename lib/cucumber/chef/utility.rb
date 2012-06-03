@@ -46,9 +46,9 @@ module Cucumber
       def generate_do_not_edit_warning(message=nil)
         warning = []
         warning << "#"
-        warning << "# WARNING: Automatically generate file; DO NOT EDIT!"
+        warning << "# WARNING: Automatically generated file; DO NOT EDIT!"
         warning << [ "# Cucumber-Chef v#{Cucumber::Chef::VERSION}", message ].compact.join(" ")
-        warning << "# Generated on #{Time.now.utc}"
+        warning << "# Generated on #{Time.now.utc.to_s}"
         warning << "#"
         warning.join("\n")
       end
