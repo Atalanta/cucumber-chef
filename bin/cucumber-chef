@@ -14,7 +14,7 @@ class CucumberChef < Thor
     end
 
     def initalize_config
- 
+
       source_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber", "chef", "templates", "cucumber-chef"))
       destination_dir = File.expand_path(File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
       FileUtils.mkdir_p(destination_dir)
@@ -119,6 +119,19 @@ class CucumberChef < Thor
     provisioner = Cucumber::Chef::Provisioner.new(server)
     provisioner.build
 
+    puts
+    puts("Your cucumber-chef test lab has now been provisioned!")
+    puts
+    puts("Be sure to log into the chef-server webui and change the default credentials.")
+    puts
+    puts("  Chef-Server WebUI:")
+    puts("    http://#{server.public_ip_address}:4040/")
+    puts("  Username:")
+    puts("    admin")
+    puts("  Password:")
+    puts("    #{Cucumber::Chef::Provisioner::PASSWORD}")
+    puts
+
   rescue Cucumber::Chef::Error => e
     error(e.message)
   end
@@ -128,8 +141,22 @@ class CucumberChef < Thor
   def teardown
     load_config
 
-    test_lab = Cucumber::Chef::TestLab.new
-    test_lab.destroy
+    if yes?(set_color("Are you sure you want to teardown your cucumber-chef test lab?", :red, true))
+      count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
+      puts
+      puts(set_color("You have 5 seconds to abort!", :green, true))
+      puts
+      print(set_color("Self-destructing in", :green, true))
+      5.downto(1) do |x|
+        print(set_color("...#{x}", count_down_colors[x], true))
+        sleep(1)
+      end
+      puts(set_color("...BOOM!", :red, true))
+      test_lab = Cucumber::Chef::TestLab.new
+      test_lab.destroy
+    else
+      puts(set_color("Whew! That was close!", :green, true))
+    end
 
   rescue Cucumber::Chef::Error => e
     error(e)
@@ -201,29 +228,16 @@ class CucumberChef < Thor
     error(err.message)
   end
 
-#  desc "upload <project name>", "Upload the cucumber-chef test suite <project name> to the test lab platform"
-#  def upload(project_name)
-#    load_config
-#
-#    project_dir = File.expand_path(File.join(Dir.pwd, "cucumber-chef", project_name))
-#    unless File.exists?(project_dir)
-#      raise "Project dir '#{project_dir}' does not exist."
-#    end
-#
-#    runner = Cucumber::Chef::TestRunner.new(project_dir)
-#    runner.reset_project
-#    runner.upload_project
-#  end
-
   desc "test <project name>", "Run the cucumber-chef test suite <project name> from a workstation."
   def test(project_name)
     load_config
 
-    project_dir = File.expand_path(File.join(Dir.pwd, "cucumber-chef", project_name))
-    unless File.exists?(project_dir)
+    root_dir = Cucumber::Chef.locate_parent(".cucumber-chef")
+    project_dir = File.expand_path(File.join(root_dir, "cucumber-chef", project_name))
+    unless (File.exists?(project_dir) && File.directory?(project_dir))
       raise "Project directory '#{project_dir}' does not exist."
     else
-      puts "Using project directory: #{project_dir}"
+      puts("Using project directory: #{project_dir}")
     end
 
     runner = Cucumber::Chef::TestRunner.new(project_dir)
