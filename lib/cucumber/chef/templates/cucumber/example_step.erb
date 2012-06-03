@@ -1,13 +1,13 @@
 Given /^a new server has been provisioned$/ do
-  server_create(<%= @project %>)
+  server_create("<%= @project %>")
 end
 
 And /^the <%= @project %> role has been applied$/ do
-  chef_set_client_attributes(<%= @project %>, :run_list => ["role[<%= @project %>]"])
+  chef_set_client_attributes("<%= @project %>", :run_list => ["role[<%= @project %>]"])
 end
 
 And /^Chef has been run$/ do
-  chef_run_client(<%= @project %>)
+  chef_run_client("<%= @project %>")
 end
 
 Given /^some initial state$/ do
