@@ -4,11 +4,17 @@ module Cucumber::Chef::Helpers::Container
 
   def container_create(name)
     unless container_exists?(name)
-      command_run_local("lxc-create -n #{name} -f /etc/lxc/#{name} -t ubuntu 2>&1")
-      command_run_local("mkdir -p #{container_root(name)}/root/.ssh/ 2>&1")
-      command_run_local("chmod 0700 #{container_root(name)}/root/.ssh/ 2>&1")
-      command_run_local("cat /root/.ssh/id_rsa.pub > #{container_root(name)}/root/.ssh/authorized_keys 2>&1")
-      command_run_local("cat /home/ubuntu/.ssh/id_rsa.pub >> #{container_root(name)}/root/.ssh/authorized_keys 2>&1")
+      command_run_local("lxc-create -n #{name} -f /etc/lxc/#{name} -t ubuntu")
+      command_run_local("mkdir -p #{container_root(name)}/root/.ssh/")
+      command_run_local("chmod 0700 #{container_root(name)}/root/.ssh/")
+      command_run_local("cat /root/.ssh/id_rsa.pub > #{container_root(name)}/root/.ssh/authorized_keys")
+      command_run_local("cat /home/ubuntu/.ssh/id_rsa.pub >> #{container_root(name)}/root/.ssh/authorized_keys")
+
+      command_run_local("rm #{container_root(name)}/etc/motd")
+      command_run_local("cp /etc/motd #{container_root(name)}/etc/motd")
+      command_run_local("echo \"    You are now logged in to the LXC '#{name}'\\n\" >> #{container_root(name)}/etc/motd")
+      command_run_local("sed -i \"s/localhost #{name}/#{name}.test-lab #{name} localhost/\" #{container_root(name)}/etc/hosts")
+      command_run_local("echo \"#{name}.test-lab\" | tee #{container_root(name)}/etc/hostname")
     end
     container_start(name)
   end
