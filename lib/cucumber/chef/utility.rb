@@ -5,6 +5,10 @@ module Cucumber
 
     module Utility
 
+      def is_rc?
+        (Cucumber::Chef::VERSION =~ /rc/)
+      end
+
       def locate(type, *args)
         pwd = Dir.pwd.split(File::SEPARATOR)
         (pwd.length - 1).downto(0) do |i|
