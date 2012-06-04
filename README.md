@@ -187,6 +187,107 @@ Running the test task will upload your current project to the test lab, and run 
 
 At present, Cucumber-Chef only allows one test lab per AWS account.  In practice, this has not been a constraint.  LXC is incredibly lightweight, and a large number of containers can be provisioned on even a small EC2 instance.
 
+### When Things Go Oh So Wrong
+
+We have put in a few tasks to help you diagnose any issues you may come across with the test lab, containers or your cookbooks and recipes.  There are two main tasks available to help you with this: `ssh` and `diagnose`.
+
+* `ssh`
+
+This command provides you with a rapid way to connect to either your test lab or containers.  Think `vagrant ssh`; we took a queue from their wonderful gem and realized we want our gem to provide the same sort of functionality.  The main difference between our `ssh` task and the way Vagrant's task works is that we generate a fresh ssh key pair whenever a test lab is setup; so you can rest assured no one else has a copy of the credientials.  You also do not have to worry about generating or specifying your own key pair to override a default key pair as is the case with Vagrant if you do not want to use the one shipped with Vagrant.
+
+    $ cucumber-chef ssh
+    Attempting SSH connection to cucumber-chef 'test lab'...
+          _____                           _                _____ _           __
+         / ____|                         | |              / ____| |         / _|
+        | |    _   _  ___ _   _ _ __ ___ | |__   ___ _ __| |    | |__   ___| |_
+        | |   | | | |/ __| | | | '_ ` _ \| '_ \ / _ \ '__| |    | '_ \ / _ \  _|
+        | |___| |_| | (__| |_| | | | | | | |_) |  __/ |  | |____| | | |  __/ |
+         \_____\__,_|\___|\__,_|_| |_| |_|_.__/ \___|_|   \_____|_| |_|\___|_|
+
+
+        Welcome to the Cucumber Chef Test Lab v2.0.0.rc1
+
+    Last login: Mon Jun  4 07:56:40 2012 from [REDACTED]
+    ubuntu@cucumber-chef:~$
+
+Keep in mind the with Amazon's EC2 the base `ubuntu` user is already in the sudoers file; so you can `sudo su -` without needing the password.
+
+    ubuntu@cucumber-chef:~$ sudo su -
+    root@cucumber-chef:~#
+
+You can also specify a container name to SSH directly into that container.  For now you are always logged in as `root` when you SSH to a container.
+
+    $ cucumber-chef ssh devopserver
+    Attempting SSH connection to cucumber-chef container 'devopserver'...
+          _____                           _                _____ _           __
+         / ____|                         | |              / ____| |         / _|
+        | |    _   _  ___ _   _ _ __ ___ | |__   ___ _ __| |    | |__   ___| |_
+        | |   | | | |/ __| | | | '_ ` _ \| '_ \ / _ \ '__| |    | '_ \ / _ \  _|
+        | |___| |_| | (__| |_| | | | | | | |_) |  __/ |  | |____| | | |  __/ |
+         \_____\__,_|\___|\__,_|_| |_| |_|_.__/ \___|_|   \_____|_| |_|\___|_|
+
+
+        Welcome to the Cucumber Chef Test Lab v2.0.0.rc1
+
+        You are now logged in to the LXC 'devopserver'
+
+    root@devopserver:~#
+
+* `diagnose`
+
+This command provides you with a rapid way to get to the chef-client logs without needing to SSH into a container.  There are a few basic options with this task, let's take a look at them.
+
+    $ cucumber-chef help diagnose
+    Usage:
+      cucumber-chef diagnose <container>
+
+    Options:
+      -n, [--lines=N]  # output the last N lines of the chef-client 'chef.log'
+                       # Default: 1
+      -s, [--strace]   # output the chef-client 'chef-stacktrace.out'
+                       # Default: true
+      -l, [--log]      # output the chef-client 'chef.log'
+                       # Default: true
+
+    Provide diagnostics from the chef-client on the specified container.
+
+With the default options in effect, this task will output the `chef-stacktrace.out` file along with the last line of the `chef.log` file.  You can of course request as many lines as you desire from the `chef.log` file.  For example to look at the last 1000 lines of only the `chef.log` file you would likely run the task as follows.
+
+    $ cucumber-chef diagnose devopserver --no-strace -n 1000
+
+Maybe you only want to view the `chef-stacktrace.out` file?
+
+    $ cucumber-chef diagnose devopserver --no-log
+
+Maybe you want to run it with the default options in play; you would likely get some output as follows.
+
+    $ cucumber-chef diagnose devopserver
+    Attempting to collect diagnostic information on cucumber-chef container 'sysopserver'...
+    ----------------------------------------------------------------------------
+    chef-stacktrace.out:
+    ----------------------------------------------------------------------------
+    Generated at 2012-06-04 08:30:20 +0000
+    Net::HTTPServerException: 412 "Precondition Failed"
+    /opt/opscode/embedded/lib/ruby/1.9.1/net/http.rb:2303:in `error!'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/rest.rb:264:in `block in api_request'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/rest.rb:328:in `retriable_rest_request'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/rest.rb:240:in `api_request'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/rest.rb:139:in `post_rest'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/client.rb:313:in `sync_cookbooks'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/client.rb:194:in `setup_run_context'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/client.rb:162:in `run'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/application/client.rb:254:in `block in run_application'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/application/client.rb:241:in `loop'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/application/client.rb:241:in `run_application'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/lib/chef/application.rb:70:in `run'
+    /opt/opscode/embedded/lib/ruby/gems/1.9.1/gems/chef-0.10.10/bin/chef-client:26:in `<top (required)>'
+    /usr/bin/chef-client:19:in `load'
+    /usr/bin/chef-client:19:in `<main>'
+    ----------------------------------------------------------------------------
+    chef.log:
+    ----------------------------------------------------------------------------
+    [Mon, 04 Jun 2012 08:30:20 +0000] FATAL: Net::HTTPServerException: 412 "Precondition Failed"
+
 ### Example Test Run
 
 Running infrastructure tests are very slow due to the nature of what is involved.  Currently Cucumber-Chef builds a clean LXC container before each scenario to avoid carrying over tainted or corrupted data from a previous scenario run.  We have plans to support libvirt so test-labs can be moved locally to take advantage of SSD drives which will undoubtedly speed up these tests considerably.
