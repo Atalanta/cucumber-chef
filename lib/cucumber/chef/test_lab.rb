@@ -98,9 +98,16 @@ module Cucumber
 ################################################################################
 
       def info
-        @stdout.puts("----------------------------------------------------------------------------")
+        @stdout.puts("============================================================================")
         if labs_exist?
           labs.each do |lab|
+            output = StringIO.new
+            ssh = Cucumber::Chef::SSH.new(output, output, StringIO.new)
+            ssh.config[:host] = lab.public_ip_address
+            ssh.config[:ssh_user] = "ubuntu"
+            ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+            ssh.exec("lxc-ps --lxc")
+
             @stdout.puts("Instance ID: #{lab.id}")
             @stdout.puts("State: #{lab.state}")
             @stdout.puts("Username: #{lab.username}") if lab.username
@@ -114,13 +121,19 @@ module Cucumber
             lab.tags.to_hash.each do |k,v|
               @stdout.puts("  #{k}: #{v}")
             end
+            @stdout.puts("----------------------------------------------------------------------------")
             @stdout.puts("Chef-Server WebUI:")
             @stdout.puts("  http://#{lab.public_ip_address}:4040/")
+            @stdout.puts("----------------------------------------------------------------------------")
+            if output.size > 0
+              output.rewind
+              @stdout.puts(output.read)
+            end
           end
         else
           @stdout.puts("There are no cucumber-chef test labs to display information for!")
         end
-        @stdout.puts("----------------------------------------------------------------------------")
+        @stdout.puts("============================================================================")
       end
 
       def labs_exist?

@@ -28,9 +28,7 @@ module Cucumber
         cucumber_options = args.flatten.compact.uniq.join(" ")
         command = [ "sudo cucumber", cucumber_options, remote_path ].flatten.compact.join(" ")
 
-        @ssh.config[:formatter] = false
         @ssh.exec(command)
-        @ssh.config[:formatter] = true
       end
 
 
