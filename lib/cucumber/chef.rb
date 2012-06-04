@@ -5,6 +5,7 @@ require 'stringio'
 ################################################################################
 
 require 'chef'
+require 'erubis'
 require 'fog'
 require 'json'
 require 'mixlib/config'

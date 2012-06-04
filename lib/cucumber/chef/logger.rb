@@ -4,7 +4,8 @@ module Cucumber
     class LoggerError < Error; end
 
     class Logger < ::Logger
-      SEVERITIES = Severity.constants.inject([]) {|arr,c| arr[Severity.const_get(c)] = c; arr} unless const_defined?(:SEVERITIES)
+
+      SEVERITIES = Severity.constants.inject([]) {|arr,c| arr[Severity.const_get(c)] = c; arr}
 
 ################################################################################
 

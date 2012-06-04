@@ -1,6 +1,9 @@
 module Cucumber
   module Chef
+
     module Helpers
+
+################################################################################
 
       require 'cucumber/chef/helpers/chef_client'
       require 'cucumber/chef/helpers/chef_server'
@@ -9,6 +12,8 @@ module Cucumber
       require 'cucumber/chef/helpers/server'
       require 'cucumber/chef/helpers/test_lab'
       require 'cucumber/chef/helpers/utility'
+
+################################################################################
 
       def self.included(base)
         base.send(:include, Cucumber::Chef::Helpers::ChefClient)
@@ -20,6 +25,9 @@ module Cucumber
         base.send(:include, Cucumber::Chef::Helpers::Utility)
       end
 
+################################################################################
+
     end
+
   end
 end
