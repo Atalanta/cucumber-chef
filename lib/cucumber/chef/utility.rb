@@ -38,7 +38,7 @@ module Cucumber
           while count do
             stdout.print spinning_chars[(count+=1) % spinning_chars.length]
             stdout.flush if stdout.respond_to?(:flush)
-            sleep 0.5
+            sleep(0.25)
             stdout.print "\b"
             stdout.flush if stdout.respond_to?(:flush)
           end
