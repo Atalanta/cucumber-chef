@@ -65,6 +65,7 @@ Once installed, you can run `cucumber-chef` on the command line to get an overvi
     $ cucumber-chef
     Tasks:
       cucumber-chef create <project>                   # Create a project template for testing an infrastructure.
+      cucumber-chef diagnose <container>               # Provide diagnostics from the chef-client on the specified container.
       cucumber-chef displayconfig                      # Display the current cucumber-chef config.
       cucumber-chef help [TASK]                        # Describe available tasks or one specific task
       cucumber-chef info                               # Display information about the current test lab.
