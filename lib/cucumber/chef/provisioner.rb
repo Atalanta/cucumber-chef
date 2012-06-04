@@ -9,6 +9,8 @@ module Cucumber
       HOSTNAME = "cucumber-chef.test-lab"
       PASSWORD = "p@ssw0rd1"
 
+################################################################################
+
       def initialize(server, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @server = server
         @stdout, @stderr, @stdin = stdout, stderr, stdin
@@ -25,6 +27,8 @@ module Cucumber
         @cookbooks_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "cookbooks"))
         @roles_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "roles"))
       end
+
+################################################################################
 
       def build
         template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-maverick-test-lab.erb"))
@@ -44,7 +48,9 @@ module Cucumber
       end
 
 
+################################################################################
     private
+################################################################################
 
       def bootstrap(template_file)
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !@user
@@ -75,8 +81,10 @@ module Cucumber
         @stdout.print("done.\n")
       end
 
+################################################################################
+
       def download_chef_credentials
-        @stdout.print("Downloading chef credentials...")
+        @stdout.print("Downloading chef-server credentials...")
         Cucumber::Chef.spinner do
           local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
           remote_path = File.join("/", "home", @ssh.config[:ssh_user], ".chef")
@@ -88,6 +96,8 @@ module Cucumber
         end
         @stdout.print("done.\n")
       end
+
+################################################################################
 
       def download_proxy_ssh_credentials
         @stdout.print("Downloading container SSH credentials...")
@@ -105,6 +115,8 @@ module Cucumber
         @stdout.print("done.\n")
       end
 
+################################################################################
+
       def render_knife_rb
         @stdout.print("Building 'cc-knife' configuration...")
         Cucumber::Chef.spinner do
@@ -119,6 +131,8 @@ module Cucumber
         @stdout.print("done.\n")
       end
 
+################################################################################
+
       def upload_cookbook
         @stdout.print("Uploading cucumber-chef cookbooks...")
         Cucumber::Chef.spinner do
@@ -126,6 +140,8 @@ module Cucumber
         end
         @stdout.print("done.\n")
       end
+
+################################################################################
 
       def upload_role
         @stdout.print("Uploading cucumber-chef test lab role...")
@@ -135,6 +151,8 @@ module Cucumber
         @stdout.print("done.\n")
       end
 
+################################################################################
+
       def tag_node
         @stdout.print("Tagging cucumber-chef test lab node...")
         Cucumber::Chef.spinner do
@@ -143,6 +161,8 @@ module Cucumber
         @stdout.print("done.\n")
       end
 
+################################################################################
+
       def add_node_role
         @stdout.print("Setting up cucumber-chef test lab run list...")
         Cucumber::Chef.spinner do
@@ -150,6 +170,8 @@ module Cucumber
         end
         @stdout.print("done.\n")
       end
+
+################################################################################
 
       def chef_first_run
         @stdout.print("Performing chef-client first run on cucumber-chef test lab...")
@@ -160,6 +182,8 @@ module Cucumber
         end
         @stdout.print("done.\n")
       end
+
+################################################################################
 
     end
 
