@@ -37,6 +37,7 @@ module Cucumber
         command << [ "-o", "ProxyCommand='#{proxy_command}'" ] if @config[:proxy]
         command << "#{@config[:ssh_user]}@#{@config[:host]}"
         command = command.flatten.compact.join(" ")
+        $logger.debug { "console(#{command})" }
         Kernel.exec(command)
       end
 
@@ -44,36 +45,38 @@ module Cucumber
         options = { :silence => false }.merge(options)
         silence = options[:silence]
 
+        $logger.debug { format("config(#{@config.inspect})", "SSH") }
+        $logger.info { format("command(#{command})", "SSH") }
         Net::SSH.start(@config[:host], @config[:ssh_user], ssh_options) do |ssh|
           ssh.open_channel do |chan|
-            $logger.debug { format("exec(#{command})", "SSH") }
             chan.exec(command) do |ch, success|
               raise SSHError, "Could not execute '#{command}'." unless success
 
               ch.on_data do |c, data|
-                data = data.chomp
+                #data = data.chomp
                 $logger.debug { format(data, "STDOUT") }
-                @stdout.puts(data) if !silence
+                @stdout.print(data) if !silence
               end
 
               ch.on_extended_data do |c, type, data|
-                data = data.chomp
+                #data = data.chomp
                 $logger.debug { format(data, "STDERR") }
-                @stderr.puts(data) if !silence
+                @stderr.print(data) if !silence
               end
 
             end
-            chan.wait
           end
         end
       end
 
       def upload(local, remote)
+        $logger.debug { format("config(#{@config.inspect})", "SFTP") }
+        $logger.info { format("parameters(#{local},#{remote})", "SFTP") }
         Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options) do |sftp|
           sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
             case event
             when :open
-              $logger.debug { format("upload(#{args[0].local} -> #{args[0].remote})", "SFTP") }
+              $logger.info { format("upload(#{args[0].local} -> #{args[0].remote})", "SFTP") }
             when :close
               $logger.debug { format("close(#{args[0].remote})", "SFTP") }
             when :mkdir
@@ -81,18 +84,20 @@ module Cucumber
             when :put
               $logger.debug { format("put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}", "SFTP") }
             when :finish
-              $logger.debug { format("finish", "SFTP") }
+              $logger.info { format("finish", "SFTP") }
             end
           end
         end
       end
 
       def download(remote, local)
+        $logger.debug { format("config(#{@config.inspect})", "SFTP") }
+        $logger.info { format("parameters(#{remote},#{local})", "SFTP") }
         Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options) do |sftp|
           sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
             case event
             when :open
-              $logger.debug { format("download(#{args[0].remote} -> #{args[0].local})", "SFTP") }
+              $logger.info { format("download(#{args[0].remote} -> #{args[0].local})", "SFTP") }
             when :close
               $logger.debug { format("close(#{args[0].local})", "SFTP") }
             when :mkdir
@@ -100,7 +105,7 @@ module Cucumber
             when :get
               $logger.debug { format("get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}", "SFTP") }
             when :finish
-              $logger.debug { format("finish", "SFTP") }
+              $logger.info { format("finish", "SFTP") }
             end
           end
         end
@@ -116,8 +121,13 @@ module Cucumber
       end
 
       def proxy_command
-        raise SSHError, "You must specify an identity file in order to SSH proxy." if !@config[:identity_file]
+        if !@config[:identity_file]
+          message = "You must specify an identity file in order to SSH proxy."
+          $logger.fatal { message }
+          raise SSHError, message
+        end
 
+        $logger.debug { "@config(#{@config.inspect})" }
         command = ["ssh"]
         command << [ "-q" ]
         command << [ "-o", "UserKnownHostsFile=/dev/null" ]
@@ -127,16 +137,20 @@ module Cucumber
         command << [ "-i", @config[:proxy_identity_file] ] if @config[:proxy_identity_file]
         command << "#{@config[:proxy_ssh_user]}@#{@config[:proxy_host]}"
         command << "nc %h %p"
-        command.flatten.compact.join(" ")
+        command = command.flatten.compact.join(" ")
+        $logger.debug { "command(#{command})" }
+        command
       end
 
       def ssh_options
+        $logger.debug { "@config(#{@config.inspect})" }
         options = {}
         options.merge!(:password => @config[:ssh_password]) if @config[:ssh_password]
         options.merge!(:keys => @config[:identity_file]) if @config[:identity_file]
         options.merge!(:timeout => @config[:timeout]) if @config[:timeout]
         options.merge!(:user_known_hosts_file  => '/dev/null') if !@config[:host_key_verify]
-        options.merge!(:proxy => proxy_command) if @config[:proxy]
+        options.merge!(:proxy => Net::SSH::Proxy::Command.new(proxy_command)) if @config[:proxy]
+        $logger.debug { "options(#{options.inspect})" }
         options
       end
 

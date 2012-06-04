@@ -215,6 +215,46 @@ class CucumberChef < Thor
 
 ################################################################################
 
+  desc "diagnose <container>", "Provide diagnostics from the chef-client on the specified container."
+  method_option :strace, :type => :boolean, :desc => "output the chef-client 'chef-stacktrace.out'", :aliases => "-s", :default => true
+  method_option :log, :type => :boolean, :desc => "output the chef-client 'chef.log'", :aliases => "-l", :default => true
+  method_option :lines, :type => :numeric, :desc => "output the last N lines of the chef-client 'chef.log'", :aliases => "-n", :default => 1
+  def diagnose(container)
+    load_config
+
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      if test_lab.labs_exist?
+        ssh = Cucumber::Chef::SSH.new
+
+        ssh.config[:proxy] = true
+        ssh.config[:proxy_host] = test_lab.labs_running.first.public_ip_address
+        ssh.config[:proxy_ssh_user] = "ubuntu"
+        ssh.config[:proxy_identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+
+        ssh.config[:host] = container
+        ssh.config[:ssh_user] = "root"
+        ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+
+        puts([set_color("Attempting to collect diagnostic information on cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
+        if @options.strace?
+          puts(set_color("----------------------------------------------------------------------------", :bold))
+          puts(set_color("chef-stacktrace.out:", :bold))
+          puts(set_color("----------------------------------------------------------------------------", :bold))
+          ssh.exec("cat /var/chef/cache/chef-stacktrace.out")
+          print("\n")
+        end
+        if @options.log?
+          puts(set_color("----------------------------------------------------------------------------", :bold))
+          puts(set_color("chef.log:", :bold))
+          puts(set_color("----------------------------------------------------------------------------", :bold))
+          ssh.exec("tail -n #{@options.lines} /var/log/chef.log")
+        end
+      end
+    end
+  end
+
+################################################################################
+
   desc "displayconfig", "Display the current cucumber-chef config."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def displayconfig
