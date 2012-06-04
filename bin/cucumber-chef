@@ -51,7 +51,7 @@ class CucumberChef < Thor
     end
 
     def load_config
-      options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
+      @options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
     end
 
     def error(message)
@@ -109,7 +109,7 @@ class CucumberChef < Thor
   end
 
   desc "setup", "Setup cucumber-chef test lab in Amazon EC2"
-  method_option :test, :type  => :boolean
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def setup
     load_config
 
@@ -137,7 +137,7 @@ class CucumberChef < Thor
   end
 
   desc "teardown", "Teardown cucumber-chef test lab in Amazon EC2"
-  method_option :test, :type => :boolean
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def teardown
     load_config
 
@@ -178,7 +178,7 @@ class CucumberChef < Thor
   end
 
   desc "ssh [container]", "SSH to cucumber-chef test lab or LXC [container] if specified"
-  method_option :test, :type => :boolean
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def ssh(*args)
     load_config
 
@@ -219,7 +219,7 @@ class CucumberChef < Thor
   end
 
   desc "displayconfig", "Display the current cucumber-chef config"
-  method_option :test, :type  => :boolean
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def displayconfig
     load_config
 
@@ -230,7 +230,7 @@ class CucumberChef < Thor
   end
 
   desc "info", "Display information about the current test labs"
-  method_option :test, :type  => :boolean
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def info
     load_config
 
@@ -242,20 +242,22 @@ class CucumberChef < Thor
     error(e.message)
   end
 
-  desc "test <project name>", "Run the cucumber-chef test suite <project name> from a workstation."
-  def test(project_name)
+  desc "test <project> [cucumber-options]", "Run the cucumber-chef test suite."
+  #method_option :project, :type => :string, :desc => "Run a specific cucumber-chef project.", :aliases => "-p"
+  def test(project, *args)
     load_config
 
-    root_dir = Cucumber::Chef.locate_parent(".cucumber-chef")
-    project_dir = File.expand_path(File.join(root_dir, "cucumber-chef", project_name))
-    unless (File.exists?(project_dir) && File.directory?(project_dir))
-      raise "Project directory '#{project_dir}' does not exist."
+    root_path = Cucumber::Chef.locate_parent(".cucumber-chef")
+    project_path = File.expand_path(File.join(root_path, "cucumber-chef", project))
+
+    unless (File.exists?(project_path) && File.directory?(project_path))
+      raise Error, "Project directory '#{project_path}' does not exist."
     else
-      puts("Using project directory: #{project_dir}")
+      puts("Using project directory: #{project_path}")
     end
 
-    runner = Cucumber::Chef::TestRunner.new(project_dir)
-    runner.run
+    runner = Cucumber::Chef::TestRunner.new(project_path)
+    runner.run(args)
 
   rescue Cucumber::Chef::Error => e
     error(e)

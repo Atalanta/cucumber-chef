@@ -20,8 +20,9 @@ With a /single command/ Cucumber-Chef will provision a machine, set up an open s
 
 This means getting started with Cucumber-Chef is a simple, two step process.
 
-1) Install Cucumber-Chef
-2) `Run cucumber-chef init`
+1. Install Cucumber-Chef
+2. Run `cucumber-chef init` to configure Cucumber-Chef.
+3. Run `cucumber-chef setup` to build your test lab.
 
 ### Installing Cucumber-Chef
 
@@ -44,7 +45,7 @@ If you want to try a development version, simply clone this repo, and build the 
     $ bundle
     $ rake build
     $ gem install pkg/cucumber-chef-VERSION.gem
-    
+
 Again, depending on your local setup (ie whether you're using RVM or rbenv, or distribution-provided Ruby), you may need to run parts of this process with superuser privileges.
 
 ### Running `cucumber-chef init`
@@ -61,18 +62,17 @@ You can view and verify the current config at any time by running `cucumber-chef
 
 Once installed, you can run `cucumber-chef` on the command line to get an overview of the tasks it can carry out.
 
-$ cucumber-chef
-Tasks:
-  cucumber-chef connect                 # Connect to a container in your test lab
-  cucumber-chef displayconfig           # Display the current cucumber-chef config
-  cucumber-chef help [TASK]             # Describe available tasks or one specific task
-  cucumber-chef info                    # Display information about the current test labs
-  cucumber-chef init                    # Initalize Cucumber-Chef configuration
-  cucumber-chef project <project name>  # Create a project template for testing an infrastructure
-  cucumber-chef setup                   # Setup Cucumber-Chef test lab in Amazon EC2
-  cucumber-chef ssh                     # SSH to running test lab
-  cucumber-chef teardown                # Teardown Cucumber-Chef test lab in Amazon EC2
-  cucumber-chef test <project name>     # Run the cucumber-chef test suite <project name> from a workstation.
+    $ cucumber-chef
+    Tasks:
+      cucumber-chef displayconfig                      # Display the current cucumber-chef config
+      cucumber-chef help [TASK]                        # Describe available tasks or one specific task
+      cucumber-chef info                               # Display information about the current test labs
+      cucumber-chef init                               # Initalize cucumber-chef configuration
+      cucumber-chef project <project name>             # Create a project template for testing an infrastructure
+      cucumber-chef setup                              # Setup cucumber-chef test lab in Amazon EC2
+      cucumber-chef ssh [container]                    # SSH to cucumber-chef test lab or LXC [container] if specified
+      cucumber-chef teardown                           # Teardown cucumber-chef test lab in Amazon EC2
+      cucumber-chef test <project> [cucumber-options]  # Run the cucumber-chef test suite.
 
 After tunning set up, which takes about 15 minutes, you'll have a fully funtioning platform available for you to use.  Let's just quickly review what that means.  You will have an EC2 machine, fully managed by Chef, and providing the following:
 
@@ -101,15 +101,16 @@ This will create a directory, cucumber-chef, and a subdirectory, example.
 
 Once you've got your test lab set up, and you've generated a project, it's time to crack on with writing a test.  The basic idea is this:
 
-1) An infrastructure requirement is established
-2) Write a cucumber feature that expresses the required behaviour of the infrastructure requirement
-3) Write steps that will build this infrastructure environment on the test lab, using the step definitions provided - these include the ability to create a container, apply roles to it, and destroy it again.
-4) Write cookbooks and recipes and supporting code to make the test pass
+1. An infrastructure requirement is established
+2. Write a cucumber feature that expresses the required behaviour of the infrastructure requirement
+3. Write steps that will build this infrastructure environment on the test lab, using the step definitions provided - these include the ability to create a container, apply roles to it, and destroy it again.
+4. Write cookbooks and recipes and supporting code to make the test pass
 
 ### Container Details
 
 All containers operate off a bridged interface on the test-lab.  All outbound, non-local traffic from the LXC containers are NAT'd through the test-lab and off to the outside world.  This bridged interface on the test-lab is configured as follows:
 
+    CIDR: 192.168.0.0/16
     IP Address: 192.168.255.254
     Netmask: 255.255.255.0
     Broadcast: 192.168.255.255
@@ -166,7 +167,19 @@ You can write the tests and Chef code wherever you like.  We're assuming you pre
 
     $ cucumber-chef test myproject
 
-At the moment cucumber-chef doesn't pass though clever filtering and tagging options that cucumber supports - you run all the tests.  We're going to improve that soon, again, patches and pull requests very welcome.
+You can now pass in options for cucumber or even setup profiles via `cucumber.yml`.  Any command-line options specified after the project name will be passed on to cucumber.  For example:
+
+    $ cucumber-chef test myproject --tags @wip -c -v -b
+
+To take advantage of cucumber profiles, create a `cucumber.yml` configuration file in your `.cucumber-chef` directory off your chef-repo.  In this file you can take full advantage of the Cucumber profiles as definied on their wiki, https://github.com/cucumber/cucumber/wiki/cucumber.yml.
+
+    .cucumber-chef/
+    └── cucumber.yml
+
+Here is an example `cucumber.yml` which turns on colored output, verbosity and full backtraces for all test runs:
+
+    ---
+    default: -c -v -b
 
 Running the test task will upload your current project to the test lab, and run the tests, reporting the results back to the screen. Cucumber-chef also provides an upload task, so you can push the current project to the test lab, and then connect to test lab yourself to run tests in a more granular way.  To do this, you need to know the IP of the test lab.  You can find this out by running:
 
@@ -179,11 +192,7 @@ At present, Cucumber-Chef only allows one test lab per AWS account.  In practice
 Running infrastructure tests are very slow due to the nature of what is involved.  Currently Cucumber-Chef builds a clean LXC container before each scenario to avoid carrying over tainted or corrupted data from a previous scenario run.  We have plans to support libvirt so test-labs can be moved locally to take advantage of SSD drives which will undoubtedly speed up these tests considerably.
 
     $ bin/cucumber-chef test devops
-    Verifing Configuration...
     Cucumber-Chef Test Runner Initalized!
-      * 1.2.3.4: (SSH) 'rm -rf /home/ubuntu/devops'
-      * 1.2.3.4: (SCP) 'cucumber-chef/devops' -> '/home/ubuntu/devops'
-      * 1.2.3.4: (SSH) 'sudo cucumber -c -v -b /home/ubuntu/devops/features'
     Code:
       * /home/ubuntu/devops/features/support/env.rb
       * /home/ubuntu/devops/features/step_definitions/devops_ssh_steps.rb
@@ -196,7 +205,6 @@ Running infrastructure tests are very slow due to the nature of what is involved
 
       Scenario: devops can connect to server via ssh key # /home/ubuntu/devops/features/devops_ssh.feature:3
       * 192.168.230.204: (LXC) 'devopserver' Building
-      * 192.168.230.204: (LXC) 'devopserver' Booted
       * 192.168.230.204: (LXC) 'devopserver' Ready
         Given a newly bootstrapped server                # devops/features/step_definitions/devops_ssh_steps.rb:1
         When the devops users recipe is applied          # devops/features/step_definitions/devops_ssh_steps.rb:5
@@ -204,7 +212,6 @@ Running infrastructure tests are very slow due to the nature of what is involved
 
       Scenario: Default shell is bash              # /home/ubuntu/devops/features/devops_ssh.feature:8
       * 192.168.50.105: (LXC) 'devopserver' Building
-      * 192.168.50.105: (LXC) 'devopserver' Booted
       * 192.168.50.105: (LXC) 'devopserver' Ready
         Given a newly bootstrapped server          # devops/features/step_definitions/devops_ssh_steps.rb:1
         When the devops users recipe is applied    # devops/features/step_definitions/devops_ssh_steps.rb:5

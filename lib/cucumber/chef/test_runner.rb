@@ -20,11 +20,14 @@ module Cucumber
         @stdout.puts("Cucumber-Chef Test Runner Initalized!")
       end
 
-      def run
+      def run(*args)
         reset_project
         upload_project
-        project_path = File.join('/home/ubuntu', File.basename(@project_dir), 'features')
-        command = "sudo cucumber -c -v -b #{project_path}"
+
+        remote_path = File.join("/", "home", "ubuntu", "cucumber-chef", File.basename(@project_dir), "features")
+        cucumber_options = args.flatten.compact.uniq.join(" ")
+        command = [ "sudo cucumber", cucumber_options, remote_path ].flatten.compact.join(" ")
+
         @ssh.config[:formatter] = false
         @ssh.exec(command)
         @ssh.config[:formatter] = true
@@ -34,15 +37,26 @@ module Cucumber
     private
 
       def reset_project
-        project_base_path = File.join('/home/ubuntu', File.basename(@project_dir))
-        command = "rm -rf #{project_base_path}"
+        remote_path = File.join("/", "home", "ubuntu", "cucumber-chef")
+
+        command = "rm -rf #{remote_path}"
+        @ssh.exec(command)
+
+        command = "mkdir -p #{remote_path}"
         @ssh.exec(command)
       end
 
       def upload_project
-        local = @project_dir
-        remote = File.join('/home/ubuntu', File.basename(@project_dir))
-        @ssh.upload(local, remote)
+        config_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
+        cucumber_config_file = File.expand_path(File.join(config_path, "cucumber.yml"))
+        if File.exists?(cucumber_config_file)
+          remote_file = File.join("/", "home", "ubuntu", File.basename(cucumber_config_file))
+          @ssh.upload(cucumber_config_file, remote_file)
+        end
+
+        local_path = @project_dir
+        remote_path = File.join("/", "home", "ubuntu", "cucumber-chef", File.basename(@project_dir))
+        @ssh.upload(local_path, remote_path)
       end
 
     end
