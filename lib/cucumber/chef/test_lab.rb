@@ -43,24 +43,25 @@ module Cucumber
           @stdout.puts("Provisioning cucumber-chef test lab platform.")
 
           @stdout.print("Waiting for instance...")
-          @server.wait_for { self.send(:print, "."); ready? }
+          Cucumber::Chef.spinner do
+            @server.wait_for { ready? }
+          end
           @stdout.puts("done.\n")
 
           tag_server
         end
 
         @stdout.print("Waiting for sshd...")
-        begin
-          @stdout.print(".")
-          @stdout.flush
-          sleep(1)
-        end until Cucumber::Chef::SSH.ready?(@server.public_ip_address)
+        Cucumber::Chef.spinner do
+          while !Cucumber::Chef::SSH.ready?(@server.public_ip_address) do
+            sleep(1)
+          end
+        end
         @stdout.puts("done.\n")
 
         @stdout.print("Waiting for 20 seconds...")
-        20.downto(1) do
-          @stdout.print(".")
-          sleep(1)
+        Cucumber::Chef.spinner do
+          sleep(20)
         end
         @stdout.print("done.\n")
 

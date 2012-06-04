@@ -8,10 +8,7 @@ module Cucumber
 
       SEVERITIES = Severity.constants.inject([]) {|arr,c| arr[Severity.const_get(c)] = c; arr}
 
-      def initialize(redirect=false)
-        @redirect = redirect
-        #@stdout, @stderr, @stdin = StringIO.new, StringIO.new, StringIO.new
-
+      def initialize
         config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
         FileUtils.mkdir_p(config_path)
         log_file = File.join(config_path, "cucumber-chef.log")
@@ -38,13 +35,6 @@ module Cucumber
 
         message = [message, progname, (block && block.call)].delete_if{|i| i == nil}.join(": ")
         message = "%19s.%06d | %5s | %5s | %s%s\n" % [Time.now.utc.strftime("%Y-%m-%d %H:%M:%S"), Time.now.utc.usec, Process.pid.to_s, SEVERITIES[severity], called_by, message]
-
-        #buffer << message
-        #auto_flush
-        if @redirect
-          STDOUT.puts(message)
-          STDOUT.flush if STDOUT.respond_to?(:flush)
-        end
 
         @logdev.write(message)
 

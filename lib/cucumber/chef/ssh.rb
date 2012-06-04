@@ -40,8 +40,11 @@ module Cucumber
         Kernel.exec(command)
       end
 
-      def exec(command)
-        Net::SSH.start(@config[:host], @config[:ssh_user], options) do |ssh|
+      def exec(command, options={})
+        options = { :silence => false }.merge(options)
+        silence = options[:silence]
+
+        Net::SSH.start(@config[:host], @config[:ssh_user], ssh_options) do |ssh|
           ssh.open_channel do |chan|
             $logger.debug { format("exec(#{command})", "SSH") }
             chan.exec(command) do |ch, success|
@@ -49,14 +52,14 @@ module Cucumber
 
               ch.on_data do |c, data|
                 data = data.chomp
-                @stdout.puts(data)
                 $logger.debug { format(data, "STDOUT") }
+                @stdout.puts(data) if !silence
               end
 
               ch.on_extended_data do |c, type, data|
                 data = data.chomp
-                @stderr.puts(data)
                 $logger.debug { format(data, "STDERR") }
+                @stderr.puts(data) if !silence
               end
 
             end
@@ -66,7 +69,7 @@ module Cucumber
       end
 
       def upload(local, remote)
-        Net::SFTP.start(@config[:host], @config[:ssh_user], options) do |sftp|
+        Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options) do |sftp|
           sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
             case event
             when :open
@@ -85,7 +88,7 @@ module Cucumber
       end
 
       def download(remote, local)
-        Net::SFTP.start(@config[:host], @config[:ssh_user], options) do |sftp|
+        Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options) do |sftp|
           sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
             case event
             when :open
@@ -108,7 +111,7 @@ module Cucumber
 
       def format(message, subsystem=nil)
         subsystem = [ "::", subsystem ].join if subsystem
-        message = [ "[", @config[:host], subsystem, "]", " ", message ].join
+        message = [ "[", @config[:host], subsystem, "]", " ", message ].flatten.compact.join
         message
       end
 
@@ -127,7 +130,7 @@ module Cucumber
         command.flatten.compact.join(" ")
       end
 
-      def options
+      def ssh_options
         options = {}
         options.merge!(:password => @config[:ssh_password]) if @config[:ssh_password]
         options.merge!(:keys => @config[:identity_file]) if @config[:identity_file]

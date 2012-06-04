@@ -31,14 +31,16 @@ module Cucumber
         File.expand_path(File.join(parent[0..(parent.length - 2)]))
       end
 
-      def spin_wheel
+      def spinner(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         spinning_chars = %w[| / - \\]
         count = 0
         spinner = Thread.new do
           while count do
-            print spinning_chars[(count+=1) % spinning_chars.length]
+            stdout.print spinning_chars[(count+=1) % spinning_chars.length]
+            stdout.flush if stdout.respond_to?(:flush)
             sleep 0.5
-            print "\b"
+            stdout.print "\b"
+            stdout.flush if stdout.respond_to?(:flush)
           end
         end
         yield.tap do

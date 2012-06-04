@@ -49,85 +49,116 @@ module Cucumber
       def bootstrap(template_file)
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !@user
 
-        attributes = {
-          "run_list" => "role[test_lab]",
-          "cucumber_chef" => {
-            "version" => Cucumber::Chef::VERSION
+        @stdout.print("Bootstrapping AWS EC2 instance...")
+        Cucumber::Chef.spinner do
+          attributes = {
+            "run_list" => "role[test_lab]",
+            "cucumber_chef" => {
+              "version" => Cucumber::Chef::VERSION
+            }
           }
-        }
 
-        bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
-        bootstrap.config[:host] = @server.public_ip_address
-        bootstrap.config[:ssh_user] = "ubuntu"
-        bootstrap.config[:use_sudo] = true
-        bootstrap.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
-        bootstrap.config[:template_file] = template_file
-        bootstrap.config[:context][:hostname] = HOSTNAME
-        bootstrap.config[:context][:chef_server] = @server.public_ip_address
-        bootstrap.config[:context][:amqp_password] = PASSWORD
-        bootstrap.config[:context][:admin_password] = PASSWORD
-        bootstrap.config[:context][:user] = @user
-        bootstrap.config[:context][:attributes] = attributes
-        bootstrap.run
+          bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
+          bootstrap.config[:host] = @server.public_ip_address
+          bootstrap.config[:ssh_user] = "ubuntu"
+          bootstrap.config[:use_sudo] = true
+          bootstrap.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+          bootstrap.config[:template_file] = template_file
+          bootstrap.config[:context][:hostname] = HOSTNAME
+          bootstrap.config[:context][:chef_server] = @server.public_ip_address
+          bootstrap.config[:context][:amqp_password] = PASSWORD
+          bootstrap.config[:context][:admin_password] = PASSWORD
+          bootstrap.config[:context][:user] = @user
+          bootstrap.config[:context][:attributes] = attributes
+          bootstrap.run
+        end
+        @stdout.print("done.\n")
       end
 
       def download_chef_credentials
-        local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
-        remote_path = File.join("/", "home", @ssh.config[:ssh_user], ".chef")
+        @stdout.print("Downloading chef credentials...")
+        Cucumber::Chef.spinner do
+          local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
+          remote_path = File.join("/", "home", @ssh.config[:ssh_user], ".chef")
 
-        files = [ "#{@user}.pem", "validation.pem" ]
-        files.each do |file|
-          @ssh.download(File.join(remote_path, file), File.join(local_path, file))
+          files = [ "#{@user}.pem", "validation.pem" ]
+          files.each do |file|
+            @ssh.download(File.join(remote_path, file), File.join(local_path, file))
+          end
         end
+        @stdout.print("done.\n")
       end
 
       def download_proxy_ssh_credentials
-        local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
-        remote_path = File.join("/", "home", @ssh.config[:ssh_user], ".ssh")
+        @stdout.print("Downloading container SSH credentials...")
+        Cucumber::Chef.spinner do
+          local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
+          remote_path = File.join("/", "home", @ssh.config[:ssh_user], ".ssh")
 
-        files = { "id_rsa" => "id_rsa-ubuntu" }
-        files.each do |remote_file, local_file|
-          local = File.join(local_path, local_file)
-          @ssh.download(File.join(remote_path, remote_file), local)
-          File.chmod(0600, local)
+          files = { "id_rsa" => "id_rsa-ubuntu" }
+          files.each do |remote_file, local_file|
+            local = File.join(local_path, local_file)
+            @ssh.download(File.join(remote_path, remote_file), local)
+            File.chmod(0600, local)
+          end
         end
+        @stdout.print("done.\n")
       end
 
       def render_knife_rb
-        template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "chef", "knife-rb.erb"))
-        knife_rb = File.expand_path(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "knife.rb"))
+        @stdout.print("Building 'cc-knife' configuration...")
+        Cucumber::Chef.spinner do
+          template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "chef", "knife-rb.erb"))
+          knife_rb = File.expand_path(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "knife.rb"))
 
-        context = { :chef_server => @server.public_ip_address }
-        File.open(knife_rb, 'w') do |f|
-          f.puts(Cucumber::Chef::Template.render(template_file, context))
+          context = { :chef_server => @server.public_ip_address }
+          File.open(knife_rb, 'w') do |f|
+            f.puts(Cucumber::Chef::Template.render(template_file, context))
+          end
         end
+        @stdout.print("done.\n")
       end
 
       def upload_cookbook
-        @command.knife("cookbook upload cucumber-chef", "-o", @cookbooks_path)
+        @stdout.print("Uploading cucumber-chef cookbooks...")
+        Cucumber::Chef.spinner do
+          @command.knife([ "cookbook upload cucumber-chef", "-o", @cookbooks_path ], :silence => true)
+        end
+        @stdout.print("done.\n")
       end
 
       def upload_role
-        @command.knife("role from file", File.join(@roles_path, "test_lab.rb"))
+        @stdout.print("Uploading cucumber-chef test lab role...")
+        Cucumber::Chef.spinner do
+          @command.knife([ "role from file", File.join(@roles_path, "test_lab.rb") ], :silence => true)
+        end
+        @stdout.print("done.\n")
       end
 
       def tag_node
-        @command.knife("tag create", HOSTNAME, Cucumber::Chef::Config[:mode])
+        @stdout.print("Tagging cucumber-chef test lab node...")
+        Cucumber::Chef.spinner do
+          @command.knife([ "tag create", HOSTNAME, Cucumber::Chef::Config[:mode] ], :silence => true)
+        end
+        @stdout.print("done.\n")
       end
 
       def add_node_role
-        @command.knife("node run_list add", HOSTNAME, "\"role[test_lab]\"")
+        @stdout.print("Setting up cucumber-chef test lab run list...")
+        Cucumber::Chef.spinner do
+          @command.knife([ "node run_list add", HOSTNAME, "\"role[test_lab]\"" ], :silence => true)
+        end
+        @stdout.print("done.\n")
       end
 
       def chef_first_run
-        @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
-        @ssh.config[:host] = @server.public_ip_address
-        @ssh.config[:ssh_user] = "ubuntu"
-        @ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
-
-        command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
-        command = "sudo #{command}"
-        @ssh.exec(command)
+        @stdout.print("Performing chef-client first run on cucumber-chef test lab...")
+        Cucumber::Chef.spinner do
+          command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
+          command = "sudo #{command}"
+          @ssh.exec(command, :silence => true)
+        end
+        @stdout.print("done.\n")
       end
 
     end

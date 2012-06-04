@@ -21,20 +21,20 @@ module Cucumber
         raise BootstrapError, "You must supply a 'ssh_user' option." if !@config[:ssh_user]
         raise BootstrapError, "You must supply a 'ssh_password' or 'identity_file' option." if (!@config[:ssh_password] && !@config[:identity_file])
 
-        @stdout.puts("Preparing bootstrap for '#{@config[:host]}'.")
+        $logger.debug { "Preparing bootstrap for '#{@config[:host]}'." }
         @ssh.config[:host] = @config[:host]
         @ssh.config[:ssh_user] = @config[:ssh_user]
         @ssh.config[:ssh_password] = @config[:ssh_password]
         @ssh.config[:identity_file] = @config[:identity_file]
         @ssh.config[:timeout] = 5
 
-        @stdout.puts("Using template_file '#{@config[:template_file]}'.")
+        $logger.debug { "Using template_file '#{@config[:template_file]}'." }
         command = Cucumber::Chef::Template.render(@config[:template_file], @config[:context])
         command = "sudo #{command}" if @config[:use_sudo]
 
-        @stdout.puts("Running bootstrap for '#{@config[:host]}'.")
-        @ssh.exec(command)
-        @stdout.puts("Finished bootstrap for '#{@config[:host]}'.")
+        $logger.debug { "Running bootstrap for '#{@config[:host]}'." }
+        @ssh.exec(command, :silence => true)
+        $logger.debug { "Finished bootstrap for '#{@config[:host]}'." }
       end
 
     end
