@@ -8,6 +8,8 @@ module Cucumber
 
       SEVERITIES = Severity.constants.inject([]) {|arr,c| arr[Severity.const_get(c)] = c; arr}
 
+################################################################################
+
       def initialize
         config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
         FileUtils.mkdir_p(config_path)
@@ -16,6 +18,8 @@ module Cucumber
         super(log_file, 7, (1024 * 1024))
         set_log_level
       end
+
+################################################################################
 
       def parse_caller(at)
         if /^(.+?):(\d+)(?::in `(.*)')?/ =~ at
@@ -27,6 +31,8 @@ module Cucumber
           ""
         end
       end
+
+################################################################################
 
       def add(severity, message = nil, progname = nil, &block)
         return if @level > severity
@@ -41,10 +47,14 @@ module Cucumber
         true
       end
 
+################################################################################
+
       def set_log_level(level="INFO")
         log_level = (ENV['LOG_LEVEL'] || level)
         self.level = Cucumber::Chef::Logger.const_get(log_level.to_s.upcase)
       end
+
+################################################################################
 
     end
 

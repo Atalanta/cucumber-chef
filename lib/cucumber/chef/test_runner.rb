@@ -5,6 +5,8 @@ module Cucumber
 
     class TestRunner
 
+################################################################################
+
       def initialize(project_dir, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @project_dir = project_dir
         @stdout, @stderr, @stdin = stdout, stderr, stdin
@@ -20,6 +22,8 @@ module Cucumber
         @stdout.puts("Cucumber-Chef Test Runner Initalized!")
       end
 
+################################################################################
+
       def run(*args)
         reset_project
         upload_project
@@ -33,7 +37,9 @@ module Cucumber
       end
 
 
+################################################################################
     private
+################################################################################
 
       def reset_project
         @stdout.print("Cleaning up any previous test runs...")
@@ -48,6 +54,8 @@ module Cucumber
         end
         @stdout.print("done.\n")
       end
+
+################################################################################
 
       def upload_project
         @stdout.print("Uploading files required for this test run...")
@@ -65,6 +73,8 @@ module Cucumber
         end
         @stdout.print("done.\n")
       end
+
+################################################################################
 
     end
 

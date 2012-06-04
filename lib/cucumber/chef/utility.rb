@@ -5,9 +5,13 @@ module Cucumber
 
     module Utility
 
+################################################################################
+
       def is_rc?
         (Cucumber::Chef::VERSION =~ /rc/)
       end
+
+################################################################################
 
       def locate(type, *args)
         pwd = Dir.pwd.split(File::SEPARATOR)
@@ -25,11 +29,15 @@ module Cucumber
         raise UtilityError, "Could not locate #{type} '#{File.join(args)}'."
       end
 
+################################################################################
+
       def locate_parent(child)
         parent = (locate(:any, child).split(File::SEPARATOR) rescue nil)
         raise UtilityError, "Could not locate parent of '#{child}'." unless parent
         File.expand_path(File.join(parent[0..(parent.length - 2)]))
       end
+
+################################################################################
 
       def spinner(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         spinning_chars = %w[| / - \\]
@@ -49,6 +57,8 @@ module Cucumber
         end
       end
 
+################################################################################
+
       def generate_do_not_edit_warning(message=nil)
         warning = []
         warning << "#"
@@ -58,6 +68,8 @@ module Cucumber
         warning << "#"
         warning.join("\n")
       end
+
+################################################################################
 
     end
 
