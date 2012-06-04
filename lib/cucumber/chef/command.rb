@@ -22,11 +22,13 @@ module Cucumber
         options = { :exit_code => 0, :silence => false }.merge(options)
         exit_code = options[:exit_code]
         silence = options[:silence]
+        $logger.debug { "options(#{options.inspect})" }
 
         command = "#{command} 2>&1"
+        $logger.debug { "command(#{command})" }
         output = %x( #{command} )
+        $logger.debug { "exit_code(#{$?})" }
 
-        $logger.debug { "R:[#{command}] (#{$?})" }
         $logger.debug { "--------------------------------------------------------------------------------" }
         $logger.debug { output }
         $logger.debug { "--------------------------------------------------------------------------------" }
