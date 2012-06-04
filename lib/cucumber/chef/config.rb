@@ -20,12 +20,25 @@ module Cucumber
 
 ################################################################################
 
+      def self.duplicate(input)
+        output = Hash.new
+        input.each do |key, value|
+          output[key] = (value.is_a?(Hash) ? self.duplicate(input[key]) : value.to_s.dup)
+        end
+        output
+      end
+
       def self.load
         config_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "config.rb")
-        $logger.debug { "Attempting to load cucumber-chef configuration from '%s'." % config_rb }
+        $logger.info { "Attempting to load cucumber-chef configuration from '%s'." % config_rb }
         self.from_file(config_rb)
         self.verify
-        $logger.debug { "Successfully loaded cucumber-chef configuration from '%s'." % config_rb }
+        $logger.info { "Successfully loaded cucumber-chef configuration from '%s'." % config_rb }
+
+        log_dump = self.duplicate(self.configuration)
+        log_dump[:aws].merge!(:aws_access_key_id => "[REDACTED]", :aws_secret_access_key => "[REDACTED]")
+        $logger.debug { log_dump.inspect }
+
         self
       rescue Errno::ENOENT, UtilityError
         raise ConfigError, "Could not find your cucumber-chef configuration file; did you run 'cucumber-chef init'?"
@@ -43,23 +56,39 @@ module Cucumber
         self.verify_keys
         self.verify_provider_keys
         eval("self.verify_provider_#{self[:provider].to_s.downcase}")
+        $logger.debug { "Configuration verified successfully" }
       end
 
 ################################################################################
 
       def self.verify_keys
+        $logger.debug { "Checking for missing configuration keys" }
         missing_keys = KEYS.select{ |key| !self[key.to_sym] }
-        raise ConfigError, "Configuration incomplete, missing configuration keys: #{missing_keys.join(", ")}" if missing_keys.count > 0
+        if missing_keys.count > 0
+          message = "Configuration incomplete, missing configuration keys: #{missing_keys.join(", ")}"
+          $logger.fatal { message }
+          raise ConfigError, message
+        end
 
+        $logger.debug { "Checking for invalid configuration keys" }
         invalid_keys = KEYS.select{ |key| !eval("#{key.to_s.upcase}S").include?(self[key]) }
-        raise ConfigError, "Configuration incomplete, invalid configuration keys: #{invalid_keys.join(", ")}" if invalid_keys.count > 0
+        if invalid_keys.count > 0
+          message = "Configuration incomplete, invalid configuration keys: #{invalid_keys.join(", ")}"
+          $logger.fatal { message }
+          raise ConfigError, message
+        end
       end
 
 ################################################################################
 
       def self.verify_provider_keys
+        $logger.debug { "Checking for missing provider keys" }
         missing_keys = eval("PROVIDER_#{self[:provider].to_s.upcase}_KEYS").select{ |key| !self[self[:provider]].key?(key) }
-        raise ConfigError, "Configuration incomplete, missing provider configuration keys: #{missing_keys.join(", ")}" if missing_keys.count > 0
+        if missing_keys.count > 0
+          message = "Configuration incomplete, missing provider configuration keys: #{missing_keys.join(", ")}"
+          $logger.fatal { message }
+          raise ConfigError, message
+        end
       end
 
 ################################################################################
@@ -72,11 +101,15 @@ module Cucumber
           compute.describe_availability_zones
         end
       rescue Fog::Service::Error => err
-        raise ConfigError, "Invalid AWS credentials.  Please check your configuration."
+        message = "Invalid AWS credentials.  Please check your configuration."
+        $logger.fatal { message }
+        raise ConfigError, message
       end
 
       def self.verify_provider_vagrant
-        raise ConfigError, "Not yet implemented."
+        message = "Not yet implemented."
+        $logger.fatal { message }
+        raise ConfigError, message
       end
 
 ################################################################################
@@ -92,7 +125,9 @@ module Cucumber
           end
           return ami.name if ami
         end
-        raise ConfigError, "Could not find a valid AMI image ID.  Please check your configuration."
+        message = "Could not find a valid AMI image ID.  Please check your configuration."
+        $logger.fatal { message }
+        raise ConfigError, message
       end
 
 ################################################################################
