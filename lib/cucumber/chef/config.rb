@@ -22,8 +22,10 @@ module Cucumber
 
       def self.load
         config_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "config.rb")
+        $logger.debug { "Attempting to load cucumber-chef configuration from '%s'." % config_rb }
         self.from_file(config_rb)
         self.verify
+        $logger.debug { "Successfully loaded cucumber-chef configuration from '%s'." % config_rb }
         self
       rescue Errno::ENOENT, UtilityError
         raise ConfigError, "Could not find your cucumber-chef configuration file; did you run 'cucumber-chef init'?"
