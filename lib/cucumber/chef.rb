@@ -22,6 +22,7 @@ module Cucumber
     autoload :Logger, 'cucumber/chef/logger'
     autoload :Provisioner, 'cucumber/chef/provisioner'
     autoload :SSH, 'cucumber/chef/ssh'
+    autoload :TCPSocket, 'cucumber/chef/tcp_socket'
     autoload :Template, 'cucumber/chef/template'
     autoload :TestLab, 'cucumber/chef/test_lab'
     autoload :TestRunner, 'cucumber/chef/test_runner'

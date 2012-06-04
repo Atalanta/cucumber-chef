@@ -21,7 +21,7 @@ module Cucumber::Chef::Helpers::Server
     test_lab_config_dhcpd
     container_config_network(name)
     container_create(name)
-    sleep(1) until Cucumber::Chef::SSH.ready?($servers[name][:ip])
+    Cucumber::Chef::TCPSocket.new($servers[name][:ip], 22).wait
 
     log(name, $servers[name][:ip], "Ready") if $servers[name]
   end

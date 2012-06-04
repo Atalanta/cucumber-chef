@@ -12,6 +12,8 @@ module Cucumber
       SHUTDOWN_STATES = ['shutdown', 'stopping', 'stopped']
       VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
 
+################################################################################
+
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
@@ -53,9 +55,7 @@ module Cucumber
 
         @stdout.print("Waiting for sshd...")
         Cucumber::Chef.spinner do
-          while !Cucumber::Chef::SSH.ready?(@server.public_ip_address) do
-            sleep(1)
-          end
+          Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 22).wait
         end
         @stdout.puts("done.\n")
 
@@ -70,6 +70,7 @@ module Cucumber
         @server
       end
 
+################################################################################
 
       def destroy
         @stdout.puts("----------------------------------------------------------------------------")
@@ -102,13 +103,6 @@ module Cucumber
         @stdout.puts("============================================================================")
         if labs_exist?
           labs.each do |lab|
-            output = StringIO.new
-            ssh = Cucumber::Chef::SSH.new(output, output, StringIO.new)
-            ssh.config[:host] = lab.public_ip_address
-            ssh.config[:ssh_user] = "ubuntu"
-            ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
-            ssh.exec("lxc-ps --lxc")
-
             @stdout.puts("Instance ID: #{lab.id}")
             @stdout.puts("State: #{lab.state}")
             @stdout.puts("Username: #{lab.username}") if lab.username
@@ -122,32 +116,34 @@ module Cucumber
             lab.tags.to_hash.each do |k,v|
               @stdout.puts("  #{k}: #{v}")
             end
-            @stdout.puts("----------------------------------------------------------------------------")
             @stdout.puts("Chef-Server WebUI:")
             @stdout.puts("  http://#{lab.public_ip_address}:4040/")
-            @stdout.puts("----------------------------------------------------------------------------")
-            if output.size > 0
-              output.rewind
-              @stdout.puts(output.read)
-            end
           end
+          @stdout.puts("============================================================================")
         else
           @stdout.puts("There are no cucumber-chef test labs to display information for!")
         end
-        @stdout.puts("============================================================================")
       end
+
+################################################################################
 
       def labs_exist?
         (labs.size > 0)
       end
 
+################################################################################
+
       def labs
         @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && VALID_STATES.any?{|state| s.state == state}) }
       end
 
+################################################################################
+
       def labs_running
         @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && RUNNING_STATES.any?{|state| s.state == state}) }
       end
+
+################################################################################
 
       def labs_shutdown
         @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && SHUTDOWN_STATES.any?{|state| s.state == state}) }
@@ -170,7 +166,9 @@ module Cucumber
       end
 
 
+################################################################################
     private
+################################################################################
 
       def tag_server
         tag = @connection.tags.new
@@ -179,6 +177,8 @@ module Cucumber
         tag.value = Cucumber::Chef::Config[:mode]
         tag.save
       end
+
+################################################################################
 
       def ensure_security_group
         security_group_name = Cucumber::Chef::Config[:aws][:aws_security_group]
@@ -195,6 +195,8 @@ module Cucumber
           raise TestLabError, "Could not find an existing or create a new AWS security group."
         end
       end
+
+################################################################################
 
     end
 
