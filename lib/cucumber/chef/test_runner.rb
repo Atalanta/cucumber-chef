@@ -24,6 +24,7 @@ module Cucumber
         reset_project
         upload_project
 
+        @stdout.puts("Executing Cucumber-Chef Test Runner")
         remote_path = File.join("/", "home", "ubuntu", "cucumber-chef", File.basename(@project_dir), "features")
         cucumber_options = args.flatten.compact.uniq.join(" ")
         command = [ "sudo cucumber", cucumber_options, remote_path ].flatten.compact.join(" ")
@@ -35,26 +36,34 @@ module Cucumber
     private
 
       def reset_project
-        remote_path = File.join("/", "home", "ubuntu", "cucumber-chef")
+        @stdout.print("Cleaning up any previous test runs...")
+        Cucumber::Chef.spinner do
+          remote_path = File.join("/", "home", "ubuntu", "cucumber-chef")
 
-        command = "rm -rf #{remote_path}"
-        @ssh.exec(command)
+          command = "rm -rf #{remote_path}"
+          @ssh.exec(command)
 
-        command = "mkdir -p #{remote_path}"
-        @ssh.exec(command)
+          command = "mkdir -p #{remote_path}"
+          @ssh.exec(command)
+        end
+        @stdout.print("done.\n")
       end
 
       def upload_project
-        config_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
-        cucumber_config_file = File.expand_path(File.join(config_path, "cucumber.yml"))
-        if File.exists?(cucumber_config_file)
-          remote_file = File.join("/", "home", "ubuntu", File.basename(cucumber_config_file))
-          @ssh.upload(cucumber_config_file, remote_file)
-        end
+        @stdout.print("Uploading files required for this test run...")
+        Cucumber::Chef.spinner do
+          config_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
+          cucumber_config_file = File.expand_path(File.join(config_path, "cucumber.yml"))
+          if File.exists?(cucumber_config_file)
+            remote_file = File.join("/", "home", "ubuntu", File.basename(cucumber_config_file))
+            @ssh.upload(cucumber_config_file, remote_file)
+          end
 
-        local_path = @project_dir
-        remote_path = File.join("/", "home", "ubuntu", "cucumber-chef", File.basename(@project_dir))
-        @ssh.upload(local_path, remote_path)
+          local_path = @project_dir
+          remote_path = File.join("/", "home", "ubuntu", "cucumber-chef", File.basename(@project_dir))
+          @ssh.upload(local_path, remote_path)
+        end
+        @stdout.print("done.\n")
       end
 
     end
