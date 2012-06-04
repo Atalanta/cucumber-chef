@@ -210,7 +210,7 @@ This command provides you with a rapid way to connect to either your test lab or
     Last login: Mon Jun  4 07:56:40 2012 from [REDACTED]
     ubuntu@cucumber-chef:~$
 
-Keep in mind the with Amazon's EC2 the base `ubuntu` user is already in the sudoers file; so you can `sudo su -` without needing the password.
+Keep in mind with Amazon's EC2 the base `ubuntu` user is already in the sudoers file; so you can `sudo su -` without needing the password.
 
     ubuntu@cucumber-chef:~$ sudo su -
     root@cucumber-chef:~#
