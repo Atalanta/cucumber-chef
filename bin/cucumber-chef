@@ -51,8 +51,9 @@ class CucumberChef < Thor
     end
 
     def load_config
-      $logger = Cucumber::Chef::Logger.new(@options.debug?)
-      $logger.level = ((Cucumber::Chef.is_rc? || @options.debug?) ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
+      $logger = Cucumber::Chef::Logger.new
+      $logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
+
       @options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
     end
 
@@ -261,7 +262,6 @@ class CucumberChef < Thor
 ################################################################################
 
   desc "test <project> [cucumber-options]", "Test a project using the cucumber-chef test suite."
-  method_option :debug, :type => :boolean, :desc => "Enabled debug output."
   def test(project, *args)
     load_config
 
