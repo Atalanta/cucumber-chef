@@ -8,17 +8,6 @@ module Cucumber
 
 ################################################################################
 
-      def self.ready?(host)
-        socket = TCPSocket.new(host, 22)
-        ((::IO.select([socket], nil, nil, 1) && socket.gets) ? true : false)
-      rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-        false
-      ensure
-        (socket && socket.close)
-      end
-
-################################################################################
-
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
@@ -26,7 +15,11 @@ module Cucumber
         @config = Hash.new(nil)
       end
 
+################################################################################
+
       def console
+        $logger.debug { "config(#{@config.inspect})" }
+
         command = [ "ssh" ]
         command << [ "-q" ]
         command << [ "-o", "UserKnownHostsFile=/dev/null" ]
@@ -37,16 +30,19 @@ module Cucumber
         command << [ "-o", "ProxyCommand='#{proxy_command}'" ] if @config[:proxy]
         command << "#{@config[:ssh_user]}@#{@config[:host]}"
         command = command.flatten.compact.join(" ")
-        $logger.debug { "console(#{command})" }
+        $logger.debug { "command(#{command})" }
         Kernel.exec(command)
       end
+
+################################################################################
 
       def exec(command, options={})
         options = { :silence => false }.merge(options)
         silence = options[:silence]
 
-        $logger.debug { format("config(#{@config.inspect})", "SSH") }
-        $logger.info { format("command(#{command})", "SSH") }
+        $logger.debug { "config(#{@config.inspect})" }
+        $logger.debug { "options(#{options.inspect})" }
+        $logger.info { "command(#{command})" }
         Net::SSH.start(@config[:host], @config[:ssh_user], ssh_options) do |ssh|
           ssh.open_channel do |chan|
             chan.exec(command) do |ch, success|
@@ -54,13 +50,13 @@ module Cucumber
 
               ch.on_data do |c, data|
                 #data = data.chomp
-                $logger.debug { format(data, "STDOUT") }
+                $logger.debug { data }
                 @stdout.print(data) if !silence
               end
 
               ch.on_extended_data do |c, type, data|
                 #data = data.chomp
-                $logger.debug { format(data, "STDERR") }
+                $logger.debug { data }
                 @stderr.print(data) if !silence
               end
 
@@ -69,65 +65,66 @@ module Cucumber
         end
       end
 
+################################################################################
+
       def upload(local, remote)
-        $logger.debug { format("config(#{@config.inspect})", "SFTP") }
-        $logger.info { format("parameters(#{local},#{remote})", "SFTP") }
+        $logger.debug { "config(#{@config.inspect})" }
+        $logger.info { "parameters(#{local},#{remote})" }
         Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options) do |sftp|
           sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
             case event
             when :open
-              $logger.info { format("upload(#{args[0].local} -> #{args[0].remote})", "SFTP") }
+              $logger.info { "upload(#{args[0].local} -> #{args[0].remote})" }
             when :close
-              $logger.debug { format("close(#{args[0].remote})", "SFTP") }
+              $logger.debug { "close(#{args[0].remote})" }
             when :mkdir
-              $logger.debug { format("mkdir(#{args[0]})", "SFTP") }
+              $logger.debug { "mkdir(#{args[0]})" }
             when :put
-              $logger.debug { format("put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}", "SFTP") }
+              $logger.debug { "put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}" }
             when :finish
-              $logger.info { format("finish", "SFTP") }
+              $logger.info { "finish" }
             end
           end
         end
       end
 
+################################################################################
+
       def download(remote, local)
-        $logger.debug { format("config(#{@config.inspect})", "SFTP") }
-        $logger.info { format("parameters(#{remote},#{local})", "SFTP") }
+        $logger.debug { "config(#{@config.inspect})" }
+        $logger.info { "parameters(#{remote},#{local})" }
         Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options) do |sftp|
           sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
             case event
             when :open
-              $logger.info { format("download(#{args[0].remote} -> #{args[0].local})", "SFTP") }
+              $logger.info { "download(#{args[0].remote} -> #{args[0].local})" }
             when :close
-              $logger.debug { format("close(#{args[0].local})", "SFTP") }
+              $logger.debug { "close(#{args[0].local})" }
             when :mkdir
-              $logger.debug { format("mkdir(#{args[0]})", "SFTP") }
+              $logger.debug { "mkdir(#{args[0]})" }
             when :get
-              $logger.debug { format("get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}", "SFTP") }
+              $logger.debug { "get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}" }
             when :finish
-              $logger.info { format("finish", "SFTP") }
+              $logger.info { "finish" }
             end
           end
         end
       end
 
 
+################################################################################
     private
-
-      def format(message, subsystem=nil)
-        subsystem = [ "::", subsystem ].join if subsystem
-        message = [ "[", @config[:host], subsystem, "]", " ", message ].flatten.compact.join
-        message
-      end
+################################################################################
 
       def proxy_command
+        $logger.debug { "config(#{@config.inspect})" }
+
         if !@config[:identity_file]
           message = "You must specify an identity file in order to SSH proxy."
           $logger.fatal { message }
           raise SSHError, message
         end
 
-        $logger.debug { "@config(#{@config.inspect})" }
         command = ["ssh"]
         command << [ "-q" ]
         command << [ "-o", "UserKnownHostsFile=/dev/null" ]
@@ -142,8 +139,10 @@ module Cucumber
         command
       end
 
+################################################################################
+
       def ssh_options
-        $logger.debug { "@config(#{@config.inspect})" }
+        $logger.debug { "config(#{@config.inspect})" }
         options = {}
         options.merge!(:password => @config[:ssh_password]) if @config[:ssh_password]
         options.merge!(:keys => @config[:identity_file]) if @config[:identity_file]
@@ -153,6 +152,8 @@ module Cucumber
         $logger.debug { "options(#{options.inspect})" }
         options
       end
+
+################################################################################
 
     end
 
