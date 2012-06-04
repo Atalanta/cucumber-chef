@@ -80,8 +80,7 @@ After tunning set up, which takes about 15 minutes, you'll have a fully funtioni
 * The ability to run tests against LXC containers
 * A dedicated environment for certain kinds of testing scenarios
 
-The next stage is to set up a project.  A project is simply a directory structure for containing your cucumber features and steps, already set up with an appropriate environment to make use of the step definitions provided with Cucumber-Chef.  Cucumber-chef provides a task which will create a the directory for you, and populate it with a README and an example feature and step.  These represent futher documentation, and provide a model and steps to get you up and running with your testing as quickly as possible.
-
+The next stage is to set up a project.  A project is simply a directory structure for containing your cucumber features and steps, already set up with an appropriate environment to make use of the step definitions provided with Cucumber-Chef.  Cucumber-chef provides a task which will create a the directory for you, and populate it with a README and an example feature and steps.  These represent futher documentation, and provide a model and steps to get you up and running with your testing as quickly as possible.
 
     $ cd /path/to/chef-repo
     $ cucumber-chef create myproject
