@@ -141,7 +141,7 @@ module Cucumber
       def render_knife_rb
         @stdout.print("Building 'cc-knife' configuration...")
         Cucumber::Chef.spinner do
-          template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "chef", "knife-rb.erb"))
+          template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb"))
           knife_rb = File.expand_path(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "knife.rb"))
 
           context = { :chef_server => @server.public_ip_address }
