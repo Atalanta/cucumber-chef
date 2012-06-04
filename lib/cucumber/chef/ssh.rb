@@ -27,7 +27,7 @@ module Cucumber
         command << [ "-o", "KeepAlive=yes" ]
         command << [ "-o", "ServerAliveInterval=60" ]
         command << [ "-i", @config[:identity_file] ] if @config[:identity_file]
-        command << [ "-o", "ProxyCommand='#{proxy_command}'" ] if @config[:proxy]
+        command << [ "-o", "ProxyCommand=\"#{proxy_command}\"" ] if @config[:proxy]
         command << "#{@config[:ssh_user]}@#{@config[:host]}"
         command = command.flatten.compact.join(" ")
         $logger.debug { "command(#{command})" }
