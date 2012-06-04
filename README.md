@@ -64,15 +64,15 @@ Once installed, you can run `cucumber-chef` on the command line to get an overvi
 
     $ cucumber-chef
     Tasks:
-      cucumber-chef displayconfig                      # Display the current cucumber-chef config
+      cucumber-chef create <project>                   # Create a project template for testing an infrastructure.
+      cucumber-chef displayconfig                      # Display the current cucumber-chef config.
       cucumber-chef help [TASK]                        # Describe available tasks or one specific task
-      cucumber-chef info                               # Display information about the current test labs
+      cucumber-chef info                               # Display information about the current test lab.
       cucumber-chef init                               # Initalize cucumber-chef configuration
-      cucumber-chef project <project name>             # Create a project template for testing an infrastructure
       cucumber-chef setup                              # Setup cucumber-chef test lab in Amazon EC2
-      cucumber-chef ssh [container]                    # SSH to cucumber-chef test lab or LXC [container] if specified
+      cucumber-chef ssh [container]                    # SSH to cucumber-chef test lab or [container] if specified.
       cucumber-chef teardown                           # Teardown cucumber-chef test lab in Amazon EC2
-      cucumber-chef test <project> [cucumber-options]  # Run the cucumber-chef test suite.
+      cucumber-chef test <project> [cucumber-options]  # Test a project using the cucumber-chef test suite.
 
 After tunning set up, which takes about 15 minutes, you'll have a fully funtioning platform available for you to use.  Let's just quickly review what that means.  You will have an EC2 machine, fully managed by Chef, and providing the following:
 
@@ -84,16 +84,16 @@ The next stage is to set up a project.  A project is simply a directory structur
 
 
     $ cd /path/to/chef-repo
-    $ cucumber-chef project example
+    $ cucumber-chef create myproject
 
-This will create a directory, cucumber-chef, and a subdirectory, example.
+This will create a directory, cucumber-chef, and a subdirectory, `myproject`.
 
-    └── example
+    └── myproject
         ├── README
         └── features
-            ├── example.feature
+            ├── myproject.feature
             ├── step_definitions
-            │   └── example_step.rb
+            │   └── myproject_steps.rb
             └── support
                 └── env.rb
 
@@ -173,8 +173,8 @@ You can now pass in options for cucumber or even setup profiles via `cucumber.ym
 
 To take advantage of cucumber profiles, create a `cucumber.yml` configuration file in your `.cucumber-chef` directory off your chef-repo.  In this file you can take full advantage of the Cucumber profiles as definied on their wiki, https://github.com/cucumber/cucumber/wiki/cucumber.yml.
 
-    .cucumber-chef/
-    └── cucumber.yml
+    └── .cucumber-chef/
+        └── cucumber.yml
 
 Here is an example `cucumber.yml` which turns on colored output, verbosity and full backtraces for all test runs:
 
