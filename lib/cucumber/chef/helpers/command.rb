@@ -27,11 +27,11 @@ module Cucumber::Chef::Helpers::Command
     output = %x(ssh #{name} '#{command}' 2>&1)
     raise "command_run_remote(#{command}) failed (#{$?})" if ($? != expected_exit_code)
     output
-  rescue RuntimeError => e
-    if $? == 65280
-      puts "Exit Code #{$?}: Retrying..."
-      retry
-    end
+#  rescue RuntimeError => e
+#    if $? == 65280
+#      puts "Exit Code #{$?}: Retrying..."
+#      retry
+#    end
   end
 
 ################################################################################
