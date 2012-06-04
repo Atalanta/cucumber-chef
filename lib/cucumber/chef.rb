@@ -2,6 +2,8 @@ require 'readline'
 require 'socket'
 require 'stringio'
 
+################################################################################
+
 require 'chef'
 require 'fog'
 require 'json'
@@ -11,21 +13,12 @@ require 'net/ssh/proxy/command'
 require 'net/sftp'
 require 'ubuntu_ami'
 
+################################################################################
+
 module Cucumber
   module Chef
 
     class Error < StandardError; end
-
-    autoload :Command, 'cucumber/chef/command'
-    autoload :Config, 'cucumber/chef/config'
-    autoload :Bootstrap, 'cucumber/chef/bootstrap'
-    autoload :Logger, 'cucumber/chef/logger'
-    autoload :Provisioner, 'cucumber/chef/provisioner'
-    autoload :SSH, 'cucumber/chef/ssh'
-    autoload :TCPSocket, 'cucumber/chef/tcp_socket'
-    autoload :Template, 'cucumber/chef/template'
-    autoload :TestLab, 'cucumber/chef/test_lab'
-    autoload :TestRunner, 'cucumber/chef/test_runner'
 
     require 'cucumber/chef/utility'
     extend(Cucumber::Chef::Utility)
@@ -33,11 +26,18 @@ module Cucumber
   end
 end
 
-begin
-  require 'cucumber/chef/version'
-rescue LoadError => e
-  dep = e.message.split.last
-  puts "You don't appear to have #{dep} installed."
-  puts "Perhaps run `bundle install` or `gem install #{dep}`?"
-  exit 2
-end
+################################################################################
+
+require 'cucumber/chef/bootstrap'
+require 'cucumber/chef/command'
+require 'cucumber/chef/config'
+require 'cucumber/chef/logger'
+require 'cucumber/chef/provisioner'
+require 'cucumber/chef/ssh'
+require 'cucumber/chef/tcp_socket'
+require 'cucumber/chef/template'
+require 'cucumber/chef/test_lab'
+require 'cucumber/chef/test_runner'
+require 'cucumber/chef/version'
+
+################################################################################
