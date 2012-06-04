@@ -6,6 +6,8 @@ module Cucumber
     class Command
       attr_accessor :stdout, :stderr, :stdin
 
+################################################################################
+
       def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
@@ -13,6 +15,8 @@ module Cucumber
         @knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
         @knife = "/usr/bin/env knife" unless @knife
       end
+
+################################################################################
 
       def run(command, options={})
         options = { :exit_code => 0, :silence => false }.merge(options)
@@ -34,10 +38,14 @@ module Cucumber
         output
       end
 
+################################################################################
+
       def knife(command, options={})
         knife_rb = File.expand_path(File.join(Dir.pwd, ".cucumber-chef", "knife.rb"))
         run("#{@knife} #{command.flatten.compact.join(" ")} -c #{knife_rb}  --color -n", options)
       end
+
+################################################################################
 
     end
 
