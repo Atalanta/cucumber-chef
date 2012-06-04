@@ -19,6 +19,7 @@ module Cucumber
     autoload :Command, 'cucumber/chef/command'
     autoload :Config, 'cucumber/chef/config'
     autoload :Bootstrap, 'cucumber/chef/bootstrap'
+    autoload :Logger, 'cucumber/chef/logger'
     autoload :Provisioner, 'cucumber/chef/provisioner'
     autoload :SSH, 'cucumber/chef/ssh'
     autoload :Template, 'cucumber/chef/template'
