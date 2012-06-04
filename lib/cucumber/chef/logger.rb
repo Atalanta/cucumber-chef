@@ -4,18 +4,16 @@ module Cucumber
     class LoggerError < Error; end
 
     class Logger < ::Logger
-      attr_accessor :stdout, :stderr, :stdin
-
-      SEVERITIES = Severity.constants.inject([]) {|arr,c| arr[Severity.const_get(c)] = c; arr}
+      SEVERITIES = Severity.constants.inject([]) {|arr,c| arr[Severity.const_get(c)] = c; arr} unless const_defined?(:SEVERITIES)
 
 ################################################################################
 
-      def initialize
+      def initialize(file=nil)
         config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
         FileUtils.mkdir_p(config_path)
-        log_file = File.join(config_path, "cucumber-chef.log")
+        file = (file || File.join(config_path, "cucumber-chef.log"))
 
-        super(log_file, 7, (1024 * 1024))
+        super(file, 7, (1024 * 1024))
         set_log_level
       end
 
