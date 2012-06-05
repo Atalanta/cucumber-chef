@@ -37,7 +37,7 @@ module Cucumber::Chef::Helpers::Server
       container_destroy(name) if container_exists?(name)
       attributes = { :ip => generate_ip,
                      :mac => generate_mac,
-                     :persist => false }.merge(attributes)
+                     :persist => true }.merge(attributes)
     end
     $servers = ($servers || Hash.new(nil)).merge(name => attributes)
 
