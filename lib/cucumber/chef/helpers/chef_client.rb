@@ -35,7 +35,7 @@ module Cucumber::Chef::Helpers::ChefClient
 
   # call this before chef_run_client
   def chef_set_client_attributes(name, attributes={})
-    @chef_client_attributes = attributes.merge(:tags => ["cucumber-chef-container"])
+    @chef_client_attributes = @chef_client_attributes.merge(attributes)
   end
 
 ################################################################################
