@@ -31,10 +31,10 @@ module Cucumber::Chef::Helpers::Server
 ################################################################################
 
   def server_create(name, attributes={})
-    if (attributes[:persist] && $servers[name])
+    if ((attributes[:persist] && $servers[name]) || ($servers[name] && $servers[name][:persist]))
       attributes = $servers[name]
     else
-      container_destroy(name) if container_exists?(name)
+      server_destroy(name) if container_exists?(name)
       attributes = { :ip => generate_ip,
                      :mac => generate_mac,
                      :persist => true }.merge(attributes)
