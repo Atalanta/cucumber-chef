@@ -1,14 +1,50 @@
-Feature: Do awesome stuff with <%= @project %>
-  In order to <express the business reason for the existence of the <%= @project %> project>
-  As a <kind of stakeholder>
-  I want to <do something of value>
+Feature: Do awesome stuff with Cucumber-Chef
+  In order to learn how to develop test driven infrastructure
+  As an infrastructure developer
+  I want to better understand how to use Cucumber-Chef
 
-Background:
-  * a new server has been provisioned
-  * the <%= @project %> role has been applied
-  * Chef has been run
+  Background:
+    * I have a server called "myserver"
+    * it is non-persistant
+    * it has an IP address of 192.168.10.10
+    * the server has been provisioned
+    * the invalid role has been applied
+    * the chef-client has been run
 
-Scenario: Concrete examples embodying this feature
-  Given <some initial state> 
-  When <I tickle/prod/poke/frob>
-  Then <the resulting state should be as I want>
+  Scenario: Can connect to the provisioned server via SSH password authentication
+    Given I have no public keys set
+    When I ssh to "myserver" with the following credentials:
+      | username | password |
+      | root     | root     |
+    And I run "hostname"
+    Then I should see "myserver" in the output
+
+  Scenario: Default root shell is bash
+    Given I have no public keys set
+    When I ssh to "myserver" with the following credentials:
+      | username | password |
+      | root     | root     |
+    And I run "echo $SHELL"
+    Then I should see "bash" in the output
+
+  Scenario: Default gateway and resolver are using Cucumber-Chef Test Lab
+    Given I have no public keys set
+    When I ssh to "myserver" with the following credentials:
+      | username | password |
+      | root     | root     |
+    And I run "route -n | grep 'UG'"
+      Then I should see "192.168.255.254" in the output
+    And I run "cat /etc/resolv.conf"
+      Then I should see "192.168.255.254" in the output
+      And I should see "8.8.8.8" in the output
+      And I should see "8.8.4.4" in the output
+
+  Scenario: An interface is configured with my IP address
+    Given I have no public keys set
+    When I ssh to "myserver" with the following credentials:
+      | username | password |
+      | root     | root     |
+    And I run "ifconfig eth0"
+      Then I should see the IP of "myserver" in the output
+      And I should see the MAC of "myserver" in the output
+

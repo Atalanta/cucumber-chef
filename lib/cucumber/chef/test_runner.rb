@@ -28,8 +28,8 @@ module Cucumber
 
 ################################################################################
 
-      def initialize(project_dir, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-        @project_dir = project_dir
+      def initialize(features_path, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
+        @features_path = features_path
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
@@ -50,7 +50,7 @@ module Cucumber
         upload_project
 
         @stdout.puts("Executing Cucumber-Chef Test Runner")
-        remote_path = File.join("/", "home", "ubuntu", "cucumber-chef", File.basename(@project_dir), "features")
+        remote_path = File.join("/", "home", "ubuntu", "features")
         cucumber_options = args.flatten.compact.uniq.join(" ")
         command = [ "sudo cucumber", cucumber_options, remote_path ].flatten.compact.join(" ")
 
@@ -65,13 +65,16 @@ module Cucumber
       def reset_project
         @stdout.print("Cleaning up any previous test runs...")
         Cucumber::Chef.spinner do
-          remote_path = File.join("/", "home", "ubuntu", "cucumber-chef")
+          remote_path = File.join("/", "home", "ubuntu", "features")
 
           command = "rm -rf #{remote_path}"
-          @ssh.exec(command)
+          @ssh.exec(command, :silence => true)
 
-          command = "mkdir -p #{remote_path}"
-          @ssh.exec(command)
+          command = "rm -f #{remote_path}/cucumber.yml"
+          @ssh.exec(command, :silence => true)
+
+          #command = "mkdir -p #{remote_path}"
+          #@ssh.exec(command, :silence => true)
         end
         @stdout.print("done.\n")
       end
@@ -88,8 +91,8 @@ module Cucumber
             @ssh.upload(cucumber_config_file, remote_file)
           end
 
-          local_path = @project_dir
-          remote_path = File.join("/", "home", "ubuntu", "cucumber-chef", File.basename(@project_dir))
+          local_path = File.join(@features_path, "/")
+          remote_path = File.join("/", "home", "ubuntu", "features")
           @ssh.upload(local_path, remote_path)
         end
         @stdout.print("done.\n")
