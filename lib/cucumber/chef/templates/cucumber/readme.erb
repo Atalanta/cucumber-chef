@@ -4,13 +4,11 @@ Your general workflow will be to write cucumber features that describe the inten
 
 You will then want to create a cookbook, and write recipes that make your tests pass.  Upload your cookbook to your Hosted Chef-Server using 'knife' or the Cucumber-Chef Test Lab OS Chef-Server using the 'cc-knife' tool, and then run the tests with:
 
-Then run your tests with:
+cucumber-chef test [cucumber options]
 
-cucumber-chef test <project> [cucumber options]
+For an example feature, take a look at <chef-repo>/features/<%= @project %>/<%= @project %>.feature
 
-For an example feature, take a look at ./<%= @project %>/features/example.feature
-
-For an example step definition, look at ./<%= @project %>/features/example.feature
+For an example step definition, look at <chef-repo>/features/<%= @project %>/step_definitions/<%= @project %>_steps.rb
 
 Cucumber-Chef Test Lab Network
 ==============================

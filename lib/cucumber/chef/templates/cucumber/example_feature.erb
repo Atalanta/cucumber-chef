@@ -1,4 +1,5 @@
-Feature: Do test driven infrastructure with Cucumber-Chef
+@<%= @project %>
+Feature: Perform test driven infrastructure with Cucumber-Chef
   In order to learn how to develop test driven infrastructure
   As an infrastructure developer
   I want to better understand how to use Cucumber-Chef
@@ -7,28 +8,20 @@ Feature: Do test driven infrastructure with Cucumber-Chef
     * I have a server called <%= @project %>
     * <%= @project %> has been provisioned
     * the chef-client has been run on <%= @project %>
-
-  Scenario: Can connect to the provisioned server via SSH password authentication
-    Given I have no public keys set
-    When I ssh to <%= @project %> with the following credentials:
+    * I have no public keys set
+    * I ssh to <%= @project %> with the following credentials:
       | username | password |
       | root     | root     |
+
+  Scenario: Can connect to the provisioned server via SSH password authentication
     And I run "hostname"
     Then I should see "<%= @project %>" in the output
 
   Scenario: Default root shell is bash
-    Given I have no public keys set
-    When I ssh to <%= @project %> with the following credentials:
-      | username | password |
-      | root     | root     |
     And I run "echo $SHELL"
     Then I should see "bash" in the output
 
   Scenario: Default gateway and resolver are using Cucumber-Chef Test Lab
-    Given I have no public keys set
-    When I ssh to <%= @project %> with the following credentials:
-      | username | password |
-      | root     | root     |
     And I run "route -n | grep 'UG'"
       Then I should see "192.168.255.254" in the output
     And I run "cat /etc/resolv.conf"
@@ -37,19 +30,11 @@ Feature: Do test driven infrastructure with Cucumber-Chef
       And I should see "8.8.4.4" in the output
 
   Scenario: Primary interface is configured with my IP address and MAC address
-    Given I have no public keys set
-    When I ssh to <%= @project %> with the following credentials:
-      | username | password |
-      | root     | root     |
     And I run "ifconfig eth0"
       Then I should see the IP of <%= @project %> in the output
       And I should see the MAC of <%= @project %> in the output
 
   Scenario: Local interface is not configured with my IP address or MAC address
-    Given I have no public keys set
-    When I ssh to <%= @project %> with the following credentials:
-      | username | password |
-      | root     | root     |
     And I run "ifconfig lo"
       Then I should see "127.0.0.1" in the output
       And I should not see the IP of <%= @project %> in the output
