@@ -2,13 +2,13 @@ Given /^I have no public keys set$/ do
   @auth_methods = %w(password)
 end
 
-Then /^I can ssh to "([^\"]*)" with the following credentials:$/ do |host, table|
+Then /^I can ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
   @auth_methods ||= %w(publickey password)
 
   credentials = table.hashes
   credentials.each do |creds|
     lambda {
-      Net::SSH.start(host, creds["username"], :password => creds["password"], :auth_methods => @auth_methods)
+      Net::SSH.start($servers[hostname][:ip], creds["username"], :password => creds["password"], :auth_methods => @auth_methods)
     }.should_not raise_error(Net::SSH::AuthenticationFailed)
   end
 end
@@ -31,7 +31,7 @@ Then /^I can ssh to the following hosts with these credentials:$/ do |table|
     end
 
     lambda {
-      @connection = Net::SSH.start(session["hostname"],
+      @connection = Net::SSH.start($servers[session["hostname"]][:ip],
                                    session["username"],
                                    :password => session["password"],
                                    :auth_methods => session_auth_methods,
@@ -65,7 +65,7 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   end
 
   lambda {
-    @connection = Net::SSH.start(hostname,
+    @connection = Net::SSH.start($servers[hostname][:ip],
                                  session["username"],
                                  :password => session["password"],
                                  :auth_methods => session_auth_methods,
@@ -73,10 +73,14 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   }.should_not raise_error
 end
 
-When /^I run "([^\"]*)"$/ do |command|
+And /^I run "([^\"]*)"$/ do |command|
   @output = @connection.exec!(command)
 end
 
 Then /^I should see "([^\"]*)" in the output$/ do |string|
   @output.should =~ /#{string}/
+end
+
+Then /^I should the (.*) of "([^\"]*)" in the output$/ do |key, name|
+  @output.should =~ /#{$servers[name][key.downcase.to_sym]}/
 end
