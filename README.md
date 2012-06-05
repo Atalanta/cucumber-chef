@@ -40,7 +40,7 @@ Depending on your local setup (ie whether you're using RVM or rbenv, or distribu
 
 If you want to try a development version, simply clone this repo, and build the gem yourself:
 
-    $ git clone git://github.com/Atalanta/cucumber-chef -b 2.0.0.rc1
+    $ git clone git://github.com/Atalanta/cucumber-chef -b BRANCH
     $ cd cucumber-chef
     $ bundle
     $ rake build
