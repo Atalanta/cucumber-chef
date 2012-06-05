@@ -77,18 +77,20 @@ And /^I run "([^\"]*)"$/ do |command|
   @output = @connection.exec!(command)
 end
 
-Then /^I should see "([^\"]*)" in the output$/ do |string|
-  @output.should =~ /#{string}/
+Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
+  expected = !boolean
+  if expected
+    @output.should =~ /#{string}/
+  else
+    @output.should_not =~ /#{string}/
+  end
 end
 
-Then /^I should not see "([^\"]*)" in the output$/ do |string|
-  @output.should_not =~ /#{string}/
-end
-
-Then /^I should see the (.*) of (.*) in the output$/ do |key, name|
-  @output.should =~ /#{$servers[name][key.downcase.to_sym]}/
-end
-
-Then /^I should not see the (.*) of (.*) in the output$/ do |key, name|
-  @output.should_not =~ /#{$servers[name][key.downcase.to_sym]}/
+Then /^I should( not)? see the (.*) of (.*) in the output$/ do |boolean, key, name|
+  expected = !boolean
+  if expected
+    @output.should =~ /#{$servers[name][key.downcase.to_sym]}/
+  else
+    @output.should_not =~ /#{$servers[name][key.downcase.to_sym]}/
+  end
 end
