@@ -52,7 +52,7 @@ module Cucumber
         @stdout.puts("Executing Cucumber-Chef Test Runner")
         remote_path = File.join("/", "home", "ubuntu", "features")
         cucumber_options = args.flatten.compact.uniq.join(" ")
-        command = [ "sudo cucumber", cucumber_options, remote_path ].flatten.compact.join(" ")
+        command = [ "cd #{remote_path} && sudo cucumber", cucumber_options, "--exclude README*", "--exclude *.yml", "." ].flatten.compact.join(" ")
 
         @ssh.exec(command)
       end
@@ -69,12 +69,6 @@ module Cucumber
 
           command = "rm -rf #{remote_path}"
           @ssh.exec(command, :silence => true)
-
-          command = "rm -f #{remote_path}/cucumber.yml"
-          @ssh.exec(command, :silence => true)
-
-          #command = "mkdir -p #{remote_path}"
-          #@ssh.exec(command, :silence => true)
         end
         @stdout.print("done.\n")
       end
@@ -84,16 +78,16 @@ module Cucumber
       def upload_project
         @stdout.print("Uploading files required for this test run...")
         Cucumber::Chef.spinner do
+          local_path = File.join(@features_path)
+          remote_path = File.join("/", "home", "ubuntu", "features")
+          @ssh.upload(local_path, remote_path)
+
           config_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
           cucumber_config_file = File.expand_path(File.join(config_path, "cucumber.yml"))
           if File.exists?(cucumber_config_file)
-            remote_file = File.join("/", "home", "ubuntu", File.basename(cucumber_config_file))
+            remote_file = File.join("/", "home", "ubuntu", "features", File.basename(cucumber_config_file))
             @ssh.upload(cucumber_config_file, remote_file)
           end
-
-          local_path = File.join(@features_path, "/")
-          remote_path = File.join("/", "home", "ubuntu", "features")
-          @ssh.upload(local_path, remote_path)
         end
         @stdout.print("done.\n")
       end
