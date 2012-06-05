@@ -67,6 +67,13 @@ module Cucumber::Chef::Helpers::Container
 
 ################################################################################
 
+  def container_running?(name)
+    status = command_run_local("lxc-info -n #{name} 2>&1")
+    status.include?("RUNNING")
+  end
+
+################################################################################
+
   def container_config_network(name)
     lxc_network_config = File.join("/etc/lxc", name)
     File.open(lxc_network_config, 'w') do |f|

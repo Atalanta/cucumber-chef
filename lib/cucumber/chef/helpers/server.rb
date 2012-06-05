@@ -23,8 +23,8 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
-  def log(name, ip, message)
-    STDOUT.puts("\033[34m  * #{ip}: (LXC) '#{name}' #{message}\033[0m")
+  def log(name, message)
+    STDOUT.puts("\033[34m    * \033[1m#{name}\033[0m\033[34m is being #{message}\033[0m")
     STDOUT.flush if STDOUT.respond_to?(:flush)
   end
 
@@ -41,20 +41,26 @@ module Cucumber::Chef::Helpers::Server
     end
     $servers = ($servers || Hash.new(nil)).merge(name => attributes)
 
-    log(name, $servers[name][:ip], "Building") if $servers[name]
+    if !server_running?(name)
+      log(name, "provisioned") if $servers[name]
 
-    test_lab_config_dhcpd
-    container_config_network(name)
-    container_create(name)
-    Cucumber::Chef::TCPSocket.new($servers[name][:ip], 22).wait
-
-    log(name, $servers[name][:ip], "Ready") if $servers[name]
+      test_lab_config_dhcpd
+      container_config_network(name)
+      container_create(name)
+      Cucumber::Chef::TCPSocket.new($servers[name][:ip], 22).wait
+    end
   end
 
   def server_destroy(name)
-    log(name, $servers[name][:ip], "Destroy") if $servers[name]
+    log(name, "destroyed") if $servers[name]
 
     container_destroy(name)
+  end
+
+################################################################################
+
+  def server_running?(name)
+    container_running?(name)
   end
 
 ################################################################################

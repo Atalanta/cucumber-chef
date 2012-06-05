@@ -63,7 +63,7 @@ module Cucumber::Chef::Helpers::ChefClient
     attributes_json = File.join("/", container_root(name), "etc", "chef", "attributes.json")
     FileUtils.mkdir_p(File.dirname(attributes_json))
     File.open(attributes_json, 'w') do |f|
-      f.puts(@chef_client_attributes.to_json)
+      f.puts((@chef_client_attributes || {}).to_json)
     end
 
     command_run_local("cp /etc/chef/validation.pem #{container_root(name)}/etc/chef/ 2>&1")

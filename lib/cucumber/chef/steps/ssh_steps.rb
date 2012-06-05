@@ -2,7 +2,7 @@ Given /^I have no public keys set$/ do
   @auth_methods = %w(password)
 end
 
-Then /^I can ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
+Then /^I can ssh to (.*) with the following credentials:$/ do |hostname, table|
   @auth_methods ||= %w(publickey password)
 
   credentials = table.hashes
@@ -53,7 +53,7 @@ Given /^I have the following public keys:$/ do |table|
   @auth_methods << "publickey"
 end
 
-When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
+When /^I ssh to (.*) with the following credentials:$/ do |hostname, table|
   @keys = []
   @auth_methods ||= %w(password)
   session = table.hashes.first
@@ -81,6 +81,14 @@ Then /^I should see "([^\"]*)" in the output$/ do |string|
   @output.should =~ /#{string}/
 end
 
-Then /^I should the (.*) of "([^\"]*)" in the output$/ do |key, name|
+Then /^I should not see "([^\"]*)" in the output$/ do |string|
+  @output.should_not =~ /#{string}/
+end
+
+Then /^I should see the (.*) of (.*) in the output$/ do |key, name|
   @output.should =~ /#{$servers[name][key.downcase.to_sym]}/
+end
+
+Then /^I should not see the (.*) of (.*) in the output$/ do |key, name|
+  @output.should_not =~ /#{$servers[name][key.downcase.to_sym]}/
 end

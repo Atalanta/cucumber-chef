@@ -21,7 +21,7 @@ Before do
 
   # cleanup previous lxc containers on first run
   if ($servers.size == 0)
-    STDOUT.puts("  * Destroying All LXC Containers")
+    STDOUT.puts("\033[34m    * \033[1mall\033[0m\033[34m servers are being destroyed\033[0m")
     STDOUT.flush if STDOUT.respond_to?(:flush)
 
     servers.each do |name|

@@ -29,22 +29,19 @@ class CucumberChef < Thor
     end
 
     def create_project(project)
+      @project = project
       source_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber", "chef", "templates", "cucumber"))
       destination_dir = Cucumber::Chef.locate_parent(".chef")
 
-      puts source_dir
-      puts destination_dir
-
       CucumberChef.source_root source_dir
       templates = {
-        "readme.erb" => "features/README.cucumber-chef",
+        "readme.erb" => "README.cucumber-chef",
         "example_feature.erb" => "features/#{project}.feature",
         "example_steps.erb" => "features/step_definitions/#{project}_steps.rb",
         "env.rb" => "features/support/env.rb"
       }
 
       templates.each do |source, destination|
-        #puts File.join(destination_dir, destination)
         template(source, File.join(destination_dir, destination))
       end
     end
