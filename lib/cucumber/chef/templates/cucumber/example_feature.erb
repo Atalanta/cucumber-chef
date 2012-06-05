@@ -5,8 +5,6 @@ Feature: Do test driven infrastructure with Cucumber-Chef
 
   Background:
     * I have a server called <%= @project %>
-    * <%= @project %> is persistant
-    * <%= @project %> has an IP address of 192.168.10.10
     * <%= @project %> has been provisioned
     * the chef-client has been run on <%= @project %>
 
