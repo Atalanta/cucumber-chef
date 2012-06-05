@@ -172,6 +172,48 @@ Here's an example `Scenario` section you might have to test if the chef-client i
 
 See the section below label *Example Test Run* for more examples.
 
+##### List of Provisioning Steps
+
+* I have a server called (server)
+* (server) is (persistant|non-persistant)
+* (server) has an IP address of (ip)
+* (server) has a MAC address of (mac)
+* (server) has been provisioned
+* the (role) role has been added to the (server) run list
+* the (recipe) recipe has been added to the (server) run list
+* the chef-client has been run on (server)
+
+#### SSH Steps
+
+Here is how you might setup password authentication SSH access to a server:
+
+        * I have no public keys set
+        * I ssh to devopserver with the following credentials:
+          | username | password |
+          | root     | root     |
+
+##### List of SSH Steps
+
+* I have no public keys set
+
+Sets the authentication method to password.
+
+* I ssh to (server) with the following credentials:
+  | username | password |
+  | root     | root     |
+
+Starts an SSH session to the server (server).
+
+* I run "(command)"
+
+Executes (command) over the previously established SSH session on the server (server).
+
+* I should see "(expected)" in the output
+* I should not see "(not-expected)" in the output
+* I should see the (ip|mac) of (server) in the output
+* I should not see the (ip|mac) of (server) in the output
+
+
 #### Cucumber Before Hook Centric Helpers
 
 * `chef_set_client_config(config={})`
