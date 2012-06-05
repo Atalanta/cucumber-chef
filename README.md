@@ -174,18 +174,41 @@ See the section below label *Example Test Run* for more examples.
 
 ##### List of Provisioning Steps
 
-* I have a server called (server)
-* (server) is (persistant|non-persistant)
-* (server) has an IP address of (ip)
-* (server) has a MAC address of (mac)
-* (server) has been provisioned
-* the (role) role has been added to the (server) run list
-* the (recipe) recipe has been added to the (server) run list
-* the chef-client has been run on (server)
+Create a server profile:
+
+    I have a server called (server)
+
+Set a (server) to persist or not:
+
+    (server) is (persistant|non-persistant)
+
+Assign (server) a specific IP address (must be on the test lab network segment):
+
+    (server) has an IP address of (ip)
+
+Assign (server) a specific MAC address:
+
+    (server) has a MAC address of (mac)
+
+Initiate the provision of a (server):
+
+    (server) has been provisioned
+
+Add a role to the chef-client run list:
+
+    the (role) role has been added to the (server) run list
+
+Add a recipe to the chef-client run list:
+
+    the (recipe) recipe has been added to the (server) run list
+
+Run the chef-client:
+
+    the chef-client has been run on (server)
 
 #### SSH Steps
 
-Here is how you might setup password authentication SSH access to a server:
+Here is how you might setup and initate an SSH session using password authentication to a server named `devopserver`:
 
         * I have no public keys set
         * I ssh to devopserver with the following credentials:
@@ -194,25 +217,30 @@ Here is how you might setup password authentication SSH access to a server:
 
 ##### List of SSH Steps
 
-* I have no public keys set
+Sets the authentication method to password:
 
-Sets the authentication method to password.
+    I have no public keys set
 
-* I ssh to (server) with the following credentials:
-  | username | password |
-  | root     | root     |
+Start an SSH session to the server (server):
 
-Starts an SSH session to the server (server).
+    I ssh to (server) with the following credentials:
+      | username | password |
+      | root     | root     |
 
-* I run "(command)"
 
-Executes (command) over the previously established SSH session on the server (server).
+Executes (command) over the previously established SSH session on the server (server):
 
-* I should see "(expected)" in the output
-* I should not see "(not-expected)" in the output
-* I should see the (ip|mac) of (server) in the output
-* I should not see the (ip|mac) of (server) in the output
+    I run "(command)"
 
+Check (command) output for an (expected) or (not-expected) string:
+
+    I should see "(expected)" in the output
+    I should not see "(not-expected)" in the output
+
+Check (command) output for existance of or lack of (server) settings:
+
+    I should see the (ip|mac) of (server) in the output
+    I should not see the (ip|mac) of (server) in the output
 
 #### Cucumber Before Hook Centric Helpers
 
