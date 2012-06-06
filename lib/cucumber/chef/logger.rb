@@ -32,9 +32,11 @@ module Cucumber
 ################################################################################
 
       def initialize(file=nil)
-        config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
-        FileUtils.mkdir_p(config_path)
-        file = (file || File.join(config_path, "cucumber-chef.log"))
+        if file
+          config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
+          FileUtils.mkdir_p(config_path)
+          file = File.join(config_path, "cucumber-chef.log")
+        end
 
         super(file, 7, (1024 * 1024))
         set_log_level
