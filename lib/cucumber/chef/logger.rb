@@ -32,7 +32,7 @@ module Cucumber
 ################################################################################
 
       def initialize(file=nil)
-        if file
+        if file.nil?
           config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
           FileUtils.mkdir_p(config_path)
           file = File.join(config_path, "cucumber-chef.log")
