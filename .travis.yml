@@ -14,5 +14,8 @@ notifications:
   irc:
     - "irc.freenode.org#cucumber-chef"
 
+before_script:
+  - mkdir -p $HOME/.chef/
+
 # uncomment this line if your project needs to run something other than `rake`:
 #script: bundle exec rspec spec
