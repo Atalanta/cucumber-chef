@@ -21,10 +21,10 @@
 
 require 'spec_helper'
 
-VALID_RELEASES = %w(maverick)
-VALID_REGIONS = %w(us-west-1 us-east-1 eu-west-1)
-VALID_ARCHS = %w(i386 amd64)
-VALID_DISK_STORES = %w(instance-store ebs)
+VALID_RELEASES = %w( maverick )
+VALID_REGIONS = %w( us-west-1 us-east-1 eu-west-1 )
+VALID_ARCHS = %w( i386 amd64 )
+VALID_DISK_STORES = %w( instance-store ebs )
 
 describe Cucumber::Chef::Config do
 
@@ -140,7 +140,7 @@ describe Cucumber::Chef::Config do
         Cucumber::Chef::Config[:aws][:availability_zone] = "us-west-2a"
         expect{ Cucumber::Chef::Config.verify }.to_not raise_error(Cucumber::Chef::ConfigError)
       end
-    end
+    end if !ENV['CI'] && !ENV['TRAVIS']
 
   end
 
