@@ -71,13 +71,13 @@ module Cucumber
 
               ch.on_data do |c, data|
                 #data = data.chomp
-                $logger.debug { data }
+                $logger.debug { data.chomp }
                 @stdout.print(data) if !silence
               end
 
               ch.on_extended_data do |c, type, data|
                 #data = data.chomp
-                $logger.debug { data }
+                $logger.debug { data.chomp }
                 @stderr.print(data) if !silence
               end
 

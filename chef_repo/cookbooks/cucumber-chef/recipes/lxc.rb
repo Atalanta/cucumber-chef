@@ -19,7 +19,7 @@
 ################################################################################
 
 
-%w( lxc bridge-utils debootstrap dhcp3-server bind9 ntpdate ntp ).each do |p|
+%w( lxc bridge-utils debootstrap isc-dhcp-server bind9 ntpdate ntp ).each do |p|
   package p
 end
 
@@ -31,7 +31,7 @@ service "apparmor"
 
 bash "configure apparmor so dhcp3 can read /etc/bind" do
   code <<-EOH
-cat <<EOF >> /etc/apparmor.d/local/usr.sbin.dhcpd3
+cat <<EOF >> /etc/apparmor.d/local/usr.sbin.dhcpd
 /etc/bind/ r,
 /etc/bind/** r,
 EOF
@@ -52,12 +52,12 @@ end
 service "networking"
 
 execute "add local bind to dhclient" do
-  command "sed -i \"s/#prepend domain-name-servers 127.0.0.1;/prepend domain-name-servers 127.0.0.1;\\nsupersede domain-name \\\"test-lab\\\";\\nsupersede domain-search \\\"test-lab\\\";/\" /etc/dhcp3/dhclient.conf"
+  command "sed -i \"s/#prepend domain-name-servers 127.0.0.1;/prepend domain-name-servers 127.0.0.1;\\nsupersede domain-name \\\"test-lab\\\";\\nsupersede domain-search \\\"test-lab\\\";/\" /etc/dhcp/dhclient.conf"
 
   notifies :restart, "service[networking]"
 
   only_if do
-    %x( cat /etc/dhcp3/dhclient.conf | grep "#prepend domain-name-servers 127.0.0.1;" )
+    %x( cat /etc/dhcp/dhclient.conf | grep "#prepend domain-name-servers 127.0.0.1;" )
     ($? == 0)
   end
 end
@@ -78,7 +78,10 @@ EOF
 
   notifies :restart, "service[networking]"
 
-  not_if "ip link ls dev br0"
+  not_if do
+    %x( cat /etc/network/interfaces | grep "iface br0 inet static" )
+    ($? == 0)
+  end
 end
 
 execute "enable ipv4 packet forwarding" do
@@ -86,7 +89,10 @@ execute "enable ipv4 packet forwarding" do
 
   notifies :restart, "service[networking]"
 
-  not_if "ip link ls dev br0"
+  not_if do
+    %x( sysctl net.ipv4.ip_forward | grep "net.ipv4.ip_forward = 1" )
+    ($? == 0)
+  end
 end
 
 execute "enable nat for outbound traffic" do
@@ -94,7 +100,10 @@ execute "enable nat for outbound traffic" do
 
   notifies :restart, "service[networking]"
 
-  not_if "ip link ls dev br0"
+  not_if do
+    %x( iptables -t nat --list | grep "MASQUERADE" )
+    ($? == 0)
+  end
 end
 
 
@@ -165,41 +174,41 @@ end
 
 
 ################################################################################
-# DHCP3-SERVER
+# ISC-DHCP-SERVER
 ################################################################################
-service "dhcp3-server"
+service "isc-dhcp-server"
 
 file "touch our dhcp3 include file" do
-  path "/etc/dhcp3/test-lab.conf"
+  path "/etc/dhcp/test-lab.conf"
   action :touch
 
-  notifies :restart, "service[dhcp3-server]"
+  notifies :restart, "service[isc-dhcp-server]"
 
-  not_if { File.exists?("/etc/dhcp3/test-lab.conf") }
+  not_if { File.exists?("/etc/dhcp/test-lab.conf") }
 end
 
-template "configure dhcp3-server for test-lab" do
-  path "/etc/dhcp3/dhcpd.conf"
+template "configure isc-dhcp-server for test-lab" do
+  path "/etc/dhcp/dhcpd.conf"
   source "dhcpd-conf.erb"
   owner "root"
   group "root"
   mode "0644"
 
-  notifies :restart, "service[dhcp3-server]"
+  notifies :restart, "service[isc-dhcp-server]"
 
   not_if do
-    %x( cat /etc/dhcp3/dhcpd.conf | grep "\/etc\/dhcp3\/test-lab\.conf" )
+    %x( cat /etc/dhcp/dhcpd.conf | grep "\/etc\/dhcp\/test-lab\.conf" )
     ($? == 0)
   end
 end
 
-execute "configure dhcp3-server listener interface" do
-  command "sed -i \"s/INTERFACES=\\\"\\\"/INTERFACES=\\\"br0\\\"/\" /etc/default/dhcp3-server"
+execute "configure isc-dhcp-server listener interface" do
+  command "sed -i \"s/INTERFACES=\\\"\\\"/INTERFACES=\\\"br0\\\"/\" /etc/default/isc-dhcp-server"
 
-  notifies :restart, "service[dhcp3-server]"
+  notifies :restart, "service[isc-dhcp-server]"
 
   not_if do
-    %x( cat /etc/default/dhcp3-server | grep "INTERFACES=\\\"br0\\\"" )
+    %x( cat /etc/default/isc-dhcp-server | grep "INTERFACES=\\\"br0\\\"" )
     ($? == 0)
   end
 end
@@ -208,22 +217,46 @@ end
 ################################################################################
 # LXC
 ################################################################################
+service "lxc-net"
+service "lxc"
 
-directory "create cgroup mount point" do
-  path "/cgroup"
+#directory "create cgroup mount point" do
+#  path "/cgroup"
+#
+#  not_if { File.exists?("/cgroup") && File.directory?("/cgroup") }
+#end
 
-  not_if { File.exists?("/cgroup") && File.directory?("/cgroup") }
+#mount "mount cgroup device" do
+#  mount_point "/cgroup"
+#  device "cgroup"
+#  fstype "cgroup"
+#  pass 0
+#  action [:mount, :enable]
+
+#  not_if do
+#    %x( mount | grep "cgroup" )
+#    ($? == 0)
+#  end
+#end
+
+execute "set LXC_AUTO to false" do
+  command "sed -i \"s/LXC_AUTO=\\\"true\\\"/LXC_AUTO=\\\"false\\\"/\" /etc/default/lxc"
+
+  notifies :restart, "service[lxc-net]"
+
+  only_if do
+    %x( cat /etc/default/lxc | grep "LXC_AUTO=\\\"true\\\"" )
+    ($? == 0)
+  end
 end
 
-mount "mount cgroup device" do
-  mount_point "/cgroup"
-  device "cgroup"
-  fstype "cgroup"
-  pass 0
-  action [:mount, :enable]
+execute "set USE_LXC_BRIDGE to false" do
+  command "sed -i \"s/USE_LXC_BRIDGE=\\\"true\\\"/USE_LXC_BRIDGE=\\\"false\\\"/\" /etc/default/lxc"
 
-  not_if do
-    %x( mount | grep "cgroup" )
+  notifies :restart, "service[lxc-net]"
+
+  only_if do
+    %x( cat /etc/default/lxc | grep "USE_LXC_BRIDGE=\\\"true\\\"" )
     ($? == 0)
   end
 end
@@ -236,7 +269,7 @@ end
 
 # load the chef client into our distro lxc cache
 install_chef_sh = "/tmp/install-chef.sh"
-distros = %w( ubuntu )
+distros = { "ubuntu" => [ "lucid", "maverick", "natty", "oneiric", "precise" ] }
 arch = (%x( arch ).include?("i686") ? "i386" : "amd64")
 
 template "create lxc initializer container configuration" do
@@ -246,33 +279,35 @@ template "create lxc initializer container configuration" do
   not_if { File.exists?("/etc/lxc/initializer") }
 end
 
-distros.each do |distro|
-  cache_rootfs = File.join("/", "var", "cache", "lxc", distro, "rootfs-#{arch}")
-  initializer_rootfs = File.join("/", "var", "lib", "lxc", "initializer", "rootfs")
+distros.each do |distro, releases|
+  releases.each do |release|
+    cache_rootfs = File.join("/", "var", "cache", "lxc", release, "rootfs-#{arch}")
+    initializer_rootfs = File.join("/", "var", "lib", "lxc", "initializer", "rootfs")
 
-  execute "create the lxc initializer container" do
-    command "lxc-create -n initializer -f /etc/lxc/initializer -t #{distro}"
+    execute "create the lxc initializer container" do
+      command "lxc-create -n initializer -f /etc/lxc/initializer -t #{distro} -- -r #{release}"
 
-    not_if { File.exists?(cache_rootfs) && File.directory?(cache_rootfs) }
-  end
+      not_if { File.exists?(cache_rootfs) && File.directory?(cache_rootfs) }
+    end
 
-  execute "destroy the lxc initializer container" do
-    command "lxc-destroy -n initializer"
+    execute "destroy the lxc initializer container" do
+      command "lxc-destroy -n initializer"
 
-    only_if { File.exists?(initializer_rootfs) && File.directory?(initializer_rootfs) }
-  end
+      only_if { File.exists?(initializer_rootfs) && File.directory?(initializer_rootfs) }
+    end
 
-  template "create opscode omnibus installer in lxc container cache" do
-    path "#{cache_rootfs}#{install_chef_sh}"
-    source "lxc-install-chef.erb"
-    mode "0755"
+    template "create opscode omnibus installer in lxc container cache" do
+      path "#{cache_rootfs}#{install_chef_sh}"
+      source "lxc-install-chef.erb"
+      mode "0755"
 
-    not_if { File.exists?(File.join(cache_rootfs, install_chef_sh)) }
-  end
+      not_if { File.exists?(File.join(cache_rootfs, install_chef_sh)) }
+    end
 
-  execute "install chef-client using omnibus in lxc container cache" do
-    command "chroot #{cache_rootfs} /bin/bash -c '#{install_chef_sh}'"
+    execute "install chef-client using omnibus in lxc container cache" do
+      command "chroot #{cache_rootfs} /bin/bash -c '#{install_chef_sh}'"
 
-    not_if { File.exists?(File.join(cache_rootfs, "opt", "opscode", "bin", "chef-client")) }
+      not_if { File.exists?(File.join(cache_rootfs, "opt", "opscode", "bin", "chef-client")) }
+    end
   end
 end
