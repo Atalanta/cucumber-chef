@@ -56,8 +56,11 @@ module Cucumber::Chef::Helpers::ChefClient
       f.puts("log_level               :#{@chef_client_config[:log_level]}")
       f.puts("log_location            \"#{@chef_client_config[:log_location]}\"")
       f.puts("chef_server_url         \"#{@chef_client_config[:chef_server_url]}\"")
+      f.puts("ssl_verify_mode         :verify_none")
       f.puts("validation_client_name  \"#{@chef_client_config[:validation_client_name]}\"")
       f.puts("node_name               \"#{name}\"")
+      f.puts
+      f.puts("Mixlib::Log::Formatter.show_time = true")
     end
 
     attributes_json = File.join("/", container_root(name), "etc", "chef", "attributes.json")

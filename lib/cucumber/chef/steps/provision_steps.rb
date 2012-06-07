@@ -2,16 +2,24 @@ Given /^I have a server called (.*)$/ do |name|
   @server = (@server || {}).merge(name => Hash.new(nil))
 end
 
-And /^(.*) is (.*)$/ do |name, persistant|
-  @server[name][:persist] = !(persistant =~ /non-persistant/i)
+And /^(.*) is running (.*) (.*)$/ do |name, distro, release|
+  @server[name].merge( :distro => distro, :release => release )
+end
+
+And /^(.*) has (.*) architecture$/ do |name, arch|
+  @server[name].merge( :arch => arch )
+end
+
+And /^(.*) should be (.*)$/ do |name, persistant|
+  @server[name].merge( :persist => !(persistant =~ /non-persistant/i) )
 end
 
 And /^(.*) has an IP address of (.*)$/ do |name, ip|
-  @server[name][:ip] = ip
+  @server[name].merge( :ip => ip )
 end
 
 And /^(.*) has a MAC address of (.*)$/ do |name, mac|
-  @server[name][:mac] = ip
+  @server[name].merge( :mac => ip )
 end
 
 And /^(.*) has been provisioned$/ do |name|

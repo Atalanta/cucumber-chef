@@ -28,8 +28,8 @@ module Cucumber
 
 ################################################################################
 
-      def initialize(host, port)
-        @host, @port = host, port
+      def initialize(host, port, data=nil)
+        @host, @port, @data = host, port, data
 
         if !host
           message = "You must supply a host!"
@@ -48,7 +48,13 @@ module Cucumber
 
       def ready?
         socket = ::TCPSocket.new(@host, @port)
-        ((::IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
+
+        if @data.nil?
+          ((::IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
+        else
+          ((::IO.select(nil, [socket], nil, 5) && socket.write(@data)) ? true : false)
+        end
+
       rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
         false
       ensure

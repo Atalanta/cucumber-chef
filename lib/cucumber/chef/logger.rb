@@ -38,7 +38,8 @@ module Cucumber
           file = File.join(config_path, "cucumber-chef.log")
         end
 
-        super(file, 7, (1024 * 1024))
+        #super(file, 7, (1024 * 1024))
+        super(file)
         set_log_level
       end
 

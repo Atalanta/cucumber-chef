@@ -55,6 +55,8 @@ module Cucumber
         template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-maverick-test-lab.erb"))
 
         bootstrap(template_file)
+        wait_for_chef_server
+
         download_chef_credentials
         render_knife_rb
 
@@ -66,6 +68,8 @@ module Cucumber
         chef_first_run
 
         download_proxy_ssh_credentials
+
+        reboot_test_lab
       end
 
 
@@ -205,6 +209,40 @@ module Cucumber
       end
 
 ################################################################################
+
+      def wait_for_chef_server
+        @stdout.print("Waiting for Chef-Server...")
+        Cucumber::Chef.spinner do
+          Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 4000, "GET").wait
+        end
+        @stdout.puts("done.\n")
+
+        @stdout.print("Waiting for Chef-WebUI...")
+        Cucumber::Chef.spinner do
+          Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 4040, "GET").wait
+        end
+        @stdout.puts("done.\n")
+      end
+
+################################################################################
+
+      def reboot_test_lab
+        @stdout.print("Rebooting test lab; please wait...")
+        Cucumber::Chef.spinner do
+          command = "sudo reboot"
+          @ssh.exec(command, :silence => true)
+          sleep(10)
+        end
+        @stdout.print("done.\n")
+
+        @stdout.print("Waiting for SSHD...")
+        Cucumber::Chef.spinner do
+          Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 22).wait
+        end
+        @stdout.puts("done.\n")
+
+        wait_for_chef_server
+      end
 
     end
 

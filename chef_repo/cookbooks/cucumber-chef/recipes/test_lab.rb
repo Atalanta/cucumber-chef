@@ -39,6 +39,27 @@ end
   end
 end
 
+################################################################################
+# CHEF-CLIENT
+################################################################################
+service "chef-client"
+
+execute "set LXC_AUTO to false" do
+  command "sed -i \"s/log_level          :info/log_level          :debug/\" /etc/chef/client.rb"
+
+  notifies :restart, "service[chef-client]"
+
+  only_if do
+    %x( cat /etc/chef/client.rb | grep "log_level          :info" )
+    ($? == 0)
+  end
+end
+
+
+################################################################################
+# SYSTEM TWEAKS
+################################################################################
+
 %w( root ubuntu ).each do |user|
   home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
 

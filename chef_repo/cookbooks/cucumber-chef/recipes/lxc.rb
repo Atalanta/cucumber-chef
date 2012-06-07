@@ -242,7 +242,7 @@ service "lxc"
 execute "set LXC_AUTO to false" do
   command "sed -i \"s/LXC_AUTO=\\\"true\\\"/LXC_AUTO=\\\"false\\\"/\" /etc/default/lxc"
 
-  notifies :restart, "service[lxc-net]"
+  notifies :stop, "service[lxc-net]"
 
   only_if do
     %x( cat /etc/default/lxc | grep "LXC_AUTO=\\\"true\\\"" )
@@ -253,7 +253,7 @@ end
 execute "set USE_LXC_BRIDGE to false" do
   command "sed -i \"s/USE_LXC_BRIDGE=\\\"true\\\"/USE_LXC_BRIDGE=\\\"false\\\"/\" /etc/default/lxc"
 
-  notifies :restart, "service[lxc-net]"
+  notifies :stop, "service[lxc-net]"
 
   only_if do
     %x( cat /etc/default/lxc | grep "USE_LXC_BRIDGE=\\\"true\\\"" )
@@ -267,6 +267,7 @@ directory "create lxc configuration directory" do
   not_if { File.exists?("/etc/lxc") && File.directory?("/etc/lxc") }
 end
 
+=begin
 # load the chef client into our distro lxc cache
 install_chef_sh = "/tmp/install-chef.sh"
 distros = { "ubuntu" => [ "lucid", "maverick", "natty", "oneiric", "precise" ] }
@@ -284,19 +285,19 @@ distros.each do |distro, releases|
     cache_rootfs = File.join("/", "var", "cache", "lxc", release, "rootfs-#{arch}")
     initializer_rootfs = File.join("/", "var", "lib", "lxc", "initializer", "rootfs")
 
-    execute "create the lxc initializer container" do
+    execute "create the lxc initializer container for #{distro}/#{release}" do
       command "lxc-create -n initializer -f /etc/lxc/initializer -t #{distro} -- -r #{release}"
 
       not_if { File.exists?(cache_rootfs) && File.directory?(cache_rootfs) }
     end
 
-    execute "destroy the lxc initializer container" do
+    execute "destroy the lxc initializer container for #{distro}/#{release}" do
       command "lxc-destroy -n initializer"
 
       only_if { File.exists?(initializer_rootfs) && File.directory?(initializer_rootfs) }
     end
 
-    template "create opscode omnibus installer in lxc container cache" do
+    template "create opscode omnibus installer in lxc container cache for #{distro}/#{release}" do
       path "#{cache_rootfs}#{install_chef_sh}"
       source "lxc-install-chef.erb"
       mode "0755"
@@ -304,10 +305,11 @@ distros.each do |distro, releases|
       not_if { File.exists?(File.join(cache_rootfs, install_chef_sh)) }
     end
 
-    execute "install chef-client using omnibus in lxc container cache" do
+    execute "install chef-client using omnibus in lxc container cache for #{distro}/#{release}" do
       command "chroot #{cache_rootfs} /bin/bash -c '#{install_chef_sh}'"
 
       not_if { File.exists?(File.join(cache_rootfs, "opt", "opscode", "bin", "chef-client")) }
     end
   end
 end
+=end

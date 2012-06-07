@@ -6,6 +6,7 @@ Feature: Perform test driven infrastructure with Cucumber-Chef
 
   Background:
     * I have a server called <%= @project %>
+    * <%= @project %> is running ubuntu lucid
     * <%= @project %> has been provisioned
     * the chef-client has been run on <%= @project %>
     * I have no public keys set

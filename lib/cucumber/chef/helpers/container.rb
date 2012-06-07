@@ -23,9 +23,21 @@ module Cucumber::Chef::Helpers::Container
 
 ################################################################################
 
-  def container_create(name)
+  def container_create(name, distro, release, arch)
     unless container_exists?(name)
-      command_run_local("lxc-create -n #{name} -f /etc/lxc/#{name} -t ubuntu")
+      cache_rootfs = File.join("/", "var", "cache", "lxc", release, "rootfs-#{arch}")
+      log(name, "has triggered first time lxc distro cache build; this will take a while") if !File.exists?(cache_rootfs)
+
+      command_run_local("lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release} --arch #{arch}")
+
+      # install omnibus into the distro/release file cache if it's not already there
+      omnibus_chef_client = File.join("/", "opt", "opscode", "bin", "chef-client")
+      if !File.exists?(File.join(cache_rootfs, omnibus_chef_client))
+        %x(chroot #{cache_rootfs} /bin/bash -c 'apt-get -q -y --force-yes install wget' 2>&1)
+        %x(chroot #{cache_rootfs} /bin/bash -c 'wget http://opscode.com/chef/install.sh -O - | bash' 2>&1)
+        %x(chroot #{cache_rootfs} /bin/bash -c 'mkdir -p /etc/chef' 2>&1)
+      end
+
       command_run_local("mkdir -p #{container_root(name)}/root/.ssh/")
       command_run_local("chmod 0700 #{container_root(name)}/root/.ssh/")
       command_run_local("cat /root/.ssh/id_rsa.pub > #{container_root(name)}/root/.ssh/authorized_keys")

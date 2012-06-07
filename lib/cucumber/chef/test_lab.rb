@@ -72,21 +72,19 @@ module Cucumber
           @stdout.puts("done.\n")
 
           tag_server
+
+          @stdout.print("Waiting for 20 seconds...")
+          Cucumber::Chef.spinner do
+            sleep(20)
+          end
+          @stdout.print("done.\n")
         end
 
-        @stdout.print("Waiting for sshd...")
+        @stdout.print("Waiting for SSHD...")
         Cucumber::Chef.spinner do
           Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 22).wait
         end
         @stdout.puts("done.\n")
-
-        @stdout.print("Waiting for 20 seconds...")
-        Cucumber::Chef.spinner do
-          sleep(20)
-        end
-        @stdout.print("done.\n")
-
-        @stdout.puts("Instance provisioned!")
 
         @server
       end

@@ -24,11 +24,15 @@ module Cucumber::Chef::Helpers::Server
 ################################################################################
 
   def log(name, message)
-    STDOUT.puts("\033[34m    * \033[1m#{name}\033[0m\033[34m is being #{message}\033[0m")
+    STDOUT.puts("\033[34m    * \033[1m#{name}\033[0m\033[34m #{message}\033[0m")
     STDOUT.flush if STDOUT.respond_to?(:flush)
   end
 
 ################################################################################
+
+  def detect_arch
+    ((RUBY_PLATFORM =~ /x86_64/) ? "amd64" : "i386")
+  end
 
   def server_create(name, attributes={})
     if ((attributes[:persist] && $servers[name]) || ($servers[name] && $servers[name][:persist]))
@@ -37,22 +41,25 @@ module Cucumber::Chef::Helpers::Server
       server_destroy(name) if container_exists?(name)
       attributes = { :ip => generate_ip,
                      :mac => generate_mac,
-                     :persist => true }.merge(attributes)
+                     :persist => true,
+                     :distro => "ubuntu",
+                     :release => "lucid",
+                     :arch => detect_arch }.merge(attributes)
     end
     $servers = ($servers || Hash.new(nil)).merge(name => attributes)
 
     if !server_running?(name)
-      log(name, "provisioned") if $servers[name]
+      log(name, "is being provisioned") if $servers[name]
 
       test_lab_config_dhcpd
       container_config_network(name)
-      container_create(name)
+      container_create(name, $servers[name][:distro], $servers[name][:release], $servers[name][:arch])
       Cucumber::Chef::TCPSocket.new($servers[name][:ip], 22).wait
     end
   end
 
   def server_destroy(name)
-    log(name, "destroyed") if $servers[name]
+    log(name, "is being destroyed") if $servers[name]
 
     container_destroy(name)
   end
