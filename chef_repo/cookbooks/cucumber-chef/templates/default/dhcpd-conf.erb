@@ -18,6 +18,7 @@ update-conflict-detection false;
 default-lease-time 600;
 max-lease-time 7200;
 
+pid-file-name "/var/run/dhcp-server/dhcpd.pid";
 include "/etc/bind/rndc.key";
 
 zone 168.192.in-addr.arpa. {
