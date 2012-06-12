@@ -44,7 +44,7 @@ end
 ################################################################################
 service "chef-client"
 
-execute "set LXC_AUTO to false" do
+execute "set chef-client logging to debug" do
   command "sed -i \"s/log_level          :info/log_level          :debug/\" /etc/chef/client.rb"
 
   notifies :restart, "service[chef-client]"
