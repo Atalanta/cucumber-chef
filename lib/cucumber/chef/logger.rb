@@ -59,11 +59,13 @@ module Cucumber
 ################################################################################
 
       def add(severity, message = nil, progname = nil, &block)
-        return if @level > severity
+        return if (@level > severity)
 
         called_by = parse_caller(caller[1])
 
-        message = [message, progname, (block && block.call)].delete_if{|i| i == nil}.join(": ")
+        msg = (block && block.call)
+        return if (msg.nil? || msg.strip.empty?)
+        message = [message, progname, msg].delete_if{|i| i == nil}.join(": ")
         message = "%19s.%06d | %5s | %5s | %s%s\n" % [Time.now.utc.strftime("%Y-%m-%d %H:%M:%S"), Time.now.utc.usec, Process.pid.to_s, SEVERITIES[severity], called_by, message]
 
         @logdev.write(message)
