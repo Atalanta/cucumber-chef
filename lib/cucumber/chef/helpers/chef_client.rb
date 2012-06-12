@@ -26,7 +26,7 @@ module Cucumber::Chef::Helpers::ChefClient
   # call this in a Before hook
   def chef_set_client_config(config={})
     @chef_client_config = { :log_level => :debug,
-                            :log_location => "/var/log/chef.log",
+                            :log_location => "/var/log/chef/client.log",
                             :chef_server_url => "https://api.opscode.com/organizations/#{config[:orgname]}",
                             :validation_client_name => "#{config[:orgname]}-validator" }.merge(config)
   end
@@ -48,8 +48,10 @@ module Cucumber::Chef::Helpers::ChefClient
 ################################################################################
 
   def chef_config_client(name)
+    # make sure our configuration location is there
     client_rb = File.join("/", container_root(name), "etc/chef/client.rb")
     FileUtils.mkdir_p(File.dirname(client_rb))
+
     File.open(client_rb, 'w') do |f|
       f.puts(Cucumber::Chef.generate_do_not_edit_warning("Chef Client Configuration"))
       f.puts("")
@@ -68,6 +70,10 @@ module Cucumber::Chef::Helpers::ChefClient
     File.open(attributes_json, 'w') do |f|
       f.puts((@chef_client_attributes || {}).to_json)
     end
+
+    # make sure our log location is there
+    log_location = File.join("/", container_root(name), @chef_client_config[:log_location])
+    FileUtils.mkdir_p(File.dirname(log_location))
 
     command_run_local("cp /etc/chef/validation.pem #{container_root(name)}/etc/chef/ 2>&1")
   end
