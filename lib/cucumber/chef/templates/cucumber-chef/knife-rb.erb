@@ -1,5 +1,5 @@
 current_dir = File.dirname(__FILE__)
-user        = ENV['USER']
+user        = ENV['OPSCODE_USER'] || ENV['USER']
 
 log_level               :debug
 log_location            STDOUT
