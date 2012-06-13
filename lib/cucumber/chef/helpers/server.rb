@@ -30,8 +30,13 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
-  def detect_arch
-    ((RUBY_PLATFORM =~ /x86_64/) ? "amd64" : "i386")
+  def detect_arch(distro)
+    case distro.downcase
+    when "ubuntu":
+      ((RUBY_PLATFORM =~ /x86_64/) ? "amd64" : "i386")
+    when "fedora":
+      ((RUBY_PLATFORM =~ /x86_64/) ? "amd64" : "i686")
+    end
   end
 
   def server_create(name, attributes={})
@@ -44,7 +49,7 @@ module Cucumber::Chef::Helpers::Server
                      :persist => true,
                      :distro => "ubuntu",
                      :release => "lucid",
-                     :arch => detect_arch }.merge(attributes)
+                     :arch => detect_arch(attributes[:distro] || "ubuntu") }.merge(attributes)
     end
     $servers = ($servers || Hash.new(nil)).merge(name => attributes)
 
