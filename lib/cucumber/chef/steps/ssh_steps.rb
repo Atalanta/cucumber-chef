@@ -2,7 +2,7 @@ Given /^I have no public keys set$/ do
   @auth_methods = %w(password)
 end
 
-Then /^I can ssh to (.*) with the following credentials:$/ do |hostname, table|
+Then /^I can ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
   @auth_methods ||= %w(publickey password)
 
   credentials = table.hashes
@@ -54,7 +54,7 @@ Given /^I have the following public keys:$/ do |table|
   @auth_methods << "publickey"
 end
 
-When /^I ssh to (.*) with the following credentials:$/ do |hostname, table|
+When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
   @keys = []
   @auth_methods ||= %w(password)
   session = table.hashes.first
@@ -87,7 +87,7 @@ Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
   end
 end
 
-Then /^I should( not)? see the (.*) of (.*) in the output$/ do |boolean, key, name|
+Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |boolean, key, name|
   expected = !boolean
   if expected
     @output.should =~ /#{$servers[name][key.downcase.to_sym]}/i

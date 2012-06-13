@@ -5,14 +5,14 @@ Feature: Perform test driven infrastructure with Cucumber-Chef
   I want to better understand how to use Cucumber-Chef
 
   Background:
-    * I have a server called <%= @project %>
-    * <%= @project %> is running ubuntu lucid
-    * <%= @project %> has been provisioned
-    * the chef-client has been run on <%= @project %>
-    * I have no public keys set
-    * I ssh to <%= @project %> with the following credentials:
-      | username | password |
-      | root     | root     |
+    * I have a server called "<%= @project %>"
+    * "<%= @project %>" is running "ubuntu" "lucid"
+    * "<%= @project %>" has been provisioned
+    * the "chef-client::service" recipe has been added to the "<%= @project %>" run list
+    * the chef-client has been run on "<%= @project %>"
+    * I ssh to "<%= @project %>" with the following credentials:
+      | username | keyfile        |
+      | root     | ../.ssh/id_rsa |
 
   Scenario: Can connect to the provisioned server via SSH password authentication
     And I run "hostname"
@@ -32,11 +32,18 @@ Feature: Perform test driven infrastructure with Cucumber-Chef
 
   Scenario: Primary interface is configured with my IP address and MAC address
     And I run "ifconfig eth0"
-      Then I should see the IP of <%= @project %> in the output
-      And I should see the MAC of <%= @project %> in the output
+      Then I should see the "IP" of "<%= @project %>" in the output
+      And I should see the "MAC" of "<%= @project %>" in the output
 
   Scenario: Local interface is not configured with my IP address or MAC address
     And I run "ifconfig lo"
       Then I should see "127.0.0.1" in the output
-      And I should not see the IP of <%= @project %> in the output
-      And I should not see the MAC of <%= @project %> in the output
+      And I should not see the "IP" of "<%= @project %>" in the output
+      And I should not see the "MAC" of "<%= @project %>" in the output
+
+  Scenario: Chef-Client is running as a daemon
+    When I run "ps aux | grep [c]hef-client"
+      Then I should see "chef-client" in the output
+      And I should see "-d" in the output
+      And I should see "-i 1800" in the output
+      And I should see "-s 20" in the output
