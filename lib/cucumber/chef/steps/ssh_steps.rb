@@ -89,8 +89,8 @@ end
 Then /^I should( not)? see the (.*) of (.*) in the output$/ do |boolean, key, name|
   expected = !boolean
   if expected
-    @output.should =~ /#{$servers[name][key.downcase.to_sym]}/
+    @output.should =~ /#{$servers[name][key.downcase.to_sym]}/i
   else
-    @output.should_not =~ /#{$servers[name][key.downcase.to_sym]}/
+    @output.should_not =~ /#{$servers[name][key.downcase.to_sym]}/i
   end
 end
