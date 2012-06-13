@@ -38,7 +38,7 @@ module Cucumber
         @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
         @ssh.config[:host] = @test_lab.labs_running.first.public_ip_address
         @ssh.config[:ssh_user] = "ubuntu"
-        @ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+        @ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@ssh.config[:ssh_user]}")
 
         @stdout.puts("Cucumber-Chef Test Runner Initalized!")
       end
@@ -52,7 +52,7 @@ module Cucumber
         @stdout.puts("Executing Cucumber-Chef Test Runner")
         remote_path = File.join("/", "home", "ubuntu", "features")
         cucumber_options = args.flatten.compact.uniq.join(" ")
-        command = [ "cd #{remote_path} && sudo cucumber", cucumber_options, "--exclude README*", "--exclude *.yml", "." ].flatten.compact.join(" ")
+        command = [ "cd #{remote_path} && sudo cucumber", cucumber_options, "." ].flatten.compact.join(" ")
 
         @ssh.exec(command)
       end
@@ -82,10 +82,10 @@ module Cucumber
           remote_path = File.join("/", "home", "ubuntu", "features")
           @ssh.upload(local_path, remote_path)
 
-          config_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
-          cucumber_config_file = File.expand_path(File.join(config_path, "cucumber.yml"))
+          root_path = Cucumber::Chef.locate_parent(".chef")
+          cucumber_config_file = File.expand_path(File.join(root_path, "cucumber.yml"))
           if File.exists?(cucumber_config_file)
-            remote_file = File.join("/", "home", "ubuntu", "features", File.basename(cucumber_config_file))
+            remote_file = File.join(remote_path, File.basename(cucumber_config_file))
             @ssh.upload(cucumber_config_file, remote_file)
           end
         end
