@@ -25,23 +25,38 @@ module Cucumber::Chef::Helpers::Container
 
   def container_create(name, distro, release, arch)
     unless container_exists?(name)
-      cache_rootfs = File.join("/", "var", "cache", "lxc", release, "rootfs-#{arch}")
+      cache_rootfs = container_cache_root(name, distro, release, arch)
       log(name, "has triggered first time lxc distro cache build; this will take a while") if !File.exists?(cache_rootfs)
 
-      command_run_local("lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release} --arch #{arch}")
+      command_run_local(container_create_command(name, distro, release, arch))
 
       # install omnibus into the distro/release file cache if it's not already there
       omnibus_chef_client = File.join("/", "opt", "opscode", "bin", "chef-client")
       if !File.exists?(File.join(cache_rootfs, omnibus_chef_client))
-        %x(chroot #{cache_rootfs} /bin/bash -c 'apt-get -q -y --force-yes install wget' 2>&1)
-        %x(chroot #{cache_rootfs} /bin/bash -c 'wget http://opscode.com/chef/install.sh -O - | bash' 2>&1)
-        %x(chroot #{cache_rootfs} /bin/bash -c 'mkdir -p /etc/chef' 2>&1)
+        case distro.downcase
+        when "ubuntu":
+          %x(chroot #{cache_rootfs} /bin/bash -c 'apt-get -y --force-yes install wget' 2>&1)
+        when "fedora":
+          %x( yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server )
+        end
+        %x( chroot #{cache_rootfs} /bin/bash -c 'wget http://opscode.com/chef/install.sh -O - | bash' 2>&1 )
+        if distro.downcase == "fedora"
+          %x( chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm' 2>&1 )
+        end
+        command_run_local("lxc-destroy -n #{name} 2>&1")
+        command_run_local(container_create_command(name, distro, release, arch))
       end
 
-      command_run_local("mkdir -p #{container_root(name)}/root/.ssh/")
-      command_run_local("chmod 0700 #{container_root(name)}/root/.ssh/")
-      command_run_local("cat /root/.ssh/id_rsa.pub > #{container_root(name)}/root/.ssh/authorized_keys")
-      command_run_local("cat /home/ubuntu/.ssh/id_rsa.pub >> #{container_root(name)}/root/.ssh/authorized_keys")
+      command_run_local("mkdir -p #{container_root(name)}/root/.ssh")
+      command_run_local("chmod 0755 #{container_root(name)}/root/.ssh")
+      command_run_local("cat /root/.ssh/id_rsa.pub | tee -a #{container_root(name)}/root/.ssh/authorized_keys")
+      command_run_local("cat /home/ubuntu/.ssh/id_rsa.pub | tee -a #{container_root(name)}/root/.ssh/authorized_keys")
+
+      command_run_local("mkdir -p #{container_root(name)}/home/ubuntu/.ssh")
+      command_run_local("chmod 0755 #{container_root(name)}/home/ubuntu/.ssh")
+      command_run_local("cat /root/.ssh/id_rsa.pub | tee -a #{container_root(name)}/home/ubuntu/.ssh/authorized_keys")
+      command_run_local("cat /home/ubuntu/.ssh/id_rsa.pub | tee -a #{container_root(name)}/home/ubuntu/.ssh/authorized_keys")
+      command_run_local("chown -R ubuntu:ubuntu #{container_root(name)}/home/ubuntu/.ssh")
 
       command_run_local("rm #{container_root(name)}/etc/motd")
       command_run_local("cp /etc/motd #{container_root(name)}/etc/motd")
@@ -112,6 +127,24 @@ module Cucumber::Chef::Helpers::Container
 
   def container_root(name)
     File.join("/", "var", "lib", "lxc", name, "rootfs")
+  end
+
+  def container_cache_root(name, distro, release, arch)
+    case distro.downcase
+    when "ubuntu":
+      cache_root = File.join("/", "var", "cache", "lxc", release, "rootfs-#{arch}")
+    when "fedora":
+      cache_root = File.join("/", "var", "cache", "lxc", distro, arch, release, "rootfs")
+    end
+  end
+
+  def container_create_command(name, distro, release, arch)
+    case distro.downcase
+    when "ubuntu":
+      "lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release} --arch #{arch}"
+    when "fedora":
+      "lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release}"
+    end
   end
 
 ################################################################################
