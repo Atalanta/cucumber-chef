@@ -109,6 +109,15 @@ end
     owner user
     group user
   end
+
+  execute "copy public key into authorized_keys for #{user}" do
+    command "cat #{home_dir}/.ssh/id_rsa.pub | tee -a #{home_dir}/.ssh/authorized_keys"
+
+    not_if do
+      %x( cat #{home_dir}/.ssh/authorized_keys | grep "`cat #{home_dir}/.ssh/id_rsa.pub`" )
+      ($? == 0)
+    end
+  end
 end
 
 file "remove update-motd" do
