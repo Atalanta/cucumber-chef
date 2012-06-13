@@ -19,7 +19,7 @@
 ################################################################################
 
 
-%w( lxc bridge-utils debootstrap isc-dhcp-server bind9 ntpdate ntp ).each do |p|
+%w( lxc bridge-utils debootstrap yum isc-dhcp-server bind9 ntpdate ntp ).each do |p|
   package p
 end
 
