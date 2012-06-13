@@ -46,6 +46,7 @@ Given /^I have the following public keys:$/ do |table|
 
   public_key_paths.each do |key|
     File.exist?(key["keyfile"]).should be_true
+    FileUtils.chmod(0600, key["keyfile"])
     @keys << key["keyfile"]
   end
 
