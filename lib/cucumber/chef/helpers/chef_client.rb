@@ -35,7 +35,7 @@ module Cucumber::Chef::Helpers::ChefClient
 
   # call this before chef_run_client
   def chef_set_client_attributes(name, attributes={})
-    @chef_client_attributes = (@chef_client_attributes || {}).merge(attributes)
+    @chef_client_attributes = (@chef_client_attributes || {}).merge(attributes) { |k,o,n| (k = (o + n)) }
   end
 
 ################################################################################
