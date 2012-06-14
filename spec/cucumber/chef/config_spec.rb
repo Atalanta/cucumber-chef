@@ -21,21 +21,14 @@
 
 require 'spec_helper'
 
-VALID_RELEASES = %w( maverick )
+VALID_RELEASES = %w( precise )
 VALID_REGIONS = %w( us-west-1 us-east-1 eu-west-1 )
 VALID_ARCHS = %w( i386 amd64 )
 VALID_DISK_STORES = %w( instance-store ebs )
 
 describe Cucumber::Chef::Config do
 
-#  before(:all) do
-#    @original_config = Cucumber::Chef::Config.hash_dup
-#    Cucumber::Chef::Config.mode = :test
-#  end
-
-#  after(:each) do
-#    Cucumber::Chef::Config.configuration = @original_config
-#  end
+################################################################################
 
   before(:each) do
     load File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "config.rb"))
@@ -44,6 +37,8 @@ describe Cucumber::Chef::Config do
   after(:each) do
     load File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "spec_helper.rb"))
   end
+
+################################################################################
 
   describe "Cucumber::Chef::Config default values" do
 
@@ -61,8 +56,8 @@ describe Cucumber::Chef::Config do
         Cucumber::Chef::Config[:aws][:aws_security_group].should == "cucumber-chef"
       end
 
-      it "Cucumber::Chef::Config[:aws][:ubuntu_release] defaults to 'maverick'" do
-        Cucumber::Chef::Config[:aws][:ubuntu_release].should == "maverick"
+      it "Cucumber::Chef::Config[:aws][:ubuntu_release] defaults to 'precise'" do
+        Cucumber::Chef::Config[:aws][:ubuntu_release].should == "precise"
       end
 
       it "Cucumber::Chef::Config[:aws][:aws_instance_arch] defaults to 'i386'" do
@@ -80,6 +75,8 @@ describe Cucumber::Chef::Config do
     end
 
   end
+
+################################################################################
 
   describe "class method: aws_image_id" do
 
@@ -110,6 +107,8 @@ describe Cucumber::Chef::Config do
 
   end
 
+################################################################################
+
   describe "when configuration is valid" do
 
     it "should allow changing providers" do
@@ -128,6 +127,7 @@ describe Cucumber::Chef::Config do
       expect{ Cucumber::Chef::Config.verify_keys }.to_not raise_error(Cucumber::Chef::ConfigError)
     end
 
+    # this explodes in CI because we won't have our secret values set
     context "when provider is aws" do
       it "should verify the configuration" do
         user = ENV['OPSCODE_USER'] || ENV['USER']
@@ -143,6 +143,8 @@ describe Cucumber::Chef::Config do
     end if !ENV['CI'] && !ENV['TRAVIS']
 
   end
+
+################################################################################
 
   describe "when configuration is invalid" do
 
@@ -172,5 +174,7 @@ describe Cucumber::Chef::Config do
     end
 
   end
+
+################################################################################
 
 end
