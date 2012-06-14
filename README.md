@@ -183,6 +183,17 @@ Set a (server) to persist or not:
 
     "(server)" should( not) be persistant
 
+Set (server) to run linux of type (distro), using (release).
+
+    "(server)" is running "(distro)" "(release)"
+
+Supported (distro -> releases):
+
+    ubuntu -> lucid, maverick, natty, oneiric, precise
+    fedora -> (release number)
+
+    Fedora releases 12, 13, 14 tested OK.
+
 Assign (server) a specific IP address (must be on the test lab network segment):
 
     "(server)" has an IP address of "(ip)"
