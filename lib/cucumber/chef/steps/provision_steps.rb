@@ -10,8 +10,8 @@ And /^"([^\"]*)" has "([^\"]*)" architecture$/ do |name, arch|
   @servers[name].merge!( :arch => arch )
 end
 
-And /^"([^\"]*)" should be "([^\"]*)"$/ do |name, persistant|
-  @servers[name].merge!( :persist => !(persistant =~ /non-persistant/i) )
+And /^"([^\"]*)" should( not)? be persistant$/ do |name, boolean|
+  @servers[name].merge!( :persist => (!boolean ? true : false) )
 end
 
 And /^"([^\"]*)" has an IP address of "([^\"]*)"$/ do |name, ip|

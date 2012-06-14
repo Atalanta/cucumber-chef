@@ -125,6 +125,7 @@ We provide several built in steps to help you with provisioning.  It is suggeste
 
 * Sets up a server called `devopserver`.
 * Makes the server persistant (it will remain up after the test finishes, which is the default behaviour).
+* Assigns what linux distro and release to use for the container.
 * Assigns it an IP address on the test lab network (this can be omitted for an auto-assigned IP).
 * Tells Cucumber-Chef to provision the server.
 * Adds the `chef-client::service` recipe in to the chef-client's run list.
@@ -134,32 +135,32 @@ We provide several built in steps to help you with provisioning.  It is suggeste
 Here is the `Background` section as you might write it in a feature:
 
       Background:
-        * I have a server called devopserver
-        * devopserver is persistant
-        * devopserver has an IP address of 192.168.10.10
-        * devopserver has been provisioned
-        * the chef-client::service recipe has been added to the devopserver run list
-        * the chef-client has been run on devopserver
-        * I have no public keys set
-        * I ssh to devopserver with the following credentials:
+        * I have a server called "devopserver"
+        * "devopserver" should be persistant
+        * "devopserver" is running "ubuntu" "lucid"
+        * "devopserver" has an IP address of "192.168.73.31"
+        * "devopserver" has been provisioned
+        * the "chef-client::service" recipe has been added to the "devopserver" run list
+        * the chef-client has been run on "devopserver"
+        * I ssh to "devopserver" with the following credentials:
           | username | password |
           | root     | root     |
 
-To get a persistent server with an auto-assigned IP address you could write something like this:
+To get a persistent server with an auto-assigned IP address using the generated and populated test lab SSH key pairs for SSH authentication you could write something like this.  Remember the tests run on the test lab, so we can just back out a directory and reference our test lab SSH private key directly:
 
       Background:
-        * I have a server called devopserver
-        * devopserver has been provisioned
-        * the chef-client::service recipe has been added to the devopserver run list
-        * the chef-client has been run on devopserver
-        * I have no public keys set
-        * I ssh to devopserver with the following credentials:
-          | username | password |
-          | root     | root     |
+        * I have a server called "devopserver"
+        * "devopserver" is running "ubuntu" "lucid"
+        * "devopserver" has been provisioned
+        * the "chef-client::service" recipe has been added to the "devopserver" run list
+        * the chef-client has been run on "devopserver"
+        * I ssh to "devopserver" with the following credentials:
+          | username | keyfile        |
+          | root     | ../.ssh/id_rsa |
 
 You can add roles to the run list by writing:
 
-        * the chef-client role has been added to the devopserver run list
+        * the "chef-client" role has been added to the "devopserver" run list
 
 Here's an example `Scenario` section you might have to test if the chef-client is actually running as a daemon:
 
@@ -176,42 +177,42 @@ See the section below label *Example Test Run* for more examples.
 
 Create a server profile:
 
-    I have a server called (server)
+    I have a server called "(server)"
 
 Set a (server) to persist or not:
 
-    (server) is (persistant|non-persistant)
+    "(server)" should( not) be persistant
 
 Assign (server) a specific IP address (must be on the test lab network segment):
 
-    (server) has an IP address of (ip)
+    "(server)" has an IP address of "(ip)"
 
 Assign (server) a specific MAC address:
 
-    (server) has a MAC address of (mac)
+    "(server)" has a MAC address of "(mac)"
 
-Initiate the provision of a (server):
+Initiate the provision of a (server).  All attributes of the server need to be set before this:
 
-    (server) has been provisioned
+    "(server)" has been provisioned
 
 Add a role to the chef-client run list:
 
-    the (role) role has been added to the (server) run list
+    the "(role)" role has been added to the "(server)" run list
 
 Add a recipe to the chef-client run list:
 
-    the (recipe) recipe has been added to the (server) run list
+    the "(recipe)" recipe has been added to the "(server)" run list
 
 Run the chef-client:
 
-    the chef-client has been run on (server)
+    the chef-client has been run on "(server)"
 
 #### SSH Steps
 
 Here is how you might setup and initate an SSH session using password authentication to a server named `devopserver`:
 
         * I have no public keys set
-        * I ssh to devopserver with the following credentials:
+        * I ssh to "devopserver" with the following credentials:
           | username | password |
           | root     | root     |
 
@@ -223,7 +224,7 @@ Sets the authentication method to password:
 
 Start an SSH session to the server (server):
 
-    I ssh to (server) with the following credentials:
+    I ssh to "(server)" with the following credentials:
       | username | password |
       | root     | root     |
 
@@ -234,13 +235,11 @@ Executes (command) over the previously established SSH session on the server (se
 
 Check (command) output for an (expected) or (not-expected) string:
 
-    I should see "(expected)" in the output
-    I should not see "(not-expected)" in the output
+    I should( not) see "(expected)" in the output
 
 Check (command) output for existance of or lack of (server) settings:
 
-    I should see the (ip|mac) of (server) in the output
-    I should not see the (ip|mac) of (server) in the output
+    I should( not) see the "(ip|mac)" of "(server)" in the output
 
 #### Cucumber Before Hook Centric Helpers
 
@@ -267,12 +266,9 @@ You can now pass in options for cucumber or even setup profiles via `cucumber.ym
 
     $ cucumber-chef test myproject --tags @wip -c -v -b
 
-To take advantage of cucumber profiles, create a `cucumber.yml` configuration file in your `.cucumber-chef` directory off your chef-repo.  In this file you can take full advantage of the Cucumber profiles as definied on their wiki, https://github.com/cucumber/cucumber/wiki/cucumber.yml.
+To take advantage of cucumber profiles, create a `cucumber.yml` configuration file in the root of your chef-repo; just as you would with any other project using cucumber.  In this file you can take full advantage of the Cucumber profiles as definied on their wiki, https://github.com/cucumber/cucumber/wiki/cucumber.yml.
 
-    └── .cucumber-chef/
-        └── cucumber.yml
-
-Here is an example `cucumber.yml` which turns on colored output, verbosity and full backtraces for all test runs:
+Here is an example default project for `cucumber.yml` which turns on colored output, verbosity and full backtraces for all test runs:
 
     ---
     default: -c -v -b
@@ -400,50 +396,48 @@ Next create your `devopserver` feature.
 
 Here is the feature we'll be using.  This feature has some extra scenarios to illustrate how you might go about testing other parts of a system.  Go into the features directory of your chef-repo and replace the contents of the `devopserver.feature` file with the text below.
 
-    @devop
-    Feature: Do test driven infrastructure with Cucumber-Chef
+    @devopserver @wip
+    Feature: Perform test driven infrastructure with Cucumber-Chef
       In order to learn how to develop test driven infrastructure
       As an infrastructure developer
       I want to better understand how to use Cucumber-Chef
 
       Background:
-        * I have a server called devopserver
-        * devopserver is persistant
-        * devopserver has an IP address of 192.168.10.10
-        * devopserver has been provisioned
-        * the chef-client::service recipe has been added to the devopserver run list
-        * the chef-client has been run on devopserver
-        * I have no public keys set
-        * I ssh to devopserver with the following credentials:
-          | username | password |
-          | root     | root     |
+        * I have a server called "devopserver"
+        * "devopserver" is running "ubuntu" "lucid"
+        * "devopserver" has been provisioned
+        * the "chef-client::service" recipe has been added to the "devopserver" run list
+        * the chef-client has been run on "devopserver"
+        * I ssh to "devopserver" with the following credentials:
+          | username | keyfile        |
+          | root     | ../.ssh/id_rsa |
 
       Scenario: Can connect to the provisioned server via SSH password authentication
-        When I run "hostname"
+        And I run "hostname"
         Then I should see "devopserver" in the output
 
       Scenario: Default root shell is bash
-        When I run "echo $SHELL"
+        And I run "echo $SHELL"
         Then I should see "bash" in the output
 
       Scenario: Default gateway and resolver are using Cucumber-Chef Test Lab
-        When I run "route -n | grep 'UG'"
+        And I run "route -n | grep 'UG'"
           Then I should see "192.168.255.254" in the output
-        When I run "cat /etc/resolv.conf"
+        And I run "cat /etc/resolv.conf"
           Then I should see "192.168.255.254" in the output
           And I should see "8.8.8.8" in the output
           And I should see "8.8.4.4" in the output
 
       Scenario: Primary interface is configured with my IP address and MAC address
-        When I run "ifconfig eth0"
-          Then I should see the IP of devopserver in the output
-          And I should see the MAC of devopserver in the output
+        And I run "ifconfig eth0"
+          Then I should see the "IP" of "devopserver" in the output
+          And I should see the "MAC" of "devopserver" in the output
 
       Scenario: Local interface is not configured with my IP address or MAC address
-        When I run "ifconfig lo"
+        And I run "ifconfig lo"
           Then I should see "127.0.0.1" in the output
-          And I should not see the IP of devopserver in the output
-          And I should not see the MAC of devopserver in the output
+          And I should not see the "IP" of "devopserver" in the output
+          And I should not see the "MAC" of "devopserver" in the output
 
       Scenario: Chef-Client is running as a daemon
         When I run "ps aux | grep [c]hef-client"
@@ -452,80 +446,79 @@ Here is the feature we'll be using.  This feature has some extra scenarios to il
           And I should see "-i 1800" in the output
           And I should see "-s 20" in the output
 
-Now we're going to execute the test.  I've tagged the feature with `@devop`, so be sure to pass that to the test runner so Cucumber knows to only run tests tagged with that.
+Now we're going to execute the test.  Created features are pre tagged with the name of the feature (i.e. `@<name>`) and `@wip`.  Be sure to pass that to the test runner so Cucumber knows to only run tests tagged with that, unless you want to test all your features.
 
-    $ cucumber-chef test --tags @devop
-    Using features directory: /home/[REDACTED]/code/chef-repo/features
+    $ bin/cucumber-chef test --tags @devopserver
+    Using features directory: /home/couldbeyou/chef-repo/features
     Cucumber-Chef Test Runner Initalized!
     Cleaning up any previous test runs...done.
     Uploading files required for this test run...done.
     Executing Cucumber-Chef Test Runner
     Using the default profile...
     Code:
-      * /home/ubuntu/features/support/env.rb
-      * /home/ubuntu/features/step_definitions/devopserver_steps.rb
+      * ./support/env.rb
+      * ./devopserver/step_definitions/devopserver_steps.rb
+      * ./sample/step_definitions/sample_steps.rb
 
     Features:
-      * /home/ubuntu/features/devopserver.feature
-    Parsing feature files took 0m0.075s
+      * ./devopserver/devopserver.feature
+    Parsing feature files took 0m0.076s
 
-    @devop
-    Feature: Do test driven infrastructure with Cucumber-Chef
+    @devopserver @wip
+    Feature: Perform test driven infrastructure with Cucumber-Chef
       In order to learn how to develop test driven infrastructure
       As an infrastructure developer
       I want to better understand how to use Cucumber-Chef
 
-      Background:                                                                    # /home/ubuntu/features/devopserver.feature:7
+      Background:                                                                        # ./devopserver/devopserver.feature:7
         * all servers are being destroyed
-        * I have a server called devopserver                                         # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:1
-        * devopserver is persistant                                                  # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:5
-        * devopserver has an IP address of 192.168.10.10                             # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:9
+        * I have a server called "devopserver"                                           # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:1
+        * "devopserver" is running "ubuntu" "lucid"                                      # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:5
         * devopserver is being provisioned
-        * devopserver has been provisioned                                           # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:17
-        * the chef-client::service recipe has been added to the devopserver run list # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:25
-        * the chef-client has been run on devopserver                                # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:29
-        * I have no public keys set                                                  # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:1
-        * I ssh to devopserver with the following credentials:                       # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:56
-          | username | password |
-          | root     | root     |
+        * "devopserver" has been provisioned                                             # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:25
+        * the "chef-client::service" recipe has been added to the "devopserver" run list # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:33
+        * the chef-client has been run on "devopserver"                                  # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/provision_steps.rb:37
+        * I ssh to "devopserver" with the following credentials:                         # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:57
+          | username | keyfile        |
+          | root     | ../.ssh/id_rsa |
 
-      Scenario: Can connect to the provisioned server via SSH password authentication # /home/ubuntu/features/devopserver.feature:19
-        When I run "hostname"                                                         # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:76
-        Then I should see "devopserver" in the output                                 # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
+      Scenario: Can connect to the provisioned server via SSH password authentication    # ./devopserver/devopserver.feature:17
+        And I run "hostname"                                                             # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:77
+        Then I should see "devopserver" in the output                                    # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
 
-      Scenario: Default root shell is bash                                           # /home/ubuntu/features/devopserver.feature:23
-        When I run "echo $SHELL"                                                     # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:76
-        Then I should see "bash" in the output                                       # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
+      Scenario: Default root shell is bash                                               # ./devopserver/devopserver.feature:21
+        And I run "echo $SHELL"                                                          # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:77
+        Then I should see "bash" in the output                                           # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
 
-      Scenario: Default gateway and resolver are using Cucumber-Chef Test Lab        # /home/ubuntu/features/devopserver.feature:27
-        When I run "route -n | grep 'UG'"                                            # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:76
-        Then I should see "192.168.255.254" in the output                            # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
-        When I run "cat /etc/resolv.conf"                                            # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:76
-        Then I should see "192.168.255.254" in the output                            # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
-        And I should see "8.8.8.8" in the output                                     # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
-        And I should see "8.8.4.4" in the output                                     # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
+      Scenario: Default gateway and resolver are using Cucumber-Chef Test Lab            # ./devopserver/devopserver.feature:25
+        And I run "route -n | grep 'UG'"                                                 # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:77
+        Then I should see "192.168.255.254" in the output                                # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
+        And I run "cat /etc/resolv.conf"                                                 # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:77
+        Then I should see "192.168.255.254" in the output                                # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
+        And I should see "8.8.8.8" in the output                                         # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
+        And I should see "8.8.4.4" in the output                                         # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
 
-      Scenario: Primary interface is configured with my IP address and MAC address   # /home/ubuntu/features/devopserver.feature:35
-        When I run "ifconfig eth0"                                                   # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:76
-        Then I should see the IP of devopserver in the output                        # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:88
-        And I should see the MAC of devopserver in the output                        # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:88
+      Scenario: Primary interface is configured with my IP address and MAC address       # ./devopserver/devopserver.feature:33
+        And I run "ifconfig eth0"                                                        # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:77
+        Then I should see the "IP" of "devopserver" in the output                        # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:90
+        And I should see the "MAC" of "devopserver" in the output                        # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:90
 
-      Scenario: Local interface is not configured with my IP address or MAC address  # /home/ubuntu/features/devopserver.feature:40
-        When I run "ifconfig lo"                                                     # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:76
-        Then I should see "127.0.0.1" in the output                                  # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
-        And I should not see the IP of devopserver in the output                     # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:92
-        And I should not see the MAC of devopserver in the output                    # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:92
+      Scenario: Local interface is not configured with my IP address or MAC address      # ./devopserver/devopserver.feature:38
+        And I run "ifconfig lo"                                                          # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:77
+        Then I should see "127.0.0.1" in the output                                      # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
+        And I should not see the "IP" of "devopserver" in the output                     # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:90
+        And I should not see the "MAC" of "devopserver" in the output                    # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:90
 
-      Scenario: Chef-Client is running as a daemon                                   # /home/ubuntu/features/devopserver.feature:46
-        When I run "ps aux | grep [c]hef-client"                                     # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:76
-        Then I should see "chef-client" in the output                                # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
-        And I should see "-d" in the output                                          # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
-        And I should see "-i 1800" in the output                                     # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
-        And I should see "-s 20" in the output                                       # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:80
+      Scenario: Chef-Client is running as a daemon                                       # ./devopserver/devopserver.feature:44
+        When I run "ps aux | grep [c]hef-client"                                         # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:77
+        Then I should see "chef-client" in the output                                    # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
+        And I should see "-d" in the output                                              # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
+        And I should see "-i 1800" in the output                                         # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
+        And I should see "-s 20" in the output                                           # cucumber-chef-2.0.0.rc1/lib/cucumber/chef/steps/ssh_steps.rb:81
 
     6 scenarios (6 passed)
-    70 steps (70 passed)
-    2m8.459s
+    58 steps (58 passed)
+    2m45.515s
 
 If all goes well you should see output similar to what's above!  Enjoy and have fun!
 

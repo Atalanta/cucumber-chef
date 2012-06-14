@@ -79,8 +79,7 @@ And /^I run "([^\"]*)"$/ do |command|
 end
 
 Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
-  expected = !boolean
-  if expected
+  if (!boolean)
     @output.should =~ /#{string}/
   else
     @output.should_not =~ /#{string}/
@@ -88,8 +87,8 @@ Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
 end
 
 Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |boolean, key, name|
-  expected = !boolean
-  if expected
+
+  if (!boolean)
     @output.should =~ /#{$servers[name][key.downcase.to_sym]}/i
   else
     @output.should_not =~ /#{$servers[name][key.downcase.to_sym]}/i
