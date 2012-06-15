@@ -43,7 +43,7 @@ set timeout 10
 spawn knife configure -i
 expect "Overwrite ${HOME}/.chef/knife.rb" { send "Y\n" }
 expect "Where should I put the config file?" { send "\n" }
-expect "Please enter the chef server URL" { send "http://<%= @config[:chef_server] %>:4000\n" }
+expect "Please enter the chef server URL" { send "\n" }
 expect "Please enter a clientname for the new client" { send "${SUDO_USER}\n" }
 expect "Please enter the existing admin clientname" { send "\n" }
 expect "Please enter the location of the existing admin client" { send "${HOME}/.chef/webui.pem\n" }
