@@ -58,53 +58,53 @@ module Cucumber
 ################################################################################
 
       def exec(command, options={})
+        @ssh ||= Net::SSH.start(@config[:host], @config[:ssh_user], ssh_options)
+
         options = { :silence => false }.merge(options)
         silence = options[:silence]
 
         $logger.debug { "config(#{@config.inspect})" }
         $logger.debug { "options(#{options.inspect})" }
         $logger.info { "command(#{command})" }
-        Net::SSH.start(@config[:host], @config[:ssh_user], ssh_options) do |ssh|
-          ssh.open_channel do |chan|
-            chan.exec(command) do |ch, success|
-              raise SSHError, "Could not execute '#{command}'." unless success
+        channel = @ssh.open_channel do |chan|
+          $logger.debug { "channel opened" }
+          chan.exec(command) do |ch, success|
+            raise SSHError, "Could not execute '#{command}'." unless success
 
-              ch.on_data do |c, data|
-                #data = data.chomp
-                $logger.debug { data.chomp }
-                @stdout.print(data) if !silence
-              end
-
-              ch.on_extended_data do |c, type, data|
-                #data = data.chomp
-                $logger.debug { data.chomp }
-                @stderr.print(data) if !silence
-              end
-
+            ch.on_data do |c, data|
+              $logger.debug { data.chomp.strip }
+              @stdout.print(data) if !silence
             end
+
+            ch.on_extended_data do |c, type, data|
+              $logger.debug { data.chomp.strip }
+              @stderr.print(data) if !silence
+            end
+
           end
         end
+        channel.wait
       end
 
 ################################################################################
 
       def upload(local, remote)
+        @sftp ||= Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options)
+
         $logger.debug { "config(#{@config.inspect})" }
         $logger.info { "parameters(#{local},#{remote})" }
-        Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options) do |sftp|
-          sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
-            case event
-            when :open
-              $logger.info { "upload(#{args[0].local} -> #{args[0].remote})" }
-            when :close
-              $logger.debug { "close(#{args[0].remote})" }
-            when :mkdir
-              $logger.debug { "mkdir(#{args[0]})" }
-            when :put
-              $logger.debug { "put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}" }
-            when :finish
-              $logger.info { "finish" }
-            end
+        @sftp.upload!(local.to_s, remote.to_s) do |event, uploader, *args|
+          case event
+          when :open
+            $logger.info { "upload(#{args[0].local} -> #{args[0].remote})" }
+          when :close
+            $logger.debug { "close(#{args[0].remote})" }
+          when :mkdir
+            $logger.debug { "mkdir(#{args[0]})" }
+          when :put
+            $logger.debug { "put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}" }
+          when :finish
+            $logger.info { "finish" }
           end
         end
       end
@@ -112,22 +112,22 @@ module Cucumber
 ################################################################################
 
       def download(remote, local)
+        @sftp ||= Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options)
+
         $logger.debug { "config(#{@config.inspect})" }
         $logger.info { "parameters(#{remote},#{local})" }
-        Net::SFTP.start(@config[:host], @config[:ssh_user], ssh_options) do |sftp|
-          sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
-            case event
-            when :open
-              $logger.info { "download(#{args[0].remote} -> #{args[0].local})" }
-            when :close
-              $logger.debug { "close(#{args[0].local})" }
-            when :mkdir
-              $logger.debug { "mkdir(#{args[0]})" }
-            when :get
-              $logger.debug { "get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}" }
-            when :finish
-              $logger.info { "finish" }
-            end
+        @sftp.download!(remote.to_s, local.to_s) do |event, downloader, *args|
+          case event
+          when :open
+            $logger.info { "download(#{args[0].remote} -> #{args[0].local})" }
+          when :close
+            $logger.debug { "close(#{args[0].local})" }
+          when :mkdir
+            $logger.debug { "mkdir(#{args[0]})" }
+          when :get
+            $logger.debug { "get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}" }
+          when :finish
+            $logger.info { "finish" }
           end
         end
       end
