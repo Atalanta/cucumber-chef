@@ -64,16 +64,18 @@ Once installed, you can run `cucumber-chef` on the command line to get an overvi
 
     $ cucumber-chef
     Tasks:
-      cucumber-chef create <project>                   # Create a project template for testing an infrastructure.
-      cucumber-chef diagnose <container>               # Provide diagnostics from the chef-client on the specified container.
-      cucumber-chef displayconfig                      # Display the current cucumber-chef config.
-      cucumber-chef help [TASK]                        # Describe available tasks or one specific task
-      cucumber-chef info                               # Display information about the current test lab.
-      cucumber-chef init                               # Initalize cucumber-chef configuration
-      cucumber-chef setup                              # Setup cucumber-chef test lab in Amazon EC2
-      cucumber-chef ssh [container]                    # SSH to cucumber-chef test lab or [container] if specified.
-      cucumber-chef teardown                           # Teardown cucumber-chef test lab in Amazon EC2
-      cucumber-chef test <project> [cucumber-options]  # Test a project using the cucumber-chef test suite.
+      cucumber-chef create <project>         # Create a project template for testing an infrastructure.
+      cucumber-chef diagnose <container>     # Provide diagnostics from the chef-client on the specified container.
+      cucumber-chef displayconfig            # Display the current cucumber-chef config.
+      cucumber-chef down                     # Shutdown the cucumber-chef test lab
+      cucumber-chef help [TASK]              # Describe available tasks or one specific task
+      cucumber-chef info                     # Display information about the current test lab.
+      cucumber-chef init                     # Initalize cucumber-chef configuration
+      cucumber-chef setup                    # Setup cucumber-chef test lab in Amazon EC2
+      cucumber-chef ssh [container]          # SSH to cucumber-chef test lab or [container] if specified.
+      cucumber-chef teardown                 # Teardown cucumber-chef test lab in Amazon EC2
+      cucumber-chef test [cucumber-options]  # Test a project using the cucumber-chef test suite.
+      cucumber-chef up                       # Startup the cucumber-chef test lab
 
 After tunning set up, which takes about 15 minutes, you'll have a fully funtioning platform available for you to use.  Let's just quickly review what that means.  You will have an EC2 machine, fully managed by Chef, and providing the following:
 
@@ -96,6 +98,14 @@ This will create a directory, cucumber-chef, and a subdirectory, `myproject`.
             │   └── myproject_steps.rb
             └── support
                 └── env.rb
+
+### Tasks
+
+* `up`
+If you are using an EBS volume, you can start and stop your test lab.  This task will attempt to start your Cucumber-Chef test lab if it is currently stopped.
+
+* `down`
+If you are using an EBS volume, you can start and stop your test lab.  This task will attempt to stop your Cucumber-Chef test lab if it is currently running.
 
 ## Writing Tests
 
