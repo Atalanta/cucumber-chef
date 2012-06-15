@@ -8,7 +8,6 @@ $logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumbe
 knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
 knife = "/usr/bin/env knife" unless knife
 
-
 message = "cc-knife v#{Cucumber::Chef::VERSION}"
 puts(message)
 $logger.info { message }
