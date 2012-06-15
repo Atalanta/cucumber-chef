@@ -50,12 +50,15 @@ module Cucumber
         socket = ::TCPSocket.new(@host, @port)
 
         if @data.nil?
+          $logger.debug { "read(#{@host}:#{@port})" }
           ((::IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
         else
+          $logger.debug { "write(#{@host}:#{@port}, '#{@data}')" }
           ((::IO.select(nil, [socket], nil, 5) && socket.write(@data)) ? true : false)
         end
 
-      rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+      rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
+        $logger.debug { e.message }
         false
       ensure
         (socket && socket.close)
