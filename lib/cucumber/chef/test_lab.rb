@@ -272,14 +272,8 @@ module Cucumber
 
 ################################################################################
 
-      def load_knife_config
-        $logger.debug { "attempting to load cucumber-chef test lab 'knife.rb'" }
-        knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
-        ::Chef::Config.from_file(knife_rb)
-      end
-
       def nodes
-        load_knife_config
+        Cucumber::Chef.load_knife_config
         query = "tags:#{Cucumber::Chef::Config[:mode]} AND name:cucumber-chef*"
         $logger.debug { "query(#{query})" }
         nodes, offset, total = ::Chef::Search::Query.new.search("node", URI.escape(query))
@@ -287,7 +281,7 @@ module Cucumber
       end
 
       def clients
-        load_knife_config
+        Cucumber::Chef.load_knife_config
         query = "name:cucumber-chef*"
         $logger.debug { "query(#{query})" }
         clients, offset, total = ::Chef::Search::Query.new.search("client", URI.escape(query))

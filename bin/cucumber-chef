@@ -52,7 +52,11 @@ class CucumberChef < Thor
 
       message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
       puts(set_color(message, :green, true))
+
+      $logger.info { "================================================================================" }
       $logger.info { message }
+      $logger.info { %x( uname -a ).chomp.strip }
+      $logger.info { "================================================================================" }
 
       @options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
     end

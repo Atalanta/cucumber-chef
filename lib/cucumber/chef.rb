@@ -26,6 +26,7 @@ require 'stringio'
 ################################################################################
 
 require 'chef'
+require 'chef/cookbook_uploader'
 require 'erubis'
 require 'fog'
 require 'json'
