@@ -87,7 +87,6 @@ Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
 end
 
 Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |boolean, key, name|
-
   if (!boolean)
     @output.should =~ /#{$servers[name][key.downcase.to_sym]}/i
   else
