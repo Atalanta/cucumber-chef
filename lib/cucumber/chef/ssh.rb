@@ -51,7 +51,7 @@ module Cucumber
         command << [ "-o", "ProxyCommand=\"#{proxy_command}\"" ] if @config[:proxy]
         command << "#{@config[:ssh_user]}@#{@config[:host]}"
         command = command.flatten.compact.join(" ")
-        $logger.debug { "command(#{command})" }
+        $logger.info { "command(#{command})" }
         Kernel.exec(command)
       end
 
