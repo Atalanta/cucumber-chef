@@ -84,6 +84,7 @@ module Cucumber
           end
         end
         channel.wait
+        $logger.debug { "channel closed" }
       end
 
 ################################################################################
@@ -102,7 +103,7 @@ module Cucumber
           when :mkdir
             $logger.debug { "mkdir(#{args[0]})" }
           when :put
-            $logger.debug { "put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}" }
+            $logger.debug { "put(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]})" }
           when :finish
             $logger.info { "finish" }
           end
@@ -125,7 +126,7 @@ module Cucumber
           when :mkdir
             $logger.debug { "mkdir(#{args[0]})" }
           when :get
-            $logger.debug { "get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]}" }
+            $logger.debug { "get(#{args[0].remote}, size #{args[2].size} bytes, offset #{args[1]})" }
           when :finish
             $logger.info { "finish" }
           end

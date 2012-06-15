@@ -34,20 +34,48 @@ module Cucumber
 
 ################################################################################
 
+      def load_knife_config
+        $logger.debug { "attempting to load cucumber-chef test lab 'knife.rb'" }
+
+        knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
+        ::Chef::Config.from_file(knife_rb)
+
+        $logger.debug { "load_knife_config(#{knife_rb})" }
+      end
+
+################################################################################
+
       def locate(type, *args)
         pwd = Dir.pwd.split(File::SEPARATOR)
+        $logger.debug { "pwd='#{Dir.pwd}'" } if $logger
         (pwd.length - 1).downto(0) do |i|
           candidate = File.join(pwd[0..i], args)
+          $logger.debug { "candidate='#{candidate}'" } if $logger
           case type
           when :file
-            return File.expand_path(candidate) if (File.exists?(candidate) && !File.directory?(candidate))
+            if (File.exists?(candidate) && !File.directory?(candidate))
+              result = File.expand_path(candidate)
+              $logger.debug { "result='#{result}'" } if $logger
+              return result
+            end
           when :directory
-            return File.expand_path(candidate) if (File.exists?(candidate) && File.directory?(candidate))
+            if (File.exists?(candidate) && File.directory?(candidate))
+              result = File.expand_path(candidate)
+              $logger.debug { "result='#{result}'" } if $logger
+              return result
+            end
           when :any
-            return File.expand_path(candidate) if File.exists?(candidate)
+            if File.exists?(candidate)
+              result = File.expand_path(candidate)
+              $logger.debug { "result='#{result}'" } if $logger
+              return result
+            end
           end
         end
-        raise UtilityError, "Could not locate #{type} '#{File.join(args)}'."
+
+        message = "Could not locate #{type} '#{File.join(args)}'."
+        $logger.fatal { message }
+        raise UtilityError, message
       end
 
 ################################################################################
