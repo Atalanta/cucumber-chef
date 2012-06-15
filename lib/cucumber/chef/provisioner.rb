@@ -199,7 +199,7 @@ module Cucumber
 ################################################################################
 
       def chef_first_run
-        @stdout.print("Performing chef-client first run on cucumber-chef test lab...")
+        @stdout.print("Performing chef-client run to setup and configure the cucumber-chef test lab...")
         Cucumber::Chef.spinner do
           command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
           command = "sudo #{command}"

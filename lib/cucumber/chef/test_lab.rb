@@ -28,9 +28,9 @@ module Cucumber
       attr_reader :connection, :server
       attr_accessor :stdout, :stderr, :stdin
 
-      INVALID_STATES = ['terminated', 'shutting-down', 'starting-up', 'pending']
-      RUNNING_STATES = ['running']
-      SHUTDOWN_STATES = ['shutdown', 'stopping', 'stopped']
+      INVALID_STATES = %w( terminated pending )
+      RUNNING_STATES =  %w( running starting-up )
+      SHUTDOWN_STATES = %w( shutdown stopping stopped shutting-down )
       VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
 
 ################################################################################
@@ -49,9 +49,8 @@ module Cucumber
 ################################################################################
 
       def create
-        if labs_exist?
+        if (lab_exists? && (@server = labs_running.first))
           @stdout.puts("A test lab already exists using the AWS credentials you have supplied; attempting to reprovision it.")
-          @server = labs_running.first
         else
           server_definition = {
             :image_id => Cucumber::Chef::Config.aws_image_id,
@@ -59,40 +58,47 @@ module Cucumber
             :flavor_id => Cucumber::Chef::Config[:aws][:aws_instance_type],
             :key_name => Cucumber::Chef::Config[:aws][:aws_ssh_key_id],
             :availability_zone => Cucumber::Chef::Config[:aws][:availability_zone],
-            :tags => { "purpose" => "cucumber-chef", "cucumber-chef" => Cucumber::Chef::Config[:mode] },
+            :tags => { "purpose" => "cucumber-chef", "cucumber-chef-mode" => Cucumber::Chef::Config[:mode] },
             :identity_file => Cucumber::Chef::Config[:aws][:identity_file]
           }
-          @server = @connection.servers.create(server_definition)
-          @stdout.puts("Provisioning cucumber-chef test lab platform.")
+          if (@server = @connection.servers.create(server_definition))
+            @stdout.puts("Provisioning cucumber-chef test lab platform.")
 
-          @stdout.print("Waiting for instance...")
+            @stdout.print("Waiting for instance...")
+            Cucumber::Chef.spinner do
+              @server.wait_for { ready? }
+            end
+            @stdout.puts("done.\n")
+
+            tag_server
+
+            @stdout.print("Waiting for 20 seconds...")
+            Cucumber::Chef.spinner do
+              sleep(20)
+            end
+            @stdout.print("done.\n")
+          end
+        end
+
+        if @server
+          @stdout.print("Waiting for SSHD...")
           Cucumber::Chef.spinner do
-            @server.wait_for { ready? }
+            Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 22).wait
           end
           @stdout.puts("done.\n")
-
-          tag_server
-
-          @stdout.print("Waiting for 20 seconds...")
-          Cucumber::Chef.spinner do
-            sleep(20)
-          end
-          @stdout.print("done.\n")
         end
-
-        @stdout.print("Waiting for SSHD...")
-        Cucumber::Chef.spinner do
-          Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 22).wait
-        end
-        @stdout.puts("done.\n")
 
         @server
+
+      rescue Exception => e
+        $logger.fatal { e.message }
+        $logger.fatal { "Backtrace:\n#{e.backtrace.join("\n")}" }
+        raise TestLabError, e.message
       end
 
 ################################################################################
 
       def destroy
-        @stdout.puts("============================================================================")
         if ((l = labs).count > 0)
           @stdout.puts("Destroying Servers:")
           l.each do |server|
@@ -102,86 +108,190 @@ module Cucumber
         else
           @stdout.puts("There are no cucumber-chef test labs to destroy!")
         end
-        @stdout.puts("============================================================================")
+
+      rescue Exception => e
+        $logger.fatal { e.message }
+        $logger.fatal { e.backtrace.join("\n") }
+        raise TestLabError, e.message
       end
 
 ################################################################################
 
       def start
-        # TODO: Implementation
+        if (lab_exists? && (@server = labs_shutdown.first))
+          if @server.start
+
+            @stdout.print("Waiting for instance...")
+            Cucumber::Chef.spinner do
+              @server.wait_for { ready? }
+            end
+            @stdout.puts("done.\n")
+
+            @stdout.print("Waiting for SSHD...")
+            Cucumber::Chef.spinner do
+              Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 22).wait
+            end
+            @stdout.puts("done.\n")
+
+            @stdout.puts("Successfully started up cucumber-chef test lab!")
+
+            info
+          else
+            @stdout.puts("Failed to start up cucumber-chef test lab!")
+          end
+        else
+          @stdout.puts("There are no available cucumber-chef test labs to start up!")
+        end
+
+      rescue Exception => e
+        $logger.fatal { e.message }
+        $logger.fatal { e.backtrace.join("\n") }
+        raise TestLabError, e.message
       end
 
 
       def stop
-        # TODO: Implementation
+        if (lab_exists? && (@server = labs_running.first))
+          if @server.stop
+            @stdout.puts("Successfully shutdown cucumber-chef test lab!")
+          else
+            @stdout.puts("Failed to shutdown cucumber-chef test lab!")
+          end
+        else
+          @stdout.puts("There are no available cucumber-chef test labs top shutdown!")
+        end
+
+      rescue Exception => e
+        $logger.fatal { e.message }
+        $logger.fatal { e.backtrace.join("\n") }
+        raise TestLabError, e.message
       end
 
 ################################################################################
 
       def info
-        @stdout.puts("============================================================================")
-        if labs_exist?
+        if lab_exists?
           labs.each do |lab|
             @stdout.puts("Instance ID: #{lab.id}")
             @stdout.puts("State: #{lab.state}")
             @stdout.puts("Username: #{lab.username}") if lab.username
-            @stdout.puts("IP Address:")
-            @stdout.puts("  Public...: #{lab.public_ip_address}") if lab.public_ip_address
-            @stdout.puts("  Private..: #{lab.private_ip_address}") if lab.private_ip_address
-            @stdout.puts("DNS:")
-            @stdout.puts("  Public...: #{lab.dns_name}") if lab.dns_name
-            @stdout.puts("  Private..: #{lab.private_dns_name}") if lab.private_dns_name
-            @stdout.puts("Tags:")
-            lab.tags.to_hash.each do |k,v|
-              @stdout.puts("  #{k}: #{v}")
+            if (lab.public_ip_address || lab.private_ip_address)
+              @stdout.puts
+              @stdout.puts("IP Address:")
+              @stdout.puts("  Public...: #{lab.public_ip_address}") if lab.public_ip_address
+              @stdout.puts("  Private..: #{lab.private_ip_address}") if lab.private_ip_address
             end
-            @stdout.puts("Chef-Server WebUI:")
-            @stdout.puts("  http://#{lab.public_ip_address}:4040/")
+            if (lab.dns_name || lab.private_dns_name)
+              @stdout.puts
+              @stdout.puts("DNS:")
+              @stdout.puts("  Public...: #{lab.dns_name}") if lab.dns_name
+              @stdout.puts("  Private..: #{lab.private_dns_name}") if lab.private_dns_name
+            end
+            if (lab.tags.count > 0)
+              @stdout.puts
+              @stdout.puts("Tags:")
+              lab.tags.to_hash.each do |k,v|
+                @stdout.puts("  #{k}: #{v}")
+              end
+            end
+            if lab.public_ip_address
+              @stdout.puts
+              @stdout.puts("Chef-Server WebUI:")
+              @stdout.puts("  http://#{lab.public_ip_address}:4040/")
+            end
+            @stdout.puts
+            if (labs_running.include?(lab) && (n = nodes))
+              @stdout.puts
+              @stdout.puts("Nodes:")
+              n.each do |node|
+                @stdout.puts("  * #{node.name} (#{node.cloud.public_ipv4})")
+              end
+            end
+            if (labs_running.include?(lab) && (c = clients))
+              @stdout.puts
+              @stdout.puts("Clients:")
+              c.each do |client|
+                @stdout.puts("  * #{client.name}")
+              end
+            end
           end
-          @stdout.puts("============================================================================")
         else
           @stdout.puts("There are no cucumber-chef test labs to display information for!")
         end
+
+      rescue Exception => e
+        $logger.fatal { e.message }
+        $logger.fatal { e.backtrace.join("\n") }
+        raise TestLabError, e.message
       end
 
 ################################################################################
 
-      def labs_exist?
+      def lab_exists?
         (labs.size > 0)
       end
 
 ################################################################################
 
       def labs
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && VALID_STATES.any?{|state| s.state == state}) }
+        results = @connection.servers.select do |server|
+          $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
+          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s && VALID_STATES.any?{ |state| state == server.state } )
+        end
+        results.each do |server|
+          $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
+        end
+        results
       end
 
 ################################################################################
 
       def labs_running
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && RUNNING_STATES.any?{|state| s.state == state}) }
+        results = @connection.servers.select do |server|
+          $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
+          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s && RUNNING_STATES.any?{ |state| state == server.state } )
+        end
+        results.each do |server|
+          $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
+        end
+        results
       end
 
 ################################################################################
 
       def labs_shutdown
-        @connection.servers.select{ |s| (s.tags['cucumber-chef'] == Cucumber::Chef::Config[:mode].to_s && SHUTDOWN_STATES.any?{|state| s.state == state}) }
+        results = @connection.servers.select do |server|
+          $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
+          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s && SHUTDOWN_STATES.any?{ |state| state == server.state } )
+        end
+        results.each do |server|
+          $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
+        end
+        results
       end
 
 ################################################################################
 
+      def load_knife_config
+        $logger.debug { "attempting to load cucumber-chef test lab 'knife.rb'" }
+        knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
+        ::Chef::Config.from_file(knife_rb)
+      end
+
       def nodes
-        mode = Cucumber::Chef::Config[:mode]
-        command = Cucumber::Chef::Command.new(StringIO.new, StringIO.new, StringIO.new)
-        output = command.knife("search node \"tags:#{mode} AND name:cucumber-chef*\"", "-a name", "-F json")
-        JSON.parse(output)["rows"].collect{ |row| row["name"] }
+        load_knife_config
+        query = "tags:#{Cucumber::Chef::Config[:mode]} AND name:cucumber-chef*"
+        $logger.debug { "query(#{query})" }
+        nodes, offset, total = ::Chef::Search::Query.new.search("node", URI.escape(query))
+        nodes.compact
       end
 
       def clients
-        mode = Cucumber::Chef::Config[:mode]
-        command = Cucumber::Chef::Command.new(StringIO.new, StringIO.new, StringIO.new)
-        output = command.knife("search node \"name:cucumber-chef*\"", "-a name", "-F json")
-        JSON.parse(output)["rows"].collect{ |row| row["name"] }
+        load_knife_config
+        query = "name:cucumber-chef*"
+        $logger.debug { "query(#{query})" }
+        clients, offset, total = ::Chef::Search::Query.new.search("client", URI.escape(query))
+        clients.compact
       end
 
 
@@ -190,11 +300,15 @@ module Cucumber
 ################################################################################
 
       def tag_server
-        tag = @connection.tags.new
-        tag.resource_id = @server.id
-        tag.key = "cucumber-chef"
-        tag.value = Cucumber::Chef::Config[:mode]
-        tag.save
+        {
+          "cucumber-chef-mode" => Cucumber::Chef::Config[:mode],
+          "purpose" => "cucumber-chef"
+        }.each do |k, v|
+          tag = @connection.tags.new
+          tag.resource_id = @server.id
+          tag.key, tag.value = k, v
+          tag.save
+        end
       end
 
 ################################################################################

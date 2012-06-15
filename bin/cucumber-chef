@@ -50,10 +50,14 @@ class CucumberChef < Thor
       $logger = Cucumber::Chef::Logger.new
       $logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
 
+      message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
+      puts(set_color(message, :green, true))
+      $logger.info { message }
+
       @options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
     end
 
-    def error(message)
+    def fatal(message)
       puts(set_color(message, :red, :bold))
       exit(255)
     end
@@ -115,29 +119,39 @@ class CucumberChef < Thor
   def setup
     load_config
 
-    test_lab = Cucumber::Chef::TestLab.new
-    server = test_lab.create
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      if (server = test_lab.create)
+        if (provisioner = Cucumber::Chef::Provisioner.new(server))
 
-    provisioner = Cucumber::Chef::Provisioner.new(server)
-    provisioner.build
+          provisioner.build
 
+          puts
+          puts("Your cucumber-chef test lab has now been provisioned!")
+          puts
+          puts("Be sure to log into the chef-server webui and change the default credentials.")
+          puts
+          puts("  Chef-Server WebUI:")
+          puts("    http://#{server.public_ip_address}:4040/")
+          puts("  Username:")
+          puts("    admin")
+          puts("  Password:")
+          puts("    #{Cucumber::Chef::Provisioner::PASSWORD}")
+
+        else
+          puts(set_color("Could not create the provisioner!", :red, true))
+        end
+      else
+        puts(set_color("Could not create the server!", :red, true))
+      end
+    else
+      puts(set_color("Could not create a new instance of test lab!", :red, true))
+    end
     puts
-    puts(set_color("============================================================================", :bold))
-    puts("Your cucumber-chef test lab has now been provisioned!")
-    puts
-    puts("Be sure to log into the chef-server webui and change the default credentials.")
-    puts
-    puts("  Chef-Server WebUI:")
-    puts("    http://#{server.public_ip_address}:4040/")
-    puts("  Username:")
-    puts("    admin")
-    puts("  Password:")
-    puts("    #{Cucumber::Chef::Provisioner::PASSWORD}")
-    puts
-    puts(set_color("============================================================================", :bold))
 
   rescue Cucumber::Chef::Error => e
-    error(e.message)
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e.message)
   end
 
 ################################################################################
@@ -147,27 +161,71 @@ class CucumberChef < Thor
   def teardown
     load_config
 
-    if yes?(set_color("Are you sure you want to teardown your cucumber-chef test lab?", :red, true))
-      count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
-      puts
-      puts(set_color("============================================================================", :bold))
-      puts(set_color("You have 5 seconds to abort!", :green, true))
-      puts(set_color("============================================================================", :bold))
-      puts
-      print(set_color("Self-destructing in", :green, true))
-      5.downto(1) do |x|
-        print(set_color("...#{x}", count_down_colors[x], true))
-        sleep(1)
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      if yes?(set_color("Are you sure you want to teardown your cucumber-chef test lab?", :red, true))
+        count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
+        puts
+        puts(set_color("You have 5 seconds to abort!", :green, true))
+        puts
+        print(set_color("Self-destructing in", :green, true))
+        5.downto(1) do |x|
+          print(set_color("...#{x}", count_down_colors[x], true))
+          sleep(1)
+        end
+        puts(set_color("...BOOM!", :red, true))
+        puts
+        test_lab.destroy
+      else
+        puts
+        puts(set_color("Whew! That was close!", :green, true))
       end
-      puts(set_color("...BOOM!", :red, true))
-      test_lab = Cucumber::Chef::TestLab.new
-      test_lab.destroy
     else
-      puts(set_color("Whew! That was close!", :green, true))
+      puts(set_color("Could not find a cucumber-chef test lab to teardown!", :red, true))
     end
+    puts
 
   rescue Cucumber::Chef::Error => e
-    error(e)
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
+  desc "up", "Startup the cucumber-chef test lab"
+  def up
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      test_lab.start
+    else
+      puts(set_color("Could not find a cucumber-chef test lab to startup!", :red, true))
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
+  desc "down", "Shutdown the cucumber-chef test lab"
+  def down
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      test_lab.stop
+    else
+      puts(set_color("Could not find a cucumber-chef test lab to shutdown!", :red, true))
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
   end
 
 ################################################################################
@@ -177,44 +235,41 @@ class CucumberChef < Thor
   def ssh(*args)
     load_config
 
-    if (test_lab = Cucumber::Chef::TestLab.new)
-      if test_lab.labs_exist?
-        ssh = Cucumber::Chef::SSH.new
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+      ssh = Cucumber::Chef::SSH.new
 
-        if args.size == 0
-          ssh.config[:host] = test_lab.labs_running.first.public_ip_address
-          ssh.config[:ssh_user] = "ubuntu"
-          ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
+      if args.size == 0
+        ssh.config[:host] = test_lab.labs_running.first.public_ip_address
+        ssh.config[:ssh_user] = "ubuntu"
+        ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
 
-          puts(set_color("============================================================================", :bold))
-          puts([set_color("Attempting SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
-          puts(set_color("============================================================================", :bold))
-          ssh.console
-        else
-          container = args[0]
-
-          ssh.config[:proxy] = true
-          ssh.config[:proxy_host] = test_lab.labs_running.first.public_ip_address
-          ssh.config[:proxy_ssh_user] = "ubuntu"
-          ssh.config[:proxy_identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
-
-          ssh.config[:host] = container
-          ssh.config[:ssh_user] = "root"
-          ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
-
-          puts(set_color("============================================================================", :bold))
-          puts([set_color("Attempting SSH connection to cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
-          puts(set_color("============================================================================", :bold))
-          ssh.console
-        end
-
+        puts([set_color("Attempting SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
+        ssh.console
       else
-        puts(set_color("No test labs available to ssh to!", :red, true))
+        container = args[0]
+
+        ssh.config[:proxy] = true
+        ssh.config[:proxy_host] = test_lab.labs_running.first.public_ip_address
+        ssh.config[:proxy_ssh_user] = "ubuntu"
+        ssh.config[:proxy_identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+
+        ssh.config[:host] = container
+        ssh.config[:ssh_user] = "root"
+        ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+
+        puts([set_color("Attempting SSH connection to cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
+        ssh.console
       end
+
+    else
+      puts(set_color("No cucumber-chef test labs available to ssh to!", :red, true))
     end
+    puts
 
   rescue Cucumber::Chef::Error => e
-    error(e)
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
   end
 
 ################################################################################
@@ -226,35 +281,39 @@ class CucumberChef < Thor
   def diagnose(container)
     load_config
 
-    if (test_lab = Cucumber::Chef::TestLab.new)
-      if test_lab.labs_exist?
-        ssh = Cucumber::Chef::SSH.new
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+      ssh = Cucumber::Chef::SSH.new
 
-        ssh.config[:proxy] = true
-        ssh.config[:proxy_host] = test_lab.labs_running.first.public_ip_address
-        ssh.config[:proxy_ssh_user] = "ubuntu"
-        ssh.config[:proxy_identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+      ssh.config[:proxy] = true
+      ssh.config[:proxy_host] = test_lab.labs_running.first.public_ip_address
+      ssh.config[:proxy_ssh_user] = "ubuntu"
+      ssh.config[:proxy_identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
 
-        ssh.config[:host] = container
-        ssh.config[:ssh_user] = "root"
-        ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+      ssh.config[:host] = container
+      ssh.config[:ssh_user] = "root"
+      ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
 
-        puts([set_color("Attempting to collect diagnostic information on cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
-        if @options.strace?
-          puts(set_color("============================================================================", :bold))
-          puts("chef-stacktrace.out:")
-          puts(set_color("============================================================================", :bold))
-          ssh.exec("[[ -e /var/chef/cache/chef-stacktrace.out ]] && cat /var/chef/cache/chef-stacktrace.out")
-          print("\n")
-        end
-        if @options.log?
-          puts(set_color("============================================================================", :bold))
-          puts("chef.log:")
-          puts(set_color("============================================================================", :bold))
-          ssh.exec("[[ -e /var/log/chef.log ]] && tail -n #{@options.lines} /var/log/chef.log")
-        end
+      puts([set_color("Attempting to collect diagnostic information on cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
+      if @options.strace?
+        puts
+        puts("chef-stacktrace.out:")
+        puts(set_color("============================================================================", :bold))
+        ssh.exec("[[ -e /var/chef/cache/chef-stacktrace.out ]] && cat /var/chef/cache/chef-stacktrace.out")
+        print("\n")
+      end
+      if @options.log?
+        puts
+        puts("chef.log:")
+        puts(set_color("============================================================================", :bold))
+        ssh.exec("[[ -e /var/log/chef.log ]] && tail -n #{@options.lines} /var/log/chef.log")
       end
     end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
   end
 
 ################################################################################
@@ -264,10 +323,13 @@ class CucumberChef < Thor
   def displayconfig
     load_config
 
+    puts
     say(Cucumber::Chef::Config.configuration.to_yaml, :bold)
+    puts
 
   rescue Cucumber::Chef::Error => e
-    error(e.message)
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e.message)
   end
 
 ################################################################################
@@ -277,12 +339,15 @@ class CucumberChef < Thor
   def info
     load_config
 
+    puts
     if (test_lab = Cucumber::Chef::TestLab.new)
       test_lab.info
     end
+    puts
 
   rescue Cucumber::Chef::Error => e
-    error(e.message)
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e.message)
   end
 
 ################################################################################
@@ -299,9 +364,11 @@ class CucumberChef < Thor
     puts
     puts(set_color("Project created!", :green, true))
     say("Please look at the README in '#{features_dir}/#{project}/', and the example features (#{File.basename(feature)}) and steps (#{File.basename(steps)}), which I have autogenerated for you.", :green)
+    puts
 
   rescue Cucumber::Chef::Error => e
-    error(e)
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
   end
 
 ################################################################################
@@ -310,6 +377,7 @@ class CucumberChef < Thor
   def test(*args)
     load_config
 
+    puts
     root_path = Cucumber::Chef.locate_parent(".cucumber-chef")
     features_path = File.expand_path(File.join(root_path, "features"))
 
@@ -321,9 +389,11 @@ class CucumberChef < Thor
 
     runner = Cucumber::Chef::TestRunner.new(features_path)
     runner.run(args)
+    puts
 
   rescue Cucumber::Chef::Error => e
-    error(e)
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
   end
 
 ################################################################################
