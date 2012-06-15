@@ -64,8 +64,8 @@ describe Cucumber::Chef::Config do
         Cucumber::Chef::Config[:aws][:aws_instance_arch].should == "i386"
       end
 
-      it "Cucumber::Chef::Config[:aws][:aws_instance_disk_store] defaults to 'instance-store'" do
-        Cucumber::Chef::Config[:aws][:aws_instance_disk_store].should == "instance-store"
+      it "Cucumber::Chef::Config[:aws][:aws_instance_disk_store] defaults to 'ebs'" do
+        Cucumber::Chef::Config[:aws][:aws_instance_disk_store].should == "ebs"
       end
 
       it "Cucumber::Chef::Config[:aws][:aws_instance_type] defaults to 'm1.small'" do

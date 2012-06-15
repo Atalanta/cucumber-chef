@@ -158,7 +158,7 @@ module Cucumber
 
       aws       Hash[ :ubuntu_release => "precise",
                       :aws_instance_arch => "i386",
-                      :aws_instance_disk_store => "instance-store",
+                      :aws_instance_disk_store => "ebs",
                       :aws_instance_type => "m1.small",
                       :aws_security_group => "cucumber-chef" ]
 
