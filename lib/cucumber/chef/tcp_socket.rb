@@ -33,13 +33,13 @@ module Cucumber
 
         if !host
           message = "You must supply a host!"
-          $logger.fatal { message }
+          $logger.fatal { message } if $logger
           raise TCPSocketError, message
         end
 
         if !port
           message = "You must supply a port!"
-          $logger.fatal { message }
+          $logger.fatal { message } if $logger
           raise TCPSocketError, message
         end
       end
@@ -50,15 +50,15 @@ module Cucumber
         socket = ::TCPSocket.new(@host, @port)
 
         if @data.nil?
-          $logger.debug { "read(#{@host}:#{@port})" }
+          $logger.debug { "read(#{@host}:#{@port})" } if $logger
           ((::IO.select([socket], nil, nil, 5) && socket.gets) ? true : false)
         else
-          $logger.debug { "write(#{@host}:#{@port}, '#{@data}')" }
+          $logger.debug { "write(#{@host}:#{@port}, '#{@data}')" } if $logger
           ((::IO.select(nil, [socket], nil, 5) && socket.write(@data)) ? true : false)
         end
 
       rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
-        $logger.debug { e.message }
+        $logger.debug { e.message } if $logger
         false
       ensure
         (socket && socket.close)

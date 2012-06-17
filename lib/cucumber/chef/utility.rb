@@ -74,7 +74,7 @@ module Cucumber
         end
 
         message = "Could not locate #{type} '#{File.join(args)}'."
-        $logger.fatal { message }
+        $logger.fatal { message } if $logger
         raise UtilityError, message
       end
 
