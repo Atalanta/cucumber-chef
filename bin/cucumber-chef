@@ -47,6 +47,13 @@ class CucumberChef < Thor
     end
 
     def load_config
+
+      chef_repo = (Cucumber::Chef.locate_parent(".chef") rescue nil)
+      if ( !chef_repo || ( !File.exists?(chef_repo) || !File.directory?(chef_repo) ) )
+        fatal("Doesn't look like your inside a chef-repo!  Please relocate to one and execute your command again!")
+        exit(255)
+      end
+
       $logger = Cucumber::Chef::Logger.new
       $logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
 
