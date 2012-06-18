@@ -2,7 +2,7 @@
 #
 #      Author: Stephen Nelson-Smith <stephen@atalanta-systems.com>
 #      Author: Zachary Patten <zachary@jovelabs.com>
-#   Copyright: Copyright (c) 2011-2012 Cucumber-Chef
+#   Copyright: Copyright (c) 2011-2012 Atalanta Systems Ltd
 #     License: Apache License, Version 2.0
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,7 +52,7 @@ module Cucumber::Chef::Helpers::Server
                      :arch => detect_arch(attributes[:distro] || "ubuntu") }.merge(attributes)
     end
     $servers = ($servers || Hash.new(nil)).merge(name => attributes)
-
+    $current_server = $servers[name][:ip]
     if !server_running?(name)
       log(name, "is being provisioned") if $servers[name]
 
