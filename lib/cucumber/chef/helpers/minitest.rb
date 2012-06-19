@@ -25,13 +25,12 @@ module Cucumber::Chef::Helpers::MiniTest
     @chef_client_attributes[:run_list].unshift("recipe[minitest-handler]")
     chef_config_client(name)
   end
-  
+
   def run_minitests(name)
     chef_run = command_run_remote(name, "/usr/bin/chef-client -j /etc/chef/attributes.json -N #{name} -l info")
     test_result = chef_run.drop_while {|e| e !~ /^# Running tests/}.take_while {|e| e !~ /^[.*] INFO/}
     puts test_result
     test_result
   end
-  
-end
 
+end
