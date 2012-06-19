@@ -317,7 +317,7 @@ class CucumberChef < Thor
         puts
         puts("chef.log:")
         puts(set_color("============================================================================", :bold))
-        ssh.exec("[[ -e /var/log/chef.log ]] && tail -n #{@options.lines} /var/log/chef.log")
+        ssh.exec("[[ -e /var/log/chef/client.log ]] && tail -n #{@options.lines} /var/log/chef/client.log")
       end
     end
     puts
@@ -385,6 +385,7 @@ class CucumberChef < Thor
 ################################################################################
 
   desc "test [cucumber-options]", "Test a project using the cucumber-chef test suite."
+  method_option :destroy, :type => :boolean, :desc => "destroy all containers before test run", :aliases => "-z", :default => false
   def test(*args)
     load_config
 
@@ -399,7 +400,7 @@ class CucumberChef < Thor
     end
 
     runner = Cucumber::Chef::TestRunner.new(features_path)
-    runner.run(args)
+    runner.run(@options.destroy?, args)
     puts
 
   rescue Cucumber::Chef::Error => e

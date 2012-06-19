@@ -45,14 +45,15 @@ module Cucumber
 
 ################################################################################
 
-      def run(*args)
+      def run(destroy, *args)
         reset_project
         upload_project
 
         @stdout.puts("Executing Cucumber-Chef Test Runner")
         remote_path = File.join("/", "home", "ubuntu", "features")
         cucumber_options = args.flatten.compact.uniq.join(" ")
-        command = [ "cd #{remote_path} && sudo cucumber", cucumber_options, "." ].flatten.compact.join(" ")
+        env = ( destroy ? "DESTROY=1" : nil )
+        command = [ "cd #{remote_path}", "&&", "sudo", env, "cucumber", cucumber_options, "--exclude support/roles", "--exclude support/data_bags", "." ].flatten.compact.join(" ")
 
         @ssh.exec(command)
       end
