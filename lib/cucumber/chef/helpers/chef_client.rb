@@ -47,6 +47,28 @@ module Cucumber::Chef::Helpers::ChefClient
 
 ################################################################################
 
+  def load_databag_item(databag_item_path)
+    ::Chef::JSONCompat.from_json(IO.read(databag_item_path))
+  end
+
+  def load_databag(databag, databag_path)
+    items = Dir.glob(File.expand_path(File.join(databag_path, "*.{json,rb}")))
+    items.each do |item|
+      next if File.directory?(item)
+
+      item_path = File.basename(item)
+      databag_item_path = File.expand_path(File.join(databag_path, item_path))
+
+      data_bag_item = ::Chef::DataBagItem.new
+      data_bag_item.data_bag(databag)
+      data_bag_item.raw_data = load_databag_item(databag_item_path)
+      data_bag_item.save
+      log("Chef-Server", "Updated data bag item: #{databag}, #{item_path}.")
+    end
+  end
+
+################################################################################
+
   def chef_config_client(name)
     # make sure our configuration location is there
     client_rb = File.join("/", container_root(name), "etc/chef/client.rb")

@@ -19,9 +19,8 @@
 #
 ################################################################################
 
-require 'cucumber/chef/steps/chef_steps'
-require 'cucumber/chef/steps/minitest_steps'
-require 'cucumber/chef/steps/provision_steps'
-require 'cucumber/chef/steps/ssh_steps'
-
-################################################################################
+And /^the following databags have been updated:$/ do |table|
+  table.hashes.each do |databag, databag_path|
+    load_databag(databag, databag_path)
+  end
+end
