@@ -35,6 +35,45 @@ module Cucumber::Chef::Helpers::ChefServer
 
 ################################################################################
 
+  def load_role(role, role_path)
+    ::Chef::Config[:role_path] = role_path
+    role = ::Chef::Role.from_disk(role)
+    role.save
+    log("chef-server", "updated role: '#{role}'")
+  end
+
+################################################################################
+
+  def create_databag(databag)
+    @rest ||= Chef::REST.new(Chef::Config[:chef_server_url])
+    @rest.post_rest("data", { "name" => databag })
+  rescue Net::HTTPServerException => e
+    raise unless e.to_s =~ /^409/
+  end
+
+  def load_databag_item(databag_item_path)
+    ::Yajl::Parser.parse(IO.read(databag_item_path))
+  end
+
+  def load_databag(databag, databag_path)
+    create_databag(databag)
+    items = Dir.glob(File.expand_path(File.join(databag_path, "*.{json,rb}")))
+    items.each do |item|
+      next if File.directory?(item)
+
+      item_path = File.basename(item)
+      databag_item_path = File.expand_path(File.join(databag_path, item_path))
+
+      data_bag_item = ::Chef::DataBagItem.new
+      data_bag_item.data_bag(databag)
+      data_bag_item.raw_data = load_databag_item(databag_item_path)
+      data_bag_item.save
+      log("chef-server", "updated data bag item: '#{databag}/#{item_path}'")
+    end
+  end
+
+################################################################################
+
 end
 
 ################################################################################

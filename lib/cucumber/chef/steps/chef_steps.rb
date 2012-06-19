@@ -20,7 +20,13 @@
 ################################################################################
 
 And /^the following databags have been updated:$/ do |table|
-  table.hashes.each do |databag, databag_path|
-    load_databag(databag, databag_path)
+  table.hashes.each do |entry|
+    load_databag(entry['databag'], entry['databag_path'])
+  end
+end
+
+And /^the following roles have been updated:$/ do |table|
+  table.hashes.each do |entry|
+    load_role(entry['role'], entry['role_path'])
   end
 end

@@ -8,7 +8,7 @@ Then /^I can ssh to "([^\"]*)" with the following credentials:$/ do |hostname, t
   credentials = table.hashes
   credentials.each do |creds|
     lambda {
-      Net::SSH.start($servers[hostname][:ip], creds["username"], :password => creds["password"], :auth_methods => @auth_methods)
+      Net::SSH.start(session["hostname"], creds["username"], :password => creds["password"], :auth_methods => @auth_methods)
     }.should_not raise_error(Net::SSH::AuthenticationFailed)
   end
 end
@@ -31,7 +31,7 @@ Then /^I can ssh to the following hosts with these credentials:$/ do |table|
     end
 
     lambda {
-      @connection = Net::SSH.start($servers[session["hostname"]][:ip],
+      @connection = Net::SSH.start(session["hostname"],
                                    session["username"],
                                    :password => session["password"],
                                    :auth_methods => session_auth_methods,
@@ -66,7 +66,7 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   end
 
   lambda {
-    @connection = Net::SSH.start($servers[hostname][:ip],
+    @connection = Net::SSH.start(hostname,
                                  session["username"],
                                  :password => session["password"],
                                  :auth_methods => session_auth_methods,

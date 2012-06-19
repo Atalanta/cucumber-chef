@@ -24,7 +24,7 @@ module Cucumber::Chef::Helpers::Server
 ################################################################################
 
   def log(name, message)
-    STDOUT.puts("\033[34m====> \033[1m#{name}\033[0m\033[34m #{message}\033[0m")
+    STDOUT.puts("\033[34m  >>> \033[1m#{name}\033[0m\033[34m #{message}\033[0m")
     STDOUT.flush if STDOUT.respond_to?(:flush)
   end
 
@@ -43,7 +43,7 @@ module Cucumber::Chef::Helpers::Server
     if ((attributes[:persist] && $servers[name]) || ($servers[name] && $servers[name][:persist]))
       attributes = $servers[name]
     else
-      server_destroy(name) if container_exists?(name)
+      server_destroy(name) if (container_exists?(name) && (ENV['DESTROY'] == "1"))
       attributes = { :ip => generate_ip,
                      :mac => generate_mac,
                      :persist => true,
