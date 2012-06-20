@@ -39,7 +39,7 @@ module Cucumber::Chef::Helpers::ChefServer
     ::Chef::Config[:role_path] = role_path
     role = ::Chef::Role.from_disk(role)
     role.save
-    log("chef-server", "updated role: '#{role}'")
+    log("chef-server", "updated role '#{role}' from file '#{role_path}'")
   end
 
 ################################################################################
@@ -68,7 +68,7 @@ module Cucumber::Chef::Helpers::ChefServer
       data_bag_item.data_bag(databag)
       data_bag_item.raw_data = load_databag_item(databag_item_path)
       data_bag_item.save
-      log("chef-server", "updated data bag item: '#{databag}/#{item_path}'")
+      log("chef-server", "updated data bag item '#{databag}/#{item_path}' from file '#{databag_path}'")
     end
   end
 
