@@ -29,13 +29,15 @@ Before do
     servers.each do |name|
       server_destroy(name)
     end
-    File.delete($servers_bin)
+    File.exists?($servers_bin) && File.delete($servers_bin)
   else
     STDOUT.puts("\033[34m  >>> \033[1mservers\033[0m\033[34m are being preserved\033[0m")
     STDOUT.flush if STDOUT.respond_to?(:flush)
   end
 
-  $servers = Marshal.load(IO.read($servers_bin)) if (!defined?($servers) && File.exists?($servers_bin))
+  if File.exists?($servers_bin)
+    $servers = Marshal.load(IO.read($servers_bin))
+  end
 
   # for Opscode Hosted chef-server use this:
   #chef_set_client_config(:orgname => "cucumber-chef")
@@ -46,11 +48,14 @@ Before do
 end
 
 After do |scenario|
+  @connection.close if @connection
+
   data = Marshal.dump($servers)
   File.open($servers_bin, 'w') do |f|
     f.puts(Marshal.dump($servers))
   end
-  exit(255) if scenario.failed?
+
+  Kernel.exit if scenario.failed?
 
   # cleanup non-persistent lxc containers on exit
   $servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
