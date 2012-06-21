@@ -25,12 +25,14 @@ module Cucumber::Chef::Helpers::ChefServer
 
   def chef_server_node_destroy(name)
     (Chef::Node.load(name).destroy rescue nil)
+    log("chef-server", "destroyed node '#{name}'")
   end
 
 ################################################################################
 
   def chef_server_client_destroy(name)
     (Chef::ApiClient.load(name).destroy rescue nil)
+    log("chef-server", "destroyed client '#{name}'")
   end
 
 ################################################################################
@@ -70,6 +72,12 @@ module Cucumber::Chef::Helpers::ChefServer
       data_bag_item.save
       log("chef-server", "updated data bag item '#{databag}/#{item_path}' from file '#{databag_path}'")
     end
+
+    # TODO fix ghetto sleep
+    # databags don't always update right away; ghetto fix with a sleep
+    # for now.  likely needs to loop reading the databag back until it updates
+    # then return
+    sleep(3)
   end
 
 ################################################################################
