@@ -24,20 +24,23 @@ module Cucumber::Chef::Helpers::ChefServer
 ################################################################################
 
   def chef_server_node_destroy(name)
-    (Chef::Node.load(name).destroy rescue nil)
+    (::Chef::Node.load(name).destroy rescue nil)
     log("chef-server", "destroyed node '#{name}'")
   end
 
 ################################################################################
 
   def chef_server_client_destroy(name)
-    (Chef::ApiClient.load(name).destroy rescue nil)
+    (::Chef::ApiClient.load(name).destroy rescue nil)
     log("chef-server", "destroyed client '#{name}'")
   end
 
 ################################################################################
 
   def load_role(role, role_path)
+    if !File.exists?(File.expand_path(role_path))
+      raise "Role path does not exist!"
+    end
     ::Chef::Config[:role_path] = role_path
     role = ::Chef::Role.from_disk(role)
     role.save
@@ -47,7 +50,7 @@ module Cucumber::Chef::Helpers::ChefServer
 ################################################################################
 
   def create_databag(databag)
-    @rest ||= Chef::REST.new(Chef::Config[:chef_server_url])
+    @rest ||= ::Chef::REST.new(Chef::Config[:chef_server_url])
     @rest.post_rest("data", { "name" => databag })
   rescue Net::HTTPServerException => e
     raise unless e.to_s =~ /^409/
