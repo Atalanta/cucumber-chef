@@ -290,9 +290,6 @@ Suppose we have a cookbook that creates new users.  After it runs we should be a
           | databag | databag_path |
           | users | ./support/data_bags/users |
         * the chef-client has been run on "users"
-        * I ssh to "users" with the following credentials:
-          | username | keyfile |
-          | root | ../.ssh/id_rsa |
 
 And now for the `Scenario`:
 
