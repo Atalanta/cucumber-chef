@@ -39,10 +39,12 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @connection = Fog::Compute.new(:provider => 'AWS',
-                                       :aws_access_key_id => Cucumber::Chef::Config[:aws][:aws_access_key_id],
-                                       :aws_secret_access_key => Cucumber::Chef::Config[:aws][:aws_secret_access_key],
-                                       :region => Cucumber::Chef::Config[:aws][:region])
+        @connection = Fog::Compute.new(
+          :provider => 'AWS',
+          :aws_access_key_id => Cucumber::Chef::Config[:aws][:aws_access_key_id],
+          :aws_secret_access_key => Cucumber::Chef::Config[:aws][:aws_secret_access_key],
+          :region => Cucumber::Chef::Config[:aws][:region]
+        )
         ensure_security_group
       end
 
@@ -236,7 +238,9 @@ module Cucumber
       def labs
         results = @connection.servers.select do |server|
           $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
-          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s && VALID_STATES.any?{ |state| state == server.state } )
+          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
+            server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
+            VALID_STATES.any?{ |state| state == server.state } )
         end
         results.each do |server|
           $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
@@ -249,7 +253,9 @@ module Cucumber
       def labs_running
         results = @connection.servers.select do |server|
           $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
-          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s && RUNNING_STATES.any?{ |state| state == server.state } )
+          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
+            server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
+            RUNNING_STATES.any?{ |state| state == server.state } )
         end
         results.each do |server|
           $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
@@ -262,7 +268,9 @@ module Cucumber
       def labs_shutdown
         results = @connection.servers.select do |server|
           $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
-          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s && SHUTDOWN_STATES.any?{ |state| state == server.state } )
+          ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
+            server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
+            SHUTDOWN_STATES.any?{ |state| state == server.state } )
         end
         results.each do |server|
           $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
@@ -274,7 +282,7 @@ module Cucumber
 
       def nodes
         Cucumber::Chef.load_knife_config
-        query = "tags:#{Cucumber::Chef::Config[:mode]} AND name:cucumber-chef*"
+        query = "tags:#{Cucumber::Chef::Config[:mode]} AND tags:#{Cucumber::Chef::Config[:user]}"
         $logger.debug { "query(#{query})" }
         nodes, offset, total = ::Chef::Search::Query.new.search("node", URI.escape(query))
         nodes.compact
@@ -282,7 +290,7 @@ module Cucumber
 
       def clients
         Cucumber::Chef.load_knife_config
-        query = "name:cucumber-chef*"
+        query = "tags:#{Cucumber::Chef::Config[:mode]} AND tags:#{Cucumber::Chef::Config[:user]}"
         $logger.debug { "query(#{query})" }
         clients, offset, total = ::Chef::Search::Query.new.search("client", URI.escape(query))
         clients.compact
@@ -296,6 +304,7 @@ module Cucumber
       def tag_server
         {
           "cucumber-chef-mode" => Cucumber::Chef::Config[:mode],
+          "cucumber-chef-user" => Cucumber::Chef::Config[:user],
           "purpose" => "cucumber-chef"
         }.each do |k, v|
           tag = @connection.tags.new

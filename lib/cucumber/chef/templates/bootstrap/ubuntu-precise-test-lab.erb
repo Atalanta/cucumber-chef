@@ -1,5 +1,6 @@
 bash -c '
-[ -f /.cucumber-chef-bootstrap ] && echo "Already bootstrapped!" && exit
+CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
+[ -f ${CUCUMBER_CHEF_BOOTSTRAP_DONE} ] && echo "Already bootstrapped!" && exit
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -16,7 +17,6 @@ apt-get -q -y --force-yes -o Dpkg::Options::="--force-confnew" install opscode-k
 chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}/.gnupg
 apt-get -q -y upgrade
 
-apt-get -q -y install debconf-utils
 cat <<EOF | debconf-set-selections
 chef chef/chef_server_url string http://<%= @config[:chef_server] %>:4000
 chef-solr chef-solr/amqp_password password <%= @config[:amqp_password] %>
@@ -95,5 +95,5 @@ cat <<EOF > /etc/chef/first-boot.json
 <%= @config[:attributes].to_json %>
 EOF
 
-touch /.cucumber-chef-bootstrap
+touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}
 '

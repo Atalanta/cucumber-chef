@@ -159,6 +159,8 @@ module Cucumber
       provider        :aws
       librarian_chef  false
 
+      user            ( ENV['OPSCODE_USER'] || ENV['USER'] )
+
       aws             Hash[ :ubuntu_release => "precise",
                             :aws_instance_arch => "i386",
                             :aws_instance_disk_store => "ebs",

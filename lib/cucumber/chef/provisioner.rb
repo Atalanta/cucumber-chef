@@ -44,7 +44,6 @@ module Cucumber
 
         @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
 
-        @user = ENV['OPSCODE_USER'] || ENV['USER']
         @cookbooks_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "cookbooks"))
         @roles_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "roles"))
       end
@@ -52,7 +51,7 @@ module Cucumber
 ################################################################################
 
       def build
-        template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-maverick-test-lab.erb"))
+        template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-test-lab.erb"))
 
         bootstrap(template_file)
         wait_for_chef_server
@@ -78,7 +77,7 @@ module Cucumber
 ################################################################################
 
       def bootstrap(template_file)
-        raise ProvisionerError, "You must have the environment variable 'USER' set." if !@user
+        raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config[:user]
 
         @stdout.print("Bootstrapping AWS EC2 instance...")
         Cucumber::Chef.spinner do
@@ -100,7 +99,7 @@ module Cucumber
           bootstrap.config[:context][:chef_server] = HOSTNAME
           bootstrap.config[:context][:amqp_password] = PASSWORD
           bootstrap.config[:context][:admin_password] = PASSWORD
-          bootstrap.config[:context][:user] = @user
+          bootstrap.config[:context][:user] = Cucumber::Chef::Config[:user]
           bootstrap.config[:context][:attributes] = attributes
           bootstrap.run
         end
@@ -115,7 +114,7 @@ module Cucumber
           local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
           remote_path = File.join("/", "home", @ssh.config[:ssh_user], ".chef")
 
-          files = [ "#{@user}.pem", "validation.pem" ]
+          files = [ "#{Cucumber::Chef::Config[:user]}.pem", "validation.pem" ]
           files.each do |file|
             @ssh.download(File.join(remote_path, file), File.join(local_path, file))
           end
@@ -149,7 +148,12 @@ module Cucumber
           template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb"))
           knife_rb = File.expand_path(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "knife.rb"))
 
-          context = { :chef_server => @server.public_ip_address, :librarian_chef => Cucumber::Chef::Config[:librarian_chef] }
+          context = {
+            :chef_server => @server.public_ip_address,
+            :librarian_chef => Cucumber::Chef::Config[:librarian_chef],
+            :user => Cucumber::Chef::Config[:user]
+          }
+
           File.open(knife_rb, 'w') do |f|
             f.puts(Cucumber::Chef::Template.render(template_file, context))
           end
@@ -207,7 +211,7 @@ module Cucumber
         Cucumber::Chef.spinner do
           Cucumber::Chef.load_knife_config
           node = ::Chef::Node.load(HOSTNAME)
-          [ Cucumber::Chef::Config[:mode].to_s ].each do |tag|
+          [ Cucumber::Chef::Config[:mode].to_s, Cucumber::Chef::Config[:user].to_s ].each do |tag|
             node.tags << tag
             node.save
           end
