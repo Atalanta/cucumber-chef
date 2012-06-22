@@ -345,8 +345,8 @@ class CucumberChef < Thor
 
 ################################################################################
 
-  desc "list", "List container processes."
-  def list
+  desc "ps", "Snapshot of the current container processes."
+  def ps(*args)
     load_config
 
     puts
@@ -360,7 +360,7 @@ class CucumberChef < Thor
       puts(set_color("Getting container processes from cucumber-chef test lab...", :blue, true))
       puts
       puts(set_color("============================================================================", :bold))
-      ssh.exec("lxc-ps --lxc -- uax")
+      ssh.exec("lxc-ps --lxc -- #{args.join(" ")}")
       print("\n")
     end
     puts
