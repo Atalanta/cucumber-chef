@@ -497,7 +497,7 @@ Maybe you want to run it with the default options in play; you would likely get 
 
 This command provides you with a snapshot of all the container processes running on the Cucumber-Chef test lab.  You can pass in `ps` command line options to customize the output as you desire.
 
-    $ bin/cucumber-chef help ps
+    $ cucumber-chef help ps
     Usage:
       cucumber-chef ps [ps-options]
 
@@ -505,7 +505,7 @@ This command provides you with a snapshot of all the container processes running
 
 Standard usage using `aux` options:
 
-    $ bin/cucumber-chef ps aux
+    $ cucumber-chef ps aux
     cucumber-chef v2.0.0.rc1
 
     Getting container processes from cucumber-chef test lab...
@@ -639,7 +639,7 @@ Here is the feature we'll be using.  This feature has some extra scenarios to il
 
 Now we're going to execute the test.  Created features are pre tagged with the name of the feature (i.e. `@<name>`) and `@wip`.  Be sure to pass that to the test runner so Cucumber knows to only run tests tagged with that, unless you want to test all your features.
 
-    $ bin/cucumber-chef test --tags @devopserver
+    $ cucumber-chef test --tags @devopserver
     Using features directory: /home/couldbeyou/chef-repo/features
     Cucumber-Chef Test Runner Initalized!
     Cleaning up any previous test runs...done.
