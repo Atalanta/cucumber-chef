@@ -352,12 +352,6 @@ You can write the tests and Chef code wherever you like.  We're assuming you pre
 
     $ cucumber-chef test
 
-You can now pass in options for cucumber or even setup profiles via `cucumber.yml`.  Any command-line options specified after the project name will be passed on to cucumber.  For example:
-
-    $ cucumber-chef test --tags @wip -c -v -b
-
-To take advantage of cucumber profiles, create a `cucumber.yml` configuration file in the root of your chef-repo; just as you would with any other project using cucumber.  In this file you can take full advantage of the Cucumber profiles as definied on their wiki, https://github.com/cucumber/cucumber/wiki/cucumber.yml.
-
 Containers are now persisted by default.  This means faster run times on average but if things get screwy, or you want to test from a clean slate, you can easily reset your containers.  If you pass in either `-z` or `--destroy` all containers will be wiped before the test run starts.
 
     $ bin/cucumber-chef help test
@@ -368,6 +362,12 @@ Containers are now persisted by default.  This means faster run times on average
       -z, [--destroy]  # destroy all containers before test run
 
     Test a project using the cucumber-chef test suite.
+
+You can now pass in options for cucumber or even setup profiles via `cucumber.yml`.  Any command-line options specified after the project name will be passed on to cucumber.  For example:
+
+    $ cucumber-chef test --tags @wip -c -v -b
+
+To take advantage of cucumber profiles, create a `cucumber.yml` configuration file in the root of your chef-repo; just as you would with any other project using cucumber.  In this file you can take full advantage of the Cucumber profiles as definied on their wiki, https://github.com/cucumber/cucumber/wiki/cucumber.yml.
 
 Here is an example default project for `cucumber.yml` which turns on colored output, verbosity and full backtraces for all test runs:
 
