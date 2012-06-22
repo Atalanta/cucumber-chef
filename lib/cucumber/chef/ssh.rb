@@ -62,6 +62,7 @@ module Cucumber
 
         options = { :silence => false }.merge(options)
         silence = options[:silence]
+        output = ""
 
         $logger.debug { "config(#{@config.inspect})" }
         $logger.debug { "options(#{options.inspect})" }
@@ -72,11 +73,13 @@ module Cucumber
             raise SSHError, "Could not execute '#{command}'." unless success
 
             ch.on_data do |c, data|
+              output += data
               $logger.debug { data.chomp.strip }
               @stdout.print(data) if !silence
             end
 
             ch.on_extended_data do |c, type, data|
+              output += data
               $logger.debug { data.chomp.strip }
               @stderr.print(data) if !silence
             end
@@ -85,6 +88,8 @@ module Cucumber
         end
         channel.wait
         $logger.debug { "channel closed" }
+
+        output
       end
 
 ################################################################################
