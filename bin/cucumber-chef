@@ -345,7 +345,7 @@ class CucumberChef < Thor
 
 ################################################################################
 
-  desc "ps", "Snapshot of the current container processes."
+  desc "ps [ps-options]", "Snapshot of the current cucumber-chef test lab container processes."
   def ps(*args)
     load_config
 
