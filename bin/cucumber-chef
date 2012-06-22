@@ -345,6 +345,33 @@ class CucumberChef < Thor
 
 ################################################################################
 
+  desc "list", "List container processes."
+  def list
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+      ssh = Cucumber::Chef::SSH.new
+
+      ssh.config[:host] = test_lab.labs_running.first.public_ip_address
+      ssh.config[:ssh_user] = "ubuntu"
+      ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
+
+      puts(set_color("Getting container processes from cucumber-chef test lab...", :blue, true))
+      puts
+      puts(set_color("============================================================================", :bold))
+      ssh.exec("lxc-ps --lxc -- uax")
+      print("\n")
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
   desc "info", "Display information about the current test lab."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def info
