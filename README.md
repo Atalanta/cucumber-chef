@@ -354,7 +354,7 @@ You can write the tests and Chef code wherever you like.  We're assuming you pre
 
 Containers are now persisted by default.  This means faster run times on average but if things get screwy, or you want to test from a clean slate, you can easily reset your containers.  If you pass in either `-z` or `--destroy` all containers will be wiped before the test run starts.
 
-    $ bin/cucumber-chef help test
+    $ cucumber-chef help test
     Usage:
       cucumber-chef test [cucumber-options]
 
@@ -385,6 +385,15 @@ At present, Cucumber-Chef only allows one test lab per AWS account.  In practice
 We have put in a few tasks to help you diagnose any issues you may come across with the test lab, containers or your cookbooks and recipes.  There are two main tasks available to help you with this: `ssh` and `diagnose`.
 
 #### `ssh`
+
+    $ cucumber-chef help ssh
+    Usage:
+      cucumber-chef ssh [container]
+
+    Options:
+      [--test]  # INTERNAL USE ONLY
+
+    SSH to cucumber-chef test lab or [container] if specified.
 
 This command provides you with a rapid way to connect to either your test lab or containers.  Think `vagrant ssh`; we took a queue from their wonderful gem and realized we want our gem to provide the same sort of functionality.  The main difference between our `ssh` task and the way Vagrant's task works is that we generate a fresh ssh key pair whenever a test lab is setup; so you can rest assured no one else has a copy of the credientials.  You also do not have to worry about generating or specifying your own key pair to override a default key pair as is the case with Vagrant if you do not want to use the one shipped with Vagrant.
 
