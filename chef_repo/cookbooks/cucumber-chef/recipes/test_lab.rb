@@ -36,7 +36,7 @@ end
 gem_package "cucumber-chef" do
   gem_binary("/usr/bin/gem")
 
-  if node['cucumber-chef']['prerelease']
+  if node['cucumber_chef']['prerelease']
     options("--prerelease")
   end
 end
