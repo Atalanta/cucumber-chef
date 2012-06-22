@@ -149,7 +149,7 @@ module Cucumber
           template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb"))
           knife_rb = File.expand_path(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "knife.rb"))
 
-          context = { :chef_server => @server.public_ip_address }
+          context = { :chef_server => @server.public_ip_address, :librarian_chef => Cucumber::Chef::Config[:librarian_chef] }
           File.open(knife_rb, 'w') do |f|
             f.puts(Cucumber::Chef::Template.render(template_file, context))
           end

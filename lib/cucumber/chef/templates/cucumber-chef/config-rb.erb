@@ -2,8 +2,8 @@
 # Cucumber-Chef
 ################################################################################
 
-mode                            :user
 provider                        :aws
+librarian_chef                  <%= @librarian_chef %>
 
 
 ################################################################################
@@ -18,9 +18,6 @@ aws[:identity_file]             = "<%= File.join(@aws_ssh_key_dir, @aws_ssh_key)
 
 aws[:region]                    = "<%= @region %>-1"
 aws[:availability_zone]         = "<%= @region %>-1a"
-
-#aws[:aws_image_id]              = "ami-339ca947"
-#aws[:ubuntu_release]            = "maverick"
 
 #aws[:aws_instance_arch]         = "i386"
 #aws[:aws_instance_disk_store]   = "instance-store"

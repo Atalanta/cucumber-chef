@@ -12,3 +12,8 @@ cache_type              "BasicFile"
 cookbook_path           ['#{current_dir}/../cookbooks']
 
 cache_options(:path => "#{current_dir}/checksums")
+<% if @config[:librarian_chef] -%>
+
+require 'librarian/chef/integration/knife'
+cookbook_path Librarian::Chef.install_path, "#{current_dir}/../site-cookbooks"
+<% end -%>
