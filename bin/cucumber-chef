@@ -38,7 +38,10 @@ class CucumberChef < Thor
         "readme.erb" => "features/#{project}/README",
         "example_feature.erb" => "features/#{project}/#{project}.feature",
         "example_steps.erb" => "features/#{project}/step_definitions/#{project}_steps.rb",
-        "env.rb" => "features/support/env.rb"
+        "env.rb" => "features/support/env.rb",
+        "readme-data_bags.erb" => "features/support/data_bags/README",
+        "readme-roles.erb" => "features/support/roles/README",
+        "readme-keys.erb" => "features/support/keys/README"
       }
 
       templates.each do |source, destination|
