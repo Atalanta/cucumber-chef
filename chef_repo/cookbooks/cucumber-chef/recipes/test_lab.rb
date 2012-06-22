@@ -33,7 +33,15 @@ ruby setup.rb --no-format-executable
   EOH
 end
 
-%w( rspec cucumber-chef ).each do |g|
+gem_package "cucumber-chef" do
+  gem_binary("/usr/bin/gem")
+
+  if node['cucumber-chef']['prerelease']
+    options("--prerelease")
+  end
+end
+
+%w( rspec ).each do |g|
   gem_package g do
     gem_binary("/usr/bin/gem")
   end

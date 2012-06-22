@@ -153,16 +153,17 @@ module Cucumber
 
 ################################################################################
 
-      mode      :user
-      provider  :aws
+      mode        :user
+      provider    :aws
+      prerelease  true
 
-      aws       Hash[ :ubuntu_release => "precise",
-                      :aws_instance_arch => "i386",
-                      :aws_instance_disk_store => "ebs",
-                      :aws_instance_type => "m1.small",
-                      :aws_security_group => "cucumber-chef" ]
+      aws         Hash[ :ubuntu_release => "precise",
+                        :aws_instance_arch => "i386",
+                        :aws_instance_disk_store => "ebs",
+                        :aws_instance_type => "m1.small",
+                        :aws_security_group => "cucumber-chef" ]
 
-      vagrant   Hash.new
+      vagrant     Hash.new
 
 ################################################################################
 

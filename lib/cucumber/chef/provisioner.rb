@@ -85,7 +85,8 @@ module Cucumber
           attributes = {
             "run_list" => "role[test_lab]",
             "cucumber_chef" => {
-              "version" => Cucumber::Chef::VERSION
+              "version" => Cucumber::Chef::VERSION,
+              "prerelease" => Cucumber::Chef::Config[:prerelease]
             }
           }
 
