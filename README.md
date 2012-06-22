@@ -73,6 +73,7 @@ Once installed, you can run `cucumber-chef` on the command line to get an overvi
       cucumber-chef help [TASK]              # Describe available tasks or one specific task
       cucumber-chef info                     # Display information about the current test lab.
       cucumber-chef init                     # Initalize cucumber-chef configuration
+      cucumber-chef ps [ps-options]          # Snapshot of the current cucumber-chef test lab container processes.
       cucumber-chef setup                    # Setup cucumber-chef test lab in Amazon EC2
       cucumber-chef ssh [container]          # SSH to cucumber-chef test lab or [container] if specified.
       cucumber-chef teardown                 # Teardown cucumber-chef test lab in Amazon EC2
@@ -101,12 +102,14 @@ This will create a directory, cucumber-chef, and a subdirectory, `myproject`.
             └── support
                 └── env.rb
 
-### Tasks
+### General Tasks
 
-* `up`
+#### `up`
+
 If you are using an EBS volume, you can start and stop your test lab.  This task will attempt to start your Cucumber-Chef test lab if it is currently stopped.
 
-* `down`
+#### `down`
+
 If you are using an EBS volume, you can start and stop your test lab.  This task will attempt to stop your Cucumber-Chef test lab if it is currently running.
 
 ## Writing Tests
@@ -230,6 +233,32 @@ Run the chef-client:
 
     the chef-client has been run on "(server)"
 
+#### Chef Steps
+
+To prep a server with a role and data bag:
+
+        * the following roles have been updated:
+          | role | role_path |
+          | users | ./support/roles/ |
+        * the "users" role has been added to the "users" run list
+        * the following databags have been updated:
+          | databag | databag_path |
+          | users | ./support/data_bags/users |
+
+##### List of Chef Steps
+
+Update/push roles to the chef-server:
+
+        * the following roles have been updated:
+          | role | role_path |
+          | users | ./support/roles/ |
+
+Update/push data bags to the chef-server:
+
+        * the following databags have been updated:
+          | databag | databag_path |
+          | users | ./support/data_bags/users |
+
 #### SSH Steps
 
 Here is how you might setup and initate an SSH session using password authentication to a server named `devopserver`:
@@ -237,7 +266,43 @@ Here is how you might setup and initate an SSH session using password authentica
         * I have no public keys set
         * I ssh to "devopserver" with the following credentials:
           | username | password |
-          | root     | root     |
+          | root | root |
+
+Here is how you might setup and initate an SSH session using public key authentication to a server named `users`:
+
+        * I ssh to "users" with the following credentials:
+          | username | keyfile |
+          | root | ../.ssh/id_rsa |
+
+Since the cukes run on the test lab, we can directly reference the public key pairs already there and populated for us.
+
+Suppose we have a cookbook that creates new users.  After it runs we should be able to SSH in with our public keys.  Let's test this.  First we'll do our setup in the `Background`:
+
+      Background:
+        * I have a server called "users"
+        * "users" is running "ubuntu" "lucid"
+        * "users" has been provisioned
+        * the following roles have been updated:
+          | role | role_path |
+          | users | ./support/roles/ |
+        * the "users" role has been added to the "users" run list
+        * the following databags have been updated:
+          | databag | databag_path |
+          | users | ./support/data_bags/users |
+        * the chef-client has been run on "users"
+        * I ssh to "users" with the following credentials:
+          | username | keyfile |
+          | root | ../.ssh/id_rsa |
+
+And now for the `Scenario`:
+
+      Scenario: The user can ssh in to the system with their key pair
+        * I ssh to "users" with the following credentials:
+          | username | keyfile |
+          | bdobbs | ./support/keys/bdobbs |
+        When I run "hostname"
+        Then I should see "users" in the output
+
 
 ##### List of SSH Steps
 
@@ -245,12 +310,17 @@ Sets the authentication method to password:
 
     I have no public keys set
 
-Start an SSH session to the server (server):
+Start an SSH session to the server (server) using password authentication:
 
     I ssh to "(server)" with the following credentials:
       | username | password |
       | root     | root     |
 
+Start an SSH session to the server (server) using public key authentication:
+
+    I ssh to "(server)" with the following credentials:
+      | username | keyfile |
+      | root     | id_rsa  |
 
 Executes (command) over the previously established SSH session on the server (server):
 
@@ -306,7 +376,7 @@ At present, Cucumber-Chef only allows one test lab per AWS account.  In practice
 
 We have put in a few tasks to help you diagnose any issues you may come across with the test lab, containers or your cookbooks and recipes.  There are two main tasks available to help you with this: `ssh` and `diagnose`.
 
-* `ssh`
+#### `ssh`
 
 This command provides you with a rapid way to connect to either your test lab or containers.  Think `vagrant ssh`; we took a queue from their wonderful gem and realized we want our gem to provide the same sort of functionality.  The main difference between our `ssh` task and the way Vagrant's task works is that we generate a fresh ssh key pair whenever a test lab is setup; so you can rest assured no one else has a copy of the credientials.  You also do not have to worry about generating or specifying your own key pair to override a default key pair as is the case with Vagrant if you do not want to use the one shipped with Vagrant.
 
@@ -348,7 +418,7 @@ You can also specify a container name to SSH directly into that container.  For 
 
     root@devopserver:~#
 
-* `diagnose`
+#### `diagnose`
 
 This command provides you with a rapid way to get to the chef-client logs without needing to SSH into a container.  There are a few basic options with this task, let's take a look at them.
 
@@ -402,6 +472,85 @@ Maybe you want to run it with the default options in play; you would likely get 
     chef.log:
     ----------------------------------------------------------------------------
     [Mon, 04 Jun 2012 08:30:20 +0000] FATAL: Net::HTTPServerException: 412 "Precondition Failed"
+
+
+#### `ps`
+
+This command provides you with a snapshot of all the container processes running on the Cucumber-Chef test lab.  You can pass in `ps` command line options to customize the output as you desire.
+
+    $ bin/cucumber-chef help ps
+    Usage:
+      cucumber-chef ps [ps-options]
+
+    Snapshot of the current cucumber-chef test lab container processes.
+
+Standard usage using `aux` options:
+
+    $ bin/cucumber-chef ps aux
+    cucumber-chef v2.0.0.rc1
+
+    Getting container processes from cucumber-chef test lab...
+
+    ============================================================================
+    CONTAINER  USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+    sudo       root       375  0.0  0.0   2368   608 ?        S    Jun21   0:00 upstart-udev-bridge --daemon
+    sudo       syslog     384  0.0  0.0  27296  1264 ?        Sl   Jun21   0:00 rsyslogd -c4
+    sudo       root       396  0.0  0.0   2236   388 ?        S<s  Jun21   0:00 udevd --daemon
+    sudo       root       406  0.0  0.0   1840   556 pts/19   Ss+  Jun21   0:00 /sbin/getty -8 38400 tty4
+    sudo       root       410  0.0  0.0   1840   560 pts/17   Ss+  Jun21   0:00 /sbin/getty -8 38400 tty2
+    sudo       root       412  0.0  0.0   1840   560 pts/18   Ss+  Jun21   0:00 /sbin/getty -8 38400 tty3
+    sudo       root       416  0.0  0.0   2428   812 ?        Ss   Jun21   0:00 cron
+    sudo       root       453  0.0  0.0   1840   564 pts/16   Ss+  Jun21   0:00 /sbin/getty -8 38400 tty1
+    sudo       root       455  0.0  0.0   1840   556 pts/20   Ss+  Jun21   0:00 /sbin/getty -8 38400 /dev/console
+    sudo       root       477  0.0  0.0   2288   576 ?        Ss   Jun21   0:00 dhclient3 -e IF_METRIC=100 -pf /var/run/dhclient.eth0.pid -lf /var/lib/dhcp3/dhclient.eth0.leases eth0
+    sudo       root       493  0.0  0.1   5600  2132 ?        Ss   Jun21   0:00 /usr/sbin/sshd -D
+    users      root     20777  0.0  0.0   2720  1484 ?        Ss   Jun21   0:02 /sbin/init
+    users      syslog   20876  0.0  0.0  27296  1172 ?        Sl   Jun21   0:02 rsyslogd -c4
+    users      root     20877  0.0  0.0   2368   560 ?        S    Jun21   0:00 upstart-udev-bridge --daemon
+    users      root     20883  0.0  0.0   2236   516 ?        S<s  Jun21   0:00 udevd --daemon
+    users      root     20914  0.0  0.0   1840   544 pts/4    Ss+  Jun21   0:00 /sbin/getty -8 38400 tty4
+    users      root     20918  0.0  0.0   1840   540 pts/2    Ss+  Jun21   0:00 /sbin/getty -8 38400 tty2
+    users      root     20921  0.0  0.0   1840   544 pts/3    Ss+  Jun21   0:00 /sbin/getty -8 38400 tty3
+    users      root     20925  0.0  0.0   2428   788 ?        Ss   Jun21   0:00 cron
+    users      root     20953  0.0  0.0   1840   544 pts/1    Ss+  Jun21   0:00 /sbin/getty -8 38400 tty1
+    users      root     20954  0.0  0.0   1840   544 pts/5    Ss+  Jun21   0:00 /sbin/getty -8 38400 /dev/console
+    users      root     20970  0.0  0.0   2288   572 ?        Ss   Jun21   0:00 dhclient3 -e IF_METRIC=100 -pf /var/run/dhclient.eth0.pid -lf /var/lib/dhcp3/dhclient.eth0.leases eth0
+    users      root     20987  0.0  0.1   5600  2128 ?        Ss   Jun21   0:01 /usr/sbin/sshd -D
+    users      root     21308  0.0  0.0   1848   488 ?        S    Jun21   0:07 tail -n 250 -f client.log
+    users      root     21519  0.0  0.0   1848   484 ?        S    02:19   0:02 tail -n 250 -f /var/log/auth.log
+    users      root     21851  0.0  0.0   1848   484 ?        S    02:20   0:02 tail -n 250 -f /var/log/chef/client.log
+    chef-client root     27226  0.0  0.0   2728  1524 ?        Ss   Jun21   0:00 /sbin/init
+    chef-client syslog   27328  0.0  0.0  27296  1244 ?        Sl   Jun21   0:00 rsyslogd -c4
+    chef-client root     27329  0.0  0.0   2368   584 ?        S    Jun21   0:00 upstart-udev-bridge --daemon
+    chef-client root     27340  0.0  0.0   2236   520 ?        S<s  Jun21   0:00 udevd --daemon
+    chef-client root     27364  0.0  0.0   1840   548 pts/9    Ss+  Jun21   0:00 /sbin/getty -8 38400 tty4
+    chef-client root     27368  0.0  0.0   1840   548 pts/7    Ss+  Jun21   0:00 /sbin/getty -8 38400 tty2
+    chef-client root     27369  0.0  0.0   1840   548 pts/8    Ss+  Jun21   0:00 /sbin/getty -8 38400 tty3
+    chef-client root     27371  0.0  0.0   2428   804 ?        Ss   Jun21   0:00 cron
+    chef-client root     27401  0.0  0.0   1840   548 pts/6    Ss+  Jun21   0:00 /sbin/getty -8 38400 tty1
+    chef-client root     27402  0.0  0.0   1840   548 pts/10   Ss+  Jun21   0:00 /sbin/getty -8 38400 /dev/console
+    chef-client root     27420  0.0  0.0   2288   572 ?        Ss   Jun21   0:00 dhclient3 -e IF_METRIC=100 -pf /var/run/dhclient.eth0.pid -lf /var/lib/dhcp3/dhclient.eth0.leases eth0
+    chef-client root     27437  0.0  0.1   5600  2128 ?        Ss   Jun21   0:00 /usr/sbin/sshd -D
+    chef-client root     27616  0.2  1.2  26292 22128 ?        Sl   Jun21   6:00 /opt/opscode/embedded/bin/ruby /usr/bin/chef-client -d -P /var/run/chef/client.pid -L /var/log/chef/client.log -c /etc/chef/client.rb -i 1800 -s 20
+    timezone   root     28244  0.0  0.0   2724  1568 ?        Ss   Jun21   0:00 /sbin/init
+    timezone   root     28355  0.0  0.0   2368   600 ?        S    Jun21   0:00 upstart-udev-bridge --daemon
+    timezone   syslog   28356  0.0  0.0  27296  1268 ?        Sl   Jun21   0:00 rsyslogd -c4
+    timezone   root     28366  0.0  0.0   2236   504 ?        S<s  Jun21   0:00 udevd --daemon
+    timezone   root     28385  0.0  0.0   1840   556 pts/14   Ss+  Jun21   0:00 /sbin/getty -8 38400 tty4
+    timezone   root     28388  0.0  0.0   1840   560 pts/12   Ss+  Jun21   0:00 /sbin/getty -8 38400 tty2
+    timezone   root     28390  0.0  0.0   1840   556 pts/13   Ss+  Jun21   0:00 /sbin/getty -8 38400 tty3
+    timezone   root     28397  0.0  0.0   2428   812 ?        Ss   Jun21   0:00 cron
+    timezone   root     28423  0.0  0.0   1840   564 pts/11   Ss+  Jun21   0:00 /sbin/getty -8 38400 tty1
+    timezone   root     28426  0.0  0.0   1840   560 pts/15   Ss+  Jun21   0:00 /sbin/getty -8 38400 /dev/console
+    timezone   root     28449  0.0  0.0   2288   576 ?        Ss   Jun21   0:00 dhclient3 -e IF_METRIC=100 -pf /var/run/dhclient.eth0.pid -lf /var/lib/dhcp3/dhclient.eth0.leases eth0
+    timezone   root     28466  0.0  0.1   5600  2124 ?        Ss   Jun21   0:00 /usr/sbin/sshd -D
+    sudo       root     32737  0.0  0.0   2720  1580 ?        Ss   Jun21   0:00 /sbin/init
+    users      root     32741  0.0  0.0   2232   280 ?        S<   Jun21   0:00 udevd --daemon
+    users      root     32742  0.0  0.0   2232   280 ?        S<   Jun21   0:00 udevd --daemon
+    chef-client root     32745  0.0  0.0   2232   280 ?        S<   Jun21   0:00 udevd --daemon
+    chef-client root     32747  0.0  0.0   2232   280 ?        S<   Jun21   0:00 udevd --daemon
+    timezone   root     32754  0.0  0.0   2232   272 ?        S<   Jun21   0:00 udevd --daemon
+    timezone   root     32755  0.0  0.0   2232   272 ?        S<   Jun21   0:00 udevd --daemon
 
 ### Example Test Run
 
