@@ -1,2 +1,2 @@
-rvm use ruby-1.9.2-p290@cucumber-chef --create
+rvm use ruby-1.9.3@cucumber-chef --create
 export USE_BUNDLER=force
