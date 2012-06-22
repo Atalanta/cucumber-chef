@@ -23,7 +23,9 @@ With a /single command/ Cucumber-Chef will provision a machine, set up an open s
 This means getting started with Cucumber-Chef is a simple, two step process.
 
 1. Install Cucumber-Chef
+
 2. Run `cucumber-chef init` to configure Cucumber-Chef.
+
 3. Run `cucumber-chef setup` to build your test lab.
 
 ### Installing Cucumber-Chef
