@@ -65,7 +65,11 @@ class CucumberChef < Thor
 
       $logger.info { "================================================================================" }
       $logger.info { message }
-      $logger.info { %x( uname -a ).chomp.strip }
+      $logger.info { "UNAME: %s" % %x( uname -a ).chomp.strip }
+      $logger.info { "Ruby Version: #{RUBY_VERSION}" }
+      $logger.info { "Ruby Patch Level: #{RUBY_PATCHLEVEL}" }
+      $logger.info { "Ruby Platform: #{RUBY_PLATFORM}" }
+      $logger.info { "Ruby Engine: #{RUBY_ENGINE}" }
       $logger.info { "================================================================================" }
 
       @options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
