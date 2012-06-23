@@ -23,7 +23,6 @@ module Cucumber::Chef::Helpers::MiniTest
 
   def enable_minitest(name)
     @chef_client_attributes[:run_list].unshift("recipe[minitest-handler]")
-    chef_config_client(name)
   end
 
   def run_minitests(name)
