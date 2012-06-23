@@ -333,6 +333,14 @@ Check (command) output for existance of or lack of (server) settings:
 
     I should( not) see the "(ip|mac)" of "(server)" in the output
 
+#### Minitest
+
+##### List of Minitest Steps
+
+    I enable the running of MiniTest suites for "(server)"
+
+    the tests should run and pass on "(server)"
+
 #### Cucumber Before Hook Centric Helpers
 
 * `chef_set_client_config(config={})`
