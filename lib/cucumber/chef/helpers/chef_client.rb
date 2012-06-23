@@ -40,10 +40,11 @@ module Cucumber::Chef::Helpers::ChefClient
 
 ################################################################################
 
-  def chef_run_client(name)
+  def chef_run_client(name,*args)
     chef_config_client(name)
-    command_run_remote(name, "/usr/bin/chef-client -j /etc/chef/attributes.json -N #{name}")
+    output = command_run_remote(name, ["/usr/bin/chef-client -j /etc/chef/attributes.json -N #{name}", args].join(" "))
     log("chef-client", "ran on node '#{name}'")
+    output
   end
 
 ################################################################################
