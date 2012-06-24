@@ -21,28 +21,21 @@ Before do
 
   $servers_bin ||= (Cucumber::Chef.locate(:file, ENV['HOME'], "servers.bin") rescue File.expand_path(File.join(ENV['HOME'], "servers.bin")))
 
-  # cleanup previous lxc containers on first run
+  # cleanup previous lxc containers if asked
   if (ENV['DESTROY'] == "1")
-    STDOUT.puts("\033[34m  >>> \033[1mservers\033[0m\033[34m are being destroyed\033[0m")
-    STDOUT.flush if STDOUT.respond_to?(:flush)
-
+    log("servers", "are being destroyed")
     servers.each do |name|
       server_destroy(name)
     end
     File.exists?($servers_bin) && File.delete($servers_bin)
   else
-    STDOUT.puts("\033[34m  >>> \033[1mservers\033[0m\033[34m are being preserved\033[0m")
-    STDOUT.flush if STDOUT.respond_to?(:flush)
+    log("servers", "are being preserved")
   end
 
   if File.exists?($servers_bin)
     $servers = Marshal.load(IO.read($servers_bin))
   end
 
-  # for Opscode Hosted chef-server use this:
-  #chef_set_client_config(:orgname => "cucumber-chef")
-
-  # for Opscode OS chef-server on the Cucumber-Chef test lab use this:
   chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
                          :validation_client_name => "chef-validator")
 end
@@ -50,7 +43,6 @@ end
 After do |scenario|
   @connection.close if @connection
 
-  data = Marshal.dump($servers)
   File.open($servers_bin, 'w') do |f|
     f.puts(Marshal.dump($servers))
   end
