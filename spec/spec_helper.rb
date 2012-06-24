@@ -1,28 +1,32 @@
-require "rubygems"
-require "bundler/setup"
-require File.join(File.dirname(__FILE__), "../lib/cucumber-chef")
+################################################################################
+#
+#      Author: Stephen Nelson-Smith <stephen@atalanta-systems.com>
+#      Author: Zachary Patten <zachary@jovelabs.com>
+#   Copyright: Copyright (c) 2011-2012 Atalanta Systems Ltd
+#     License: Apache License, Version 2.0
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+################################################################################
 
-def tcp_test_ssh(hostname)
-  tcp_socket = TCPSocket.new(hostname, 22)
-  IO.select([tcp_socket], nil, nil, 5)
-rescue Errno::ETIMEDOUT
-  false
-rescue Errno::EPERM
-  false
-rescue Errno::ECONNREFUSED
-  sleep 2
-  false
-  # This happens on EC2 quite often
-rescue Errno::EHOSTUNREACH
-  sleep 2
-  false
-ensure
-  tcp_socket && tcp_socket.close
-end
+require 'cucumber-chef'
 
-%w{ORGNAME OPSCODE_USER}.each do |var|
-  if ENV[var].nil? || ENV[var].empty?
-    warn "Specs require the environment variables $ORGNAME and $OPSCODE_USER to be set."
-    exit 1
-  end
-end
+dev_null = File.open("/dev/null", "w")
+$logger = Cucumber::Chef::Logger.new(dev_null)
+
+require 'simplecov'
+SimpleCov.start do
+  add_filter '/spec/'
+end if ENV["COVERAGE"]
+
+################################################################################

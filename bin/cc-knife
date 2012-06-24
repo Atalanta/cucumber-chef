@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+require 'cucumber-chef'
+
+$logger = Cucumber::Chef::Logger.new
+$logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
+
+# if we have bundler binstubs use that; otherwise attempt to detect
+knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
+knife = "/usr/bin/env knife" unless knife
+
+message = "cc-knife v#{Cucumber::Chef::VERSION}"
+puts(message)
+$logger.info { message }
+
+Cucumber::Chef::Config.load
+if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+
+  knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
+  if File.exists?(knife_rb)
+    command = [knife, ARGV, "-s http://#{test_lab.labs_running.first.public_ip_address}:4000", "-c #{knife_rb}", "2>&1"].flatten.compact.join(" ")
+    puts(command)
+    puts(%x(#{command}))
+    exit($?.to_i)
+  else
+    puts("Could not find your Cucumber-Chef 'knife.rb'.  Did you setup your test lab?")
+    exit(255)
+  end
+
+else
+  puts("No running cucumber-chef test labs to connect to!")
+  exit(1)
+end

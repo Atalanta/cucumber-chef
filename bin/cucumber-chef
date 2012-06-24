@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-require 'pathname'
-require 'fileutils'
 
 require 'thor'
 require 'cucumber-chef'
@@ -9,115 +7,447 @@ class CucumberChef < Thor
   include Thor::Actions
 
   no_tasks do
-    def create_directory_structure(project_dir)
-      %w{step_definitions support}.each do |dir|
-        FileUtils.mkdir_p(project_dir + "features" + dir)
-      end
-    end
 
-    def generate_project_skeleton(project_dir)
-      template_dir = Pathname.new(__FILE__).parent.parent + 'lib' + 'cucumber' + 'chef' + 'templates'
-      CucumberChef.source_root template_dir.realpath
+    def initalize_config
+      source_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber", "chef", "templates", "cucumber-chef"))
+      destination_dir = File.expand_path(File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
+      FileUtils.mkdir_p(destination_dir)
+
+      CucumberChef.source_root(source_dir)
+
+      get_aws_credentials
+
       templates = {
-        "readme.erb" => 'README',
-        "example_feature.erb" => 'features/example.feature',
-        "example_step.erb" => 'features/step_definitions/example_step.rb',
-        "env.rb" => "features/support/env.rb"
+        "config-rb.erb" => "config.rb"
       }
-      templates.each do |filename, destination|
-        template(filename, project_dir + destination)
+
+      templates.each do |source, destination|
+        template(source, File.join(destination_dir, destination))
+      end
+      puts
+      say "Ucanhaz Cucumber-Chef now! Rock on.", :green
+    end
+
+    def create_project(project)
+      @project = project
+      source_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber", "chef", "templates", "cucumber"))
+      destination_dir = Cucumber::Chef.locate_parent(".chef")
+
+      CucumberChef.source_root source_dir
+      templates = {
+        "readme.erb" => "features/#{project}/README",
+        "example_feature.erb" => "features/#{project}/#{project}.feature",
+        "example_steps.erb" => "features/#{project}/step_definitions/#{project}_steps.rb",
+        "env.rb" => "features/support/env.rb",
+        "readme-data_bags.erb" => "features/support/data_bags/README",
+        "readme-roles.erb" => "features/support/roles/README",
+        "readme-keys.erb" => "features/support/keys/README"
+      }
+
+      templates.each do |source, destination|
+        template(source, File.join(destination_dir, destination))
       end
     end
 
-    def config
-      @config ||= begin
-      options.test? ? Cucumber::Chef::Config.test_config : Cucumber::Chef::Config.new
+    def load_config
+
+      chef_repo = (Cucumber::Chef.locate_parent(".chef") rescue nil)
+      if ( !chef_repo || ( !File.exists?(chef_repo) || !File.directory?(chef_repo) ) )
+        fatal("Doesn't look like your inside a chef-repo!  Please relocate to one and execute your command again!")
+        exit(255)
       end
+
+      $logger = Cucumber::Chef::Logger.new
+      $logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
+
+      message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
+      puts(set_color(message, :green, true))
+
+      $logger.info { "================================================================================" }
+      $logger.info { message }
+      $logger.info { "UNAME: %s" % %x( uname -a ).chomp.strip }
+      $logger.info { "Ruby Version: #{RUBY_VERSION}" }
+      $logger.info { "Ruby Patch Level: #{RUBY_PATCHLEVEL}" }
+      $logger.info { "Ruby Platform: #{RUBY_PLATFORM}" }
+      $logger.info { "Ruby Engine: #{RUBY_ENGINE}" }
+      $logger.info { "================================================================================" }
+
+      @options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
     end
 
-    def error(message)
-      warn message
-      exit 255
+    def fatal(message)
+      puts(set_color(message, :red, :bold))
+      exit(255)
     end
+
+    def get_aws_credentials
+      say "OHAI!", :magenta
+      puts
+      say "Cucumber-Chef uses Amazon Web Services to build a test lab for automated infrastructure testing."
+      say "I need a few details before I can set up your test lab for you."
+      puts
+      say "We're going to use symmetric keys to authenticate with the AWS API."
+      say "First, I need your access key."
+      say "Your access key identifies you as you make API calls.  It's not a secret."
+      say "You can find it under 'Access Credentials', on https://aws-portal.amazon.com/gp/aws/securityCredentials"
+      puts
+      @aws_access_key = ask "What is your AWS Access Key?", :bold
+      puts
+      say "Now I need your secret access key.  This *is* a secret.  The clue's in the name."
+      say "This is just a string of characters used to create the digital signature included in your API requests."
+      say "You can also find this under 'Access Credentials', on https://aws-portal.amazon.com/gp/aws/securityCredentials"
+      puts
+      @aws_secret_access_key = ask "What is your AWS Secret Access Key?", :bold
+      puts
+      say "Right. Now I need to know about the ssh key pair you want to use to connect to EC2 machines."
+      say "I need the name of the key pair. You can see this on the AWS management console, under Network & Security > Key Pairs"
+      puts
+      @aws_ssh_id = ask "What is your AWS Key Pair called?", :bold
+      puts
+      say "I also need to know what the ssh key is called - the actual name of the file on your local machine, eg #{@aws_ssh_id}.pem"
+      puts
+      @aws_ssh_key = ask "What's the filename of your ssh key?", :bold
+      puts
+      say "And, finally, I need to know where you keep it, on the file system. Often this is ~/.ssh"
+      puts
+      @aws_ssh_key_dir = ask "What directory contains your ssh key?", :bold
+      puts
+      say "OK, nearly there. AWS uses different keys depending on which region you use."
+      say "For example, 'us-east', 'us-west', or 'eu-west'"
+      puts
+      @region = ask "Which region are you using?", :bold
+      puts
+      say("One last thing.  If your using librarian-chef, we want to be sure all the hooks are in place.")
+      puts
+      @librarian_chef = yes?("Does this chef-repo use librarian-chef?", :bold)
+      puts
+      say "Awesome.  Thank you!"
+      puts
+    end
+
   end
 
-  desc "project <project name>" , "Create a project template for testing an infrastructure"
-  def project(project_name)
-    @project = project_name
-    project_dir = Pathname.new(".") + "cucumber-chef" + @project
-    create_directory_structure(project_dir)
-    generate_project_skeleton(project_dir)
+################################################################################
+
+  desc "init", "Initalize cucumber-chef configuration"
+  def init
+    initalize_config
   end
 
-  desc "setup", "Set up a cucumber-chef test lab in Amazon EC2"
-  method_option :test, :type  => :boolean
+################################################################################
+
+  desc "setup", "Setup cucumber-chef test lab in Amazon EC2"
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def setup
-    begin
-      config.verify
-      $stdout.sync
-      provisioner = ::Cucumber::Chef::Provisioner.new
-      server = provisioner.build_test_lab(config, $stdout)
-      sleep(10)
-      provisioner.upload_cookbook(config)
-      provisioner.upload_role(config)
-      provisioner.bootstrap_node(server.dns_name, config)
-    rescue ::Cucumber::Chef::Error => err
-      error(err.message)
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      if (server = test_lab.create)
+        if (provisioner = Cucumber::Chef::Provisioner.new(server))
+
+          provisioner.build
+
+          puts
+          puts("Your cucumber-chef test lab has now been provisioned!")
+          puts
+          puts("Be sure to log into the chef-server webui and change the default credentials.")
+          puts
+          puts("  Chef-Server WebUI:")
+          puts("    http://#{server.public_ip_address}:4040/")
+          puts("  Username:")
+          puts("    admin")
+          puts("  Password:")
+          puts("    #{Cucumber::Chef::Provisioner::PASSWORD}")
+
+        else
+          puts(set_color("Could not create the provisioner!", :red, true))
+        end
+      else
+        puts(set_color("Could not create the server!", :red, true))
+      end
+    else
+      puts(set_color("Could not create a new instance of test lab!", :red, true))
     end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e.message)
   end
 
-  desc "connect", "Connect to a container in your test lab"
-  def connect
-    puts "Not implemented.  For now, find the IP of your test lab using the info task, and connect manually."
+################################################################################
+
+  desc "teardown", "Teardown cucumber-chef test lab in Amazon EC2"
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
+  def teardown
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      if yes?(set_color("Are you sure you want to teardown your cucumber-chef test lab?", :red, true))
+        count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
+        puts
+        puts(set_color("You have 5 seconds to abort!", :green, true))
+        puts
+        print(set_color("Self-destructing in", :green, true))
+        5.downto(1) do |x|
+          print(set_color("...#{x}", count_down_colors[x], true))
+          sleep(1)
+        end
+        puts(set_color("...BOOM!", :red, true))
+        puts
+        test_lab.destroy
+      else
+        puts
+        puts(set_color("Whew! That was close!", :green, true))
+      end
+    else
+      puts(set_color("Could not find a cucumber-chef test lab to teardown!", :red, true))
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
   end
 
-  desc "displayconfig", "Display the current config from knife.rb"
-  method_option :test, :type  => :boolean
+################################################################################
+
+  desc "up", "Startup the cucumber-chef test lab"
+  def up
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      test_lab.start
+    else
+      puts(set_color("Could not find a cucumber-chef test lab to startup!", :red, true))
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
+  desc "down", "Shutdown the cucumber-chef test lab"
+  def down
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      test_lab.stop
+    else
+      puts(set_color("Could not find a cucumber-chef test lab to shutdown!", :red, true))
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
+  desc "ssh [container]", "SSH to cucumber-chef test lab or [container] if specified."
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
+  def ssh(*args)
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+      ssh = Cucumber::Chef::SSH.new
+
+      if args.size == 0
+        ssh.config[:host] = test_lab.labs_running.first.public_ip_address
+        ssh.config[:ssh_user] = "ubuntu"
+        ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
+
+        puts([set_color("Attempting SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
+        ssh.console
+      else
+        container = args[0]
+
+        ssh.config[:proxy] = true
+        ssh.config[:proxy_host] = test_lab.labs_running.first.public_ip_address
+        ssh.config[:proxy_ssh_user] = "ubuntu"
+        ssh.config[:proxy_identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+
+        ssh.config[:host] = container
+        ssh.config[:ssh_user] = "root"
+        ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+
+        puts([set_color("Attempting SSH connection to cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
+        ssh.console
+      end
+
+    else
+      puts(set_color("No cucumber-chef test labs available to ssh to!", :red, true))
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
+  desc "diagnose <container>", "Provide diagnostics from the chef-client on the specified container."
+  method_option :strace, :type => :boolean, :desc => "output the chef-client 'chef-stacktrace.out'", :aliases => "-s", :default => true
+  method_option :log, :type => :boolean, :desc => "output the chef-client 'chef.log'", :aliases => "-l", :default => true
+  method_option :lines, :type => :numeric, :desc => "output the last N lines of the chef-client 'chef.log'", :aliases => "-n", :default => 1
+  def diagnose(container)
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+      ssh = Cucumber::Chef::SSH.new
+
+      ssh.config[:proxy] = true
+      ssh.config[:proxy_host] = test_lab.labs_running.first.public_ip_address
+      ssh.config[:proxy_ssh_user] = "ubuntu"
+      ssh.config[:proxy_identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+
+      ssh.config[:host] = container
+      ssh.config[:ssh_user] = "root"
+      ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:proxy_ssh_user]}")
+
+      puts([set_color("Attempting to collect diagnostic information on cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
+      if @options.strace?
+        puts
+        puts("chef-stacktrace.out:")
+        puts(set_color("============================================================================", :bold))
+        ssh.exec("[[ -e /var/chef/cache/chef-stacktrace.out ]] && cat /var/chef/cache/chef-stacktrace.out")
+        print("\n")
+      end
+      if @options.log?
+        puts
+        puts("chef.log:")
+        puts(set_color("============================================================================", :bold))
+        ssh.exec("[[ -e /var/log/chef/client.log ]] && tail -n #{@options.lines} /var/log/chef/client.log")
+      end
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
+  desc "displayconfig", "Display the current cucumber-chef config."
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def displayconfig
-    puts config.list.join("\n")
-    config.verify
-  rescue ::Cucumber::Chef::Error => err
-    error(err.message)
+    load_config
+
+    puts
+    say(Cucumber::Chef::Config.configuration.to_yaml, :bold)
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e.message)
   end
 
-  desc "info", "Display information about the current test lab"
-  method_option :test, :type  => :boolean
+################################################################################
+
+  desc "ps [ps-options]", "Snapshot of the current cucumber-chef test lab container processes."
+  def ps(*args)
+    load_config
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+      ssh = Cucumber::Chef::SSH.new
+
+      ssh.config[:host] = test_lab.labs_running.first.public_ip_address
+      ssh.config[:ssh_user] = "ubuntu"
+      ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
+
+      puts(set_color("Getting container processes from cucumber-chef test lab...", :blue, true))
+      puts
+      puts(set_color("============================================================================", :bold))
+      ssh.exec("lxc-ps --lxc -- #{args.join(" ")}")
+      print("\n")
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
+  desc "info", "Display information about the current test lab."
+  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def info
-    config.verify
-    lab = Cucumber::Chef::TestLab.new(config)
-    puts lab.info
-  rescue ::Cucumber::Chef::Error => err
-    error(err.message)
-  end
+    load_config
 
-  desc "destroy", "Destroy running test labs"
-  method_option :test, :type => :boolean
-  def destroy
-    config.verify
-    lab = Cucumber::Chef::TestLab.new(config)
-    lab.destroy
-  end
-
-  desc "upload <project name>", "Upload the cucumber-chef test suite <project name> to the test lab platform"
-  def upload(project_name)
-    project_dir = Pathname.new(".") + "cucumber-chef" + project_name
-    unless File.exists?(project_dir)
-      raise "Project dir '#{project_dir}' does not exist."
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new)
+      test_lab.info
     end
-    config.verify
-    runner = Cucumber::Chef::TestRunner.new(project_dir, config)
-    runner.upload_project
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e.message)
   end
 
-  desc "test <project name>", "Run the cucumber-chef test suite <project name> from a workstation."
-  def test(project_name)
-    project_dir = Pathname.new(".") + "cucumber-chef" + project_name
-    unless File.exists?(project_dir)
-      raise "Project dir '#{project_dir}' does not exist."
-    end
-    config.verify
-    runner = Cucumber::Chef::TestRunner.new(project_dir, config)
-    runner.run
+################################################################################
+
+  desc "create <project>" , "Create a project template for testing an infrastructure."
+  def create(project)
+
+    create_project(project)
+    root_dir = Cucumber::Chef.locate_parent(".chef")
+    features_dir = File.join(root_dir, "features")
+    feature = File.join(features_dir, "#{project}.feature")
+    steps = File.join(features_dir, "step_definitions", "#{project}.steps")
+
+    puts
+    puts(set_color("Project created!", :green, true))
+    say("Please look at the README in '#{features_dir}/#{project}/', and the example features (#{File.basename(feature)}) and steps (#{File.basename(steps)}), which I have autogenerated for you.", :green)
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
   end
+
+################################################################################
+
+  desc "test [cucumber-options]", "Test a project using the cucumber-chef test suite."
+  method_option :destroy, :type => :boolean, :desc => "destroy all containers before test run", :aliases => "-z", :default => false
+  def test(*args)
+    load_config
+
+    puts
+    root_path = Cucumber::Chef.locate_parent(".cucumber-chef")
+    features_path = File.expand_path(File.join(root_path, "features"))
+
+    unless (File.exists?(features_path) && File.directory?(features_path))
+      raise Error, "Features directory '#{features_path}' does not exist."
+    else
+      puts("Using features directory: #{features_path}")
+    end
+
+    runner = Cucumber::Chef::TestRunner.new(features_path)
+    runner.run(@options.destroy?, args)
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
 end
+
 CucumberChef.start

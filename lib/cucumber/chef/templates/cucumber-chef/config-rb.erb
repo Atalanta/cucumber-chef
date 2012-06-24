@@ -1,0 +1,33 @@
+################################################################################
+# Cucumber-Chef
+################################################################################
+
+provider                        :aws
+librarian_chef                  <%= @librarian_chef %>
+
+
+################################################################################
+# Provider: AWS
+################################################################################
+
+aws[:aws_access_key_id]         = "<%= @aws_access_key %>"
+aws[:aws_secret_access_key]     = "<%= @aws_secret_access_key %>"
+
+aws[:aws_ssh_key_id]            = "<%= @aws_ssh_id %>"
+aws[:identity_file]             = "<%= File.join(@aws_ssh_key_dir, @aws_ssh_key) %>"
+
+aws[:region]                    = "<%= @region %>-1"
+aws[:availability_zone]         = "<%= @region %>-1a"
+
+#aws[:aws_instance_arch]         = "i386"
+#aws[:aws_instance_disk_store]   = "instance-store"
+#aws[:aws_instance_type]         = "m1.small"
+
+#aws[:aws_security_group]        = "cucumber-chef"
+
+
+################################################################################
+# Provider: Vagrant
+################################################################################
+
+# TODO

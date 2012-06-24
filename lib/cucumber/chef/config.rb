@@ -1,162 +1,179 @@
-require "ubuntu_ami"
+################################################################################
+#
+#      Author: Stephen Nelson-Smith <stephen@atalanta-systems.com>
+#      Author: Zachary Patten <zachary@jovelabs.com>
+#   Copyright: Copyright (c) 2011-2012 Atalanta Systems Ltd
+#     License: Apache License, Version 2.0
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+################################################################################
 
 module Cucumber
   module Chef
-    class ConfigError < Error ; end
+
+    class ConfigError < Error; end
 
     class Config
-      KEYS = %w[mode node_name chef_server_url client_key validation_key validation_client_name]
-      KNIFE_KEYS = %w[aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file]
-      OPTIONAL_KNIFE_KEYS = %w[aws_instance_arch aws_instance_disk_store aws_instance_type]
+      extend(Mixlib::Config)
 
-      def initialize
-        config[:mode] = "user"
+      KEYS = %w( mode provider ).map(&:to_sym) unless const_defined?(:KEYS)
+      MODES = %w( user test ).map(&:to_sym) unless const_defined?(:MODES)
+      PROVIDERS = %w( aws vagrant ).map(&:to_sym) unless const_defined?(:PROVIDERS)
+
+      PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file ).map(&:to_sym) unless const_defined?(:PROVIDER_AWS_KEYS)
+
+################################################################################
+
+      def self.inspect
+        configuration.inspect
       end
 
-      def self.mode
-        config.test_mode? ? 'test' : 'user'
-      end
+################################################################################
 
-      def [](key)
-        config[key]
-      end
-
-      def []=(key, value)
-        config[key] = value
-      end
-
-      def config
-        unless @config
-          full_path = Dir.pwd.split(File::SEPARATOR)
-          (full_path.length - 1).downto(0) do |i|
-            knife_file = File.join(full_path[0..i] + [".chef", "knife.rb"])
-            if File.exist?(knife_file)
-              ::Chef::Config.from_file(knife_file)
-              @config = ::Chef::Config
-              return @config
-            end
-          end
-          raise ConfigError.new("Couldn't find knife.rb")
+      def self.duplicate(input)
+        output = Hash.new
+        input.each do |key, value|
+          output[key] = (value.is_a?(Hash) ? self.duplicate(input[key]) : value.to_s.dup)
         end
-        @config
+        output
       end
 
-      def self.test_config
-        config = self.new
-        config[:mode] = "test"
-        config
+      def self.load
+        config_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "config.rb")
+        $logger.info { "Attempting to load cucumber-chef configuration from '%s'." % config_rb }
+        self.from_file(config_rb)
+        self.verify
+        $logger.info { "Successfully loaded cucumber-chef configuration from '%s'." % config_rb }
+
+        log_dump = self.duplicate(self.configuration)
+        log_dump[:aws].merge!(:aws_access_key_id => "[REDACTED]", :aws_secret_access_key => "[REDACTED]")
+        $logger.debug { log_dump.inspect }
+
+        self
+      rescue Errno::ENOENT, UtilityError
+        raise ConfigError, "Could not find your cucumber-chef configuration file; did you run 'cucumber-chef init'?"
       end
 
-      def test_mode?
-        config[:mode] == "test"
+      def self.test
+        self.load
+        self[:mode] = :test
+        self
       end
 
-      def list
-        values = []
-        KEYS.each do |key|
-          value = config[key]
-          values << "#{key}: #{value}"
+################################################################################
+
+      def self.verify
+        self.verify_keys
+        self.verify_provider_keys
+        eval("self.verify_provider_#{self[:provider].to_s.downcase}")
+        $logger.debug { "Configuration verified successfully" }
+      end
+
+################################################################################
+
+      def self.verify_keys
+        $logger.debug { "Checking for missing configuration keys" }
+        missing_keys = KEYS.select{ |key| !self[key.to_sym] }
+        if missing_keys.count > 0
+          message = "Configuration incomplete, missing configuration keys: #{missing_keys.join(", ")}"
+          $logger.fatal { message }
+          raise ConfigError, message
         end
-        (KNIFE_KEYS + OPTIONAL_KNIFE_KEYS).each do |key|
-          values << "knife[:#{key}]: #{knife_config[key.to_sym]}" if knife_config[key.to_sym]
-        end
-        if knife_config[:aws_image_id]
-          values << "knife[:aws_image_id]: #{knife_config[:aws_image_id]}"
-        else
-          values << "knife[:ubuntu_release]: #{knife_config[:ubuntu_release]} (aws image id: #{aws_image_id})"
-        end
-        values
-      end
 
-      def verify
-        @errors = []
-        verify_orgname
-        verify_opscode_user
-        verify_keys
-        verify_opscode_platform_credentials
-        verify_aws_credentials
-        if @errors.size > 0
-          raise ConfigError.new(@errors.join("\n"))
-        end
-      end
-
-      def aws_image_id
-        if knife_config[:aws_image_id]
-          knife_config[:aws_image_id]
-        elsif knife_config[:ubuntu_release] && knife_config[:region]
-          query = ::UbuntuAmi.new(knife_config[:ubuntu_release])
-          instance_arch = query.arch_size(knife_config[:aws_instance_arch] || "i386")
-          disk_store = query.disk_store(knife_config[:aws_instance_disk_store] || "instance-store")
-          query.run["#{query.region_fix(knife_config[:region])}_#{instance_arch}#{disk_store}"]
+        $logger.debug { "Checking for invalid configuration keys" }
+        invalid_keys = KEYS.select{ |key| !eval("#{key.to_s.upcase}S").include?(self[key]) }
+        if invalid_keys.count > 0
+          message = "Configuration incomplete, invalid configuration keys: #{invalid_keys.join(", ")}"
+          $logger.fatal { message }
+          raise ConfigError, message
         end
       end
 
-      def aws_instance_type
-        knife_config[:aws_instance_type] || "m1.small"
-      end
+################################################################################
 
-      def security_group
-        knife_config[:aws_security_group] || "cucumber-chef"
-      end
-
-    private
-
-      def verify_orgname
-        if !ENV["ORGNAME"] || ENV["ORGNAME"] == ""
-          @errors << "Your organisation must be set using the environment variable ORGNAME."
+      def self.verify_provider_keys
+        $logger.debug { "Checking for missing provider keys" }
+        missing_keys = eval("PROVIDER_#{self[:provider].to_s.upcase}_KEYS").select{ |key| !self[self[:provider]].key?(key) }
+        if missing_keys.count > 0
+          message = "Configuration incomplete, missing provider configuration keys: #{missing_keys.join(", ")}"
+          $logger.fatal { message }
+          raise ConfigError, message
         end
       end
 
-      def verify_opscode_user
-        if !ENV["OPSCODE_USER"] || ENV["OPSCODE_USER"] == ""
-          @errors << "Your Opscode platform username must be set using the environment variable OPSCODE_USER."
-        end
-      end
+################################################################################
 
-      def verify_keys
-        missing_keys = []
-        KEYS.each do |key|
-          value = config[key]
-          missing_keys << key unless value && value != ""
-        end
-        KNIFE_KEYS.each do |key|
-          missing_keys << "knife[:#{key}]" unless value = knife_config[key.to_sym]
-        end
-        unless knife_config[:aws_image_id] || knife_config[:ubuntu_release]
-          missing_keys << "knife[:aws_image_id] or knife[:ubuntu_release]"
-        end
-        if missing_keys.size > 0
-          @errors << "Incomplete config file, please specify: #{missing_keys.join(", ")}."
-        end
-      end
-
-      def verify_opscode_platform_credentials
-        username = config['node_name']
-        if username
-          req = Net::HTTP.new('community.opscode.com', 80)
-          code = req.request_head("/users/#{username}").code
-        end
-        if username == "" || code != "200"
-          @errors << "Invalid Opscode platform credentials. Please check."
-        end
-      end
-
-      def verify_aws_credentials
-        if knife_config[:aws_access_key_id] && knife_config[:aws_secret_access_key]
+      def self.verify_provider_aws
+        if self[:aws][:aws_access_key_id] && self[:aws][:aws_secret_access_key]
           compute = Fog::Compute.new(:provider => 'AWS',
-                                     :aws_access_key_id => knife_config[:aws_access_key_id],
-                                     :aws_secret_access_key => knife_config[:aws_secret_access_key])
+                                     :aws_access_key_id => self[:aws][:aws_access_key_id],
+                                     :aws_secret_access_key => self[:aws][:aws_secret_access_key])
           compute.describe_availability_zones
-        else
-          @errors << "Invalid AWS credentials. Please check."
         end
       rescue Fog::Service::Error => err
-        @errors << "Invalid AWS credentials. Please check."
+        message = "Invalid AWS credentials.  Please check your configuration."
+        $logger.fatal { message }
+        raise ConfigError, message
       end
 
-      def knife_config
-        self[:knife]
+      def self.verify_provider_vagrant
+        message = "Not yet implemented."
+        $logger.fatal { message }
+        raise ConfigError, message
       end
+
+################################################################################
+
+      def self.aws_image_id
+        if self[:aws][:aws_image_id]
+          return self[:aws][:aws_image_id]
+        elsif (self[:aws][:ubuntu_release] && self[:aws][:region])
+          ami = Ubuntu.release(self[:aws][:ubuntu_release]).amis.find do |ami|
+            ami.arch == (self[:aws][:aws_instance_arch] || "i386") &&
+            ami.root_store == (self[:aws][:aws_instance_disk_store] || "instance-store") &&
+            ami.region == self[:aws][:region]
+          end
+          return ami.name if ami
+        end
+        message = "Could not find a valid AMI image ID.  Please check your configuration."
+        $logger.fatal { message }
+        raise ConfigError, message
+      end
+
+################################################################################
+
+      mode            :user
+      prerelease      true
+
+      provider        :aws
+      librarian_chef  false
+
+      user            ( ENV['OPSCODE_USER'] || ENV['USER'] )
+
+      aws             Hash[ :ubuntu_release => "precise",
+                            :aws_instance_arch => "i386",
+                            :aws_instance_disk_store => "ebs",
+                            :aws_instance_type => "m1.small",
+                            :aws_security_group => "cucumber-chef" ]
+
+      vagrant         Hash.new
+
+################################################################################
+
     end
+
   end
 end
+
+################################################################################

@@ -1,189 +1,180 @@
-require File.join(File.dirname(__FILE__), "../../spec_helper.rb")
+################################################################################
+#
+#      Author: Stephen Nelson-Smith <stephen@atalanta-systems.com>
+#      Author: Zachary Patten <zachary@jovelabs.com>
+#   Copyright: Copyright (c) 2011-2012 Atalanta Systems Ltd
+#     License: Apache License, Version 2.0
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+################################################################################
+
+require 'spec_helper'
+
+VALID_RELEASES = %w( precise )
+VALID_REGIONS = %w( us-west-1 us-east-1 eu-west-1 )
+VALID_ARCHS = %w( i386 amd64 )
+VALID_DISK_STORES = %w( instance-store ebs )
 
 describe Cucumber::Chef::Config do
-  before(:all) do
-    @orgname = ENV["ORGNAME"]
-    @opscode_user = ENV["OPSCODE_USER"]
+
+################################################################################
+
+  before(:each) do
+    load File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "config.rb"))
   end
 
   after(:each) do
-    ENV["ORGNAME"] = @orgname
-    ENV["OPSCODE_USER"] = @opscode_user
+    load File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "spec_helper.rb"))
   end
 
-  describe "verification" do
-    describe "when ORGNAME is not set" do
-      it "should raise" do
-        ENV["ORGNAME"] = ""
-        expect {
-          subject.verify
-        }.to raise_error(Cucumber::Chef::ConfigError, /ORGNAME/)
-      end
+################################################################################
+
+  describe "Cucumber::Chef::Config default values" do
+
+    it "Cucumber::Chef::Config[:mode] defaults to :user" do
+      Cucumber::Chef::Config[:mode].should == :user
     end
 
-    describe "when OPSCODE_USER is not set" do
-      it "should raise" do
-        ENV["OPSCODE_USER"] = ""
-        expect {
-          subject.verify
-        }.to raise_error(Cucumber::Chef::ConfigError, /OPSCODE_USER/)
-      end
+    it "Cucumber::Chef::Config[:provider] defaults to :aws" do
+      Cucumber::Chef::Config[:provider].should == :aws
     end
 
-    describe "when configuration is invalid" do
-      it "should complain about missing keys" do
-        subject.config[:chef_server_url] = nil
-        subject.config[:knife][:aws_access_key_id] = nil
-        expect {
-          subject.verify
-        }.to raise_error(Cucumber::Chef::ConfigError, /chef_server_url.*aws_access_key_id/)
+    context "Cucumber::Chef::Config[:aws] default values" do
+
+      it "Cucumber::Chef::Config[:aws][:aws_security_group] defaults to 'cucumber-chef'" do
+        Cucumber::Chef::Config[:aws][:aws_security_group].should == "cucumber-chef"
       end
 
-      describe "when node name is invalid" do
-        it "should raise" do
-          ENV["OPSCODE_USER"] = "REALLYBOGUSORGNAME"
-          expect {
-            subject.verify
-          }.to raise_error(Cucumber::Chef::ConfigError, /Opscode platform credentials/)
+      it "Cucumber::Chef::Config[:aws][:ubuntu_release] defaults to 'precise'" do
+        Cucumber::Chef::Config[:aws][:ubuntu_release].should == "precise"
+      end
+
+      it "Cucumber::Chef::Config[:aws][:aws_instance_arch] defaults to 'i386'" do
+        Cucumber::Chef::Config[:aws][:aws_instance_arch].should == "i386"
+      end
+
+      it "Cucumber::Chef::Config[:aws][:aws_instance_disk_store] defaults to 'ebs'" do
+        Cucumber::Chef::Config[:aws][:aws_instance_disk_store].should == "ebs"
+      end
+
+      it "Cucumber::Chef::Config[:aws][:aws_instance_type] defaults to 'm1.small'" do
+        Cucumber::Chef::Config[:aws][:aws_instance_type].should == "m1.small"
+      end
+
+    end
+
+  end
+
+################################################################################
+
+  describe "class method: aws_image_id" do
+
+    it "should return ami_image_id if Cucumber::Chef::Config[:aws][:aws_image_id] is set" do
+      aws_image_id = "ami-12345678"
+      Cucumber::Chef::Config[:aws][:aws_image_id] = aws_image_id
+      Cucumber::Chef::Config.aws_image_id.should == aws_image_id
+    end
+
+    VALID_RELEASES.each do |release|
+      VALID_REGIONS.each do |region|
+        VALID_ARCHS.each do |arch|
+          VALID_DISK_STORES.each do |disk_store|
+
+            it "should return an ami_image_id if release='#{release}', region='#{region}', arch='#{arch}', disk_store='#{disk_store}'" do
+              Cucumber::Chef::Config[:aws][:ubuntu_release] = release
+              Cucumber::Chef::Config[:aws][:region] = region
+              Cucumber::Chef::Config[:aws][:aws_instance_arch] = arch
+              Cucumber::Chef::Config[:aws][:aws_instance_disk_store] = disk_store
+
+              expect{ Cucumber::Chef::Config.aws_image_id }.to_not raise_error(Cucumber::Chef::ConfigError)
+            end
+
+          end
         end
       end
-
-      describe "when aws_access_key_id is empty" do
-        it "should raise" do
-          subject.config[:knife][:aws_access_key_id] = "bogus"
-          expect {
-            subject.verify
-          }.to raise_error(Cucumber::Chef::ConfigError, /AWS credentials/)
-        end
-      end
     end
 
-    describe "when configuration is valid" do
-      it "should not raise" do
-        subject.verify
-      end
-    end
   end
 
-  describe "when knife.rb is missing" do
-    it "should raise" do
-      begin
-        # Handle case of local .chef directory for gem development
-        chef_dir = (File.exist?('.chef') ? Pathname('.chef') : Pathname("~/.chef")).expand_path
-        (chef_dir + "knife.rb").rename(chef_dir + "knife.rb.bak")
-        config_file = chef_dir + "knife.rb"
-        expect { subject.config }.to raise_error(Cucumber::Chef::ConfigError)
-      ensure
-        (chef_dir + "knife.rb.bak").rename(chef_dir + "knife.rb")
-      end
-    end
-  end
+################################################################################
 
   describe "when configuration is valid" do
-    it "should list the configuration values" do
-      output = subject.list.join("\n")
-      output.should match(/node_name:/)
-      output.should match(/knife\[:aws_secret_access_key\]:/)
+
+    it "should allow changing providers" do
+      Cucumber::Chef::Config[:provider] = :aws
+      expect{ Cucumber::Chef::Config.verify_keys }.to_not raise_error(Cucumber::Chef::ConfigError)
+
+      Cucumber::Chef::Config[:provider] = :vagrant
+      expect{ Cucumber::Chef::Config.verify_keys }.to_not raise_error(Cucumber::Chef::ConfigError)
     end
 
-    it "should return the configuration values" do
-      subject[:node_name].should == @opscode_user
+    it "should allow changing modes" do
+      Cucumber::Chef::Config[:mode] = :test
+      expect{ Cucumber::Chef::Config.verify_keys }.to_not raise_error(Cucumber::Chef::ConfigError)
+
+      Cucumber::Chef::Config[:mode] = :user
+      expect{ Cucumber::Chef::Config.verify_keys }.to_not raise_error(Cucumber::Chef::ConfigError)
     end
 
-    it "should allow setting configuration values" do
-      subject[:mode] = "blah"
-      subject[:knife][:aws_access_key_id] = "bogus"
-      subject[:mode].should == "blah"
-      subject[:knife][:aws_access_key_id].should == "bogus"
-    end
-
-    it "should provide a method for getting a test mode configuration" do
-      config = Cucumber::Chef::Config.test_config
-      config[:mode].should == "test"
-    end
-
-    it "should know it is in test mode" do
-      Cucumber::Chef::Config.test_config.test_mode?.should be
-    end
-
-    it "should know it is not in test_mode" do
-      Cucumber::Chef::Config.new.test_mode?.should_not be
-    end
-
-    describe "and an ami is specified" do
-      it "should be returned" do
-        subject[:knife][:aws_image_id] = "my-test-ami"
-        subject.aws_image_id.should == "my-test-ami"
+    # this explodes in CI because we won't have our secret values set
+    context "when provider is aws" do
+      it "should verify the configuration" do
+        user = ENV['OPSCODE_USER'] || ENV['USER']
+        Cucumber::Chef::Config[:provider] = :aws
+        Cucumber::Chef::Config[:aws][:aws_access_key_id] = ENV['AWS_ACCESS_KEY_ID']
+        Cucumber::Chef::Config[:aws][:aws_secret_access_key] = ENV['AWS_SECRET_ACCESS_KEY']
+        Cucumber::Chef::Config[:aws][:aws_ssh_key_id] = ENV['AWS_SSH_KEY_ID'] || user
+        Cucumber::Chef::Config[:aws][:identity_file] = "#{ENV['HOME']}/.chef/#{user}.pem"
+        Cucumber::Chef::Config[:aws][:region] = "us-west-2"
+        Cucumber::Chef::Config[:aws][:availability_zone] = "us-west-2a"
+        expect{ Cucumber::Chef::Config.verify }.to_not raise_error(Cucumber::Chef::ConfigError)
       end
-    end
+    end if !ENV['CI'] && !ENV['TRAVIS']
 
-    describe "and no ami is specified but region and ubuntu release are" do
-      before(:each) do
-        UbuntuAmi.any_instance.should_receive(:run).and_return({ "eu_west_large_ebs"=>"large-ebs-instance",
-                                                                 "eu_west_small_ebs"=>"small-ebs-instance",
-                                                                 "eu_west_large"=>"large-instance",
-                                                                 "eu_west_small"=>"small-instance",
-                                                                 "us_west_small"=>"us-west-small-instance" })
-        subject[:knife][:aws_image_id] = nil
-        subject[:knife][:ubuntu_release] = "lucid"
-        subject[:knife][:region] = "eu-west-1"
-        subject[:knife][:aws_instance_arch] = nil
-        subject[:knife][:aws_instance_disk_store] = nil
-      end
-
-      it "should default to a small instance if unspecified" do
-        subject.aws_image_id.should == "small-instance"
-      end
-
-      it "should get a small instance if i386 specified" do
-        subject[:knife][:aws_instance_arch] = "i386"
-        subject.aws_image_id.should == "small-instance"
-      end
-
-      it "should get a us-west small instance if specified" do
-        subject[:knife][:region] = "us-west-1"
-        subject[:knife][:aws_instance_arch] = "small"
-        subject.aws_image_id.should == "us-west-small-instance"
-      end
-
-      it "should get a large instance if amd64 specified" do
-        subject[:knife][:aws_instance_arch] = "amd64"
-        subject.aws_image_id.should == "large-instance"
-      end
-
-      it "should get an ebs backed instance if specified" do
-        subject[:knife][:aws_instance_disk_store] = "ebs"
-        subject.aws_image_id.should == "small-ebs-instance"
-      end
-
-      it "should get a large ebs backed instance if specified" do
-        subject[:knife][:aws_instance_disk_store] = "ebs"
-        subject[:knife][:aws_instance_arch] = "amd64"
-        subject.aws_image_id.should == "large-ebs-instance"
-      end
-    end
-
-    it "should default to an m1.small instance type" do
-      subject.aws_instance_type.should == "m1.small"
-    end
-
-    describe "and an instance type is specified" do
-      it "should return the specified instance type" do
-        subject[:knife][:aws_instance_type] = "m1.large"
-        subject.aws_instance_type.should == "m1.large"
-      end
-    end
   end
 
-  it "should default to security group cucumber-chef" do
-    subject.security_group.should == "cucumber-chef"
+################################################################################
+
+  describe "when configuration is invalid" do
+
+    it "should complain about missing configuration keys" do
+      Cucumber::Chef::Config[:provider] = nil
+      expect{ Cucumber::Chef::Config.verify_keys }.to raise_error(Cucumber::Chef::ConfigError)
+
+      Cucumber::Chef::Config[:mode] = nil
+      expect{ Cucumber::Chef::Config.verify_keys }.to raise_error(Cucumber::Chef::ConfigError)
+    end
+
+    it "should complain about invalid configuration key values" do
+      Cucumber::Chef::Config[:provider] = :awss
+      expect{ Cucumber::Chef::Config.verify_keys }.to raise_error(Cucumber::Chef::ConfigError)
+
+      Cucumber::Chef::Config[:mode] = :userr
+      expect{ Cucumber::Chef::Config.verify_keys }.to raise_error(Cucumber::Chef::ConfigError)
+    end
+
+    describe "when provider is aws" do
+
+      it "should complain about missing provider configuration keys" do
+        Cucumber::Chef::Config[:provider] = :aws
+        expect{ Cucumber::Chef::Config.verify_provider_keys }.to raise_error(Cucumber::Chef::ConfigError)
+      end
+
+    end
+
   end
 
-  describe "and a security group is specified" do
-    it "should return the specified security group" do
-      subject[:knife][:aws_security_group] = "my-security-group"
-      subject.security_group.should == "my-security-group"
-    end
-  end
+################################################################################
+
 end
-

@@ -1,35 +1,49 @@
-require 'rubygems'
-require 'bundler'
-Bundler.setup(:default, :development)
-require 'rake'
+################################################################################
+#
+#      Author: Stephen Nelson-Smith <stephen@atalanta-systems.com>
+#      Author: Zachary Patten <zachary@jovelabs.com>
+#   Copyright: Copyright (c) 2011-2012 Atalanta Systems Ltd
+#     License: Apache License, Version 2.0
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+################################################################################
+
+require 'bundler/gem_tasks'
+
+################################################################################
 
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec)
 task :default => :spec
+task :test => :spec
+
+################################################################################
 
 require 'cucumber/rake/task'
 Cucumber::Rake::Task.new(:cucumber)
 
-require 'jeweler'
-Jeweler::Tasks.new do |gem|
-  # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "cucumber-chef"
-  gem.homepage = "http://cucumber-chef.org"
-  gem.license = "Apache v2"
-  gem.summary = "Tests Chef-built infrastructure"
-  gem.description = "Framework for behaviour-drive infrastructure development."
-  gem.email = "stephen@atalanta-systems.com"
-  gem.authors = ["Stephen Nelson-Smith"]
-  gem.has_rdoc = false
-  gem.bindir = "bin"
-  gem.files = `git ls-files`.split("\n")
-  gem.executables = %w(cucumber-chef)
-end
-Jeweler::RubygemsDotOrgTasks.new
+################################################################################
 
-require 'rcov/rcovtask'
-Rcov::RcovTask.new do |test|
-  test.libs << 'test'
-  test.pattern = 'test/**/test_*.rb'
-  test.verbose = true
+desc "Run RSpec with code coverage"
+task :coverage do
+  `rake spec COVERAGE=true`
+  case RUBY_PLATFORM
+  when /darwin/
+    `open coverage/index.html`
+  when /linux/
+    `google-chrome coverage/index.html`
+  end
 end
+
+################################################################################

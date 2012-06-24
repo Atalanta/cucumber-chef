@@ -1,0 +1,18 @@
+Welcome to the suite of cucumber-chef tests
+
+Your general workflow will be to write cucumber features that describe the intended behaviour.  You will then write failing tests by writing steps to test the behaviour, expressing them as cucumer scenarios.
+
+You will then want to create a cookbook, and write recipes that make your tests pass.  Upload your cookbook to your Hosted Chef-Server using 'knife' or the Cucumber-Chef Test Lab OS Chef-Server using the 'cc-knife' tool, and then run the tests with:
+
+cucumber-chef test [cucumber options]
+
+For an example feature, take a look at <chef-repo>/features/<%= @project %>/<%= @project %>.feature
+
+For an example step definition, look at <chef-repo>/features/<%= @project %>/step_definitions/<%= @project %>_steps.rb
+
+Cucumber-Chef Test Lab Network
+==============================
+CIDR: 192.168.0.0/16
+Network: 192.168.0.0
+Broadcast: 192.168.255.255
+Test Lab/Gateway: 192.168.255.254

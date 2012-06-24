@@ -1,5 +1,0 @@
-lxc.network.type = veth
-lxc.network.flags = up
-lxc.network.link = br0
-lxc.network.name = eth0
-lxc.network.ipv4 = 192.168.20.10/24
