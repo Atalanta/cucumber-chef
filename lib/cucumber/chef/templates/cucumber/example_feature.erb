@@ -11,32 +11,32 @@ Feature: Perform test driven infrastructure with Cucumber-Chef
     * the "chef-client::service" recipe has been added to the "<%= @project %>" run list
     * the chef-client has been run on "<%= @project %>"
     * I ssh to "<%= @project %>" with the following credentials:
-      | username | keyfile        |
-      | root     | ../.ssh/id_rsa |
+      | username | keyfile |
+      | root | ../.ssh/id_rsa |
 
-  Scenario: Can connect to the provisioned server via SSH password authentication
-    And I run "hostname"
+  Scenario: Can connect to the provisioned server via SSH authentication
+    When I run "hostname"
     Then I should see "<%= @project %>" in the output
 
   Scenario: Default root shell is bash
-    And I run "echo $SHELL"
+    When I run "echo $SHELL"
     Then I should see "bash" in the output
 
   Scenario: Default gateway and resolver are using Cucumber-Chef Test Lab
-    And I run "route -n | grep 'UG'"
+    When I run "route -n | grep 'UG'"
       Then I should see "192.168.255.254" in the output
-    And I run "cat /etc/resolv.conf"
+    When I run "cat /etc/resolv.conf"
       Then I should see "192.168.255.254" in the output
       And I should see "8.8.8.8" in the output
       And I should see "8.8.4.4" in the output
 
   Scenario: Primary interface is configured with my IP address and MAC address
-    And I run "ifconfig eth0"
+    When I run "ifconfig eth0"
       Then I should see the "IP" of "<%= @project %>" in the output
       And I should see the "MAC" of "<%= @project %>" in the output
 
   Scenario: Local interface is not configured with my IP address or MAC address
-    And I run "ifconfig lo"
+    When I run "ifconfig lo"
       Then I should see "127.0.0.1" in the output
       And I should not see the "IP" of "<%= @project %>" in the output
       And I should not see the "MAC" of "<%= @project %>" in the output
