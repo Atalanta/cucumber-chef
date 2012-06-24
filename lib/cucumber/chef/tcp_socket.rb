@@ -58,7 +58,7 @@ module Cucumber
         end
 
       rescue Errno::ETIMEDOUT, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
-        $logger.debug { e.message } if $logger
+        $logger.debug { "#{@host}:#{@port} - #{e.message}" } if $logger
         false
       ensure
         (socket && socket.close)
