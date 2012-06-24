@@ -23,13 +23,6 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
-  def log(name, message)
-    STDOUT.puts("\033[34m  >>> \033[1m#{name}\033[0m\033[34m #{message}\033[0m")
-    STDOUT.flush if STDOUT.respond_to?(:flush)
-  end
-
-################################################################################
-
   def detect_arch(distro)
     case distro.downcase
     when "ubuntu":
