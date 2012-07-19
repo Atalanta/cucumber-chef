@@ -17,7 +17,7 @@ if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
 
   knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
   if File.exists?(knife_rb)
-    command = [knife, ARGV, "-s http://#{test_lab.labs_running.first.public_ip_address}:4000", "-c #{knife_rb}", "2>&1"].flatten.compact.join(" ")
+    command = [knife, ARGV, "--server-url http://#{test_lab.labs_running.first.public_ip_address}:4000", "--config #{knife_rb}", "2>&1"].flatten.compact.join(" ")
     puts(command)
     puts(%x(#{command}))
     exit($?.to_i)
