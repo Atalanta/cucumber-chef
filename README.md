@@ -82,7 +82,7 @@ Once installed, you can run `cucumber-chef` on the command line to get an overvi
       cucumber-chef test [cucumber-options]  # Test a project using the cucumber-chef test suite.
       cucumber-chef up                       # Startup the cucumber-chef test lab
 
-After tunning set up, which takes about 15 minutes, you'll have a fully funtioning platform available for you to use.  Let's just quickly review what that means.  You will have an EC2 machine, fully managed by Chef, and providing the following:
+After running set up, which takes about 15 minutes, you'll have a fully functioning platform available for you to use.  Let's just quickly review what that means.  You will have an EC2 machine, fully managed by Chef, and providing the following:
 
 * The ability to provision LXC containers
 * The ability to run tests against LXC containers
