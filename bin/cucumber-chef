@@ -117,7 +117,7 @@ class CucumberChef < Thor
       puts
       @region = ask "Which region are you using?", :bold
       puts
-      say("One last thing.  If your using librarian-chef, we want to be sure all the hooks are in place.")
+      say("One last thing.  If you're using librarian-chef, we want to be sure all the hooks are in place.")
       puts
       @librarian_chef = yes?("Does this chef-repo use librarian-chef?", :bold)
       puts
