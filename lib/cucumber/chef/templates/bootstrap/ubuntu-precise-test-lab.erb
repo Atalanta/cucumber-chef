@@ -14,6 +14,7 @@ gpg --fetch-key http://apt.opscode.com/packages@opscode.com.gpg.key
 gpg --export packages@opscode.com | tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null
 apt-get -q -y --force-yes update
 apt-get -q -y --force-yes -o Dpkg::Options::="--force-confnew" install opscode-keyring
+apt-get -q -y --force-yes update
 chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}/.gnupg
 apt-get -q -y upgrade
 
@@ -23,7 +24,7 @@ chef-solr chef-solr/amqp_password password <%= @config[:amqp_password] %>
 chef-server-webui chef-server-webui/admin_password password <%= @config[:admin_password] %>
 EOF
 
-apt-get -q -y install chef chef-server
+apt-get -q -y --force-yes install chef chef-server
 
 echo -n "Waiting on validation.pem and webui.pem to appear..."
 until [ -f /etc/chef/validation.pem ] && [ -f /etc/chef/webui.pem ]; do
