@@ -34,6 +34,12 @@ module Cucumber
 
 ################################################################################
 
+      def root
+        File.expand_path(File.join(File.dirname(__FILE__), "..", "..", ".."), File.dirname(__FILE__))
+      end
+
+################################################################################
+
       def load_knife_config
         $logger.debug { "attempting to load cucumber-chef test lab 'knife.rb'" }
 
