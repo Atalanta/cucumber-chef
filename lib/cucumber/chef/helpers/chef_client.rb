@@ -25,10 +25,13 @@ module Cucumber::Chef::Helpers::ChefClient
 
   # call this in a Before hook
   def chef_set_client_config(config={})
-    @chef_client_config = { :log_level => :debug,
-                            :log_location => "/var/log/chef/client.log",
-                            :chef_server_url => "https://api.opscode.com/organizations/#{config[:orgname]}",
-                            :validation_client_name => "#{config[:orgname]}-validator" }.merge(config)
+    @chef_client_config = (@chef_client_config || {
+      :environment => "_default",
+      :log_level => :debug,
+      :log_location => "/var/log/chef/client.log",
+      :chef_server_url => "https://api.opscode.com/organizations/#{config[:orgname]}",
+      :validation_client_name => "#{config[:orgname]}-validator"
+    }).merge(config)
   end
 
 ################################################################################
@@ -63,6 +66,7 @@ module Cucumber::Chef::Helpers::ChefClient
       f.puts("ssl_verify_mode         :verify_none")
       f.puts("validation_client_name  \"#{@chef_client_config[:validation_client_name]}\"")
       f.puts("node_name               \"#{name}\"")
+      f.puts("environment             \"#{@chef_client_config[:environment]}\"")
       f.puts
       f.puts("Mixlib::Log::Formatter.show_time = true")
     end
