@@ -55,6 +55,10 @@ And /^the "([^\"]*)" recipe has been added to the "([^\"]*)" run list$/ do |reci
   chef_set_client_attributes(@servers[name], :run_list => ["recipe[#{recipe}]"])
 end
 
+And /^"([^\"]*)" is in the "([^\"]*)" environment$/ do |name, environment|
+  chef_set_client_config(:environment => environment)
+end
+
 And /^the chef-client has been run on "([^\"]*)"$/ do |name|
   chef_run_client(name)
 end
