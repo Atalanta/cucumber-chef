@@ -1,6 +1,11 @@
 #!/usr/bin/env ruby
 require 'cucumber-chef'
 
+def run(command)
+  puts "Executing: '#{command}'"
+  @ssh.exec(command)
+end
+
 $logger = Cucumber::Chef::Logger.new
 $logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
 
@@ -10,30 +15,22 @@ $logger.info { message }
 
 Cucumber::Chef::Config.load
 if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
-
-  ssh = Cucumber::Chef::SSH.new
-  ssh.config[:host] = test_lab.labs_running.first.public_ip_address
-  ssh.config[:ssh_user] = "ubuntu"
-  ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
+  @ssh = Cucumber::Chef::SSH.new
+  @ssh.config[:host] = test_lab.labs_running.first.public_ip_address
+  @ssh.config[:ssh_user] = "ubuntu"
+  @ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@ssh.config[:ssh_user]}")
 
   gem_name = "cucumber-chef-#{Cucumber::Chef::VERSION}.gem"
 
-  FileUtils.cd(File.join(Cucumber::Chef.root, "pkg"))
-  FileUtils.rm_f(gem_name)
-  puts %x(gem build ../cucumber-chef.gemspec -V)
+  puts %x(cd #{Cucumber::Chef.root} && gem build cucumber-chef.gemspec -V)
 
-  local_path = File.join(Cucumber::Chef.root, "pkg", gem_name)
-  remote_path = File.join("/", "home", ssh.config[:ssh_user], gem_name)
-  puts("#{local_path} -> #{remote_path}")
-  ssh.upload(local_path, remote_path)
+  local_file = File.join(Cucumber::Chef.root, gem_name)
+  remote_file = File.join("/", "home", @ssh.config[:ssh_user], gem_name)
+  puts("#{local_file} -> #{@ssh.config[:ssh_user]}@#{test_lab.labs_running.first.public_ip_address}:#{remote_file}")
+  @ssh.upload(local_file, remote_file)
+  FileUtils.rm_f(File.join(Cucumber::Chef.root, "*.gem"))
 
-  command = "sudo gem uninstall cucumber-chef -a -I -x -V"
-  puts("Executing: '#{command}'")
-  ssh.exec(command)
-
-  command = "sudo gem install #{gem_name} -l -V"
-  puts("Executing: '#{command}'")
-  ssh.exec(command)
+  run("cd #{File.dirname(remote_file)}; ls -la | grep 'cucumber-chef-'; sudo gem uninstall cucumber-chef -a -I -x -V; sudo gem install #{gem_name} -l -V; rm -f *.gem")
 
 else
   puts("No running cucumber-chef test labs to connect to!")
