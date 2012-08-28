@@ -31,7 +31,7 @@ And /^"([^\"]*)" has "([^\"]*)" architecture$/ do |name, arch|
   @servers[name].merge!( :arch => arch )
 end
 
-And /^"([^\"]*)" should( not)? be persistant$/ do |name, boolean|
+And /^"([^\"]*)" should( not)? be persist[ae]nt$/ do |name, boolean|
   @servers[name].merge!( :persist => (!boolean ? true : false) )
 end
 
