@@ -111,3 +111,15 @@ Then /^path "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
   @output = @connection.exec!(command)
   @output.should =~ /#{owner}/
 end
+
+Then /^file "([^\"]*)" should( not)? contain "([^\"]*)"$/ do |path, boolean, content|
+  command = "cat %s" % [
+    path
+  ]
+  @output = @connection.exec!(command)
+  if (!boolean)
+    @output.should =~ /#{content}/
+  else
+    @output.should_not =~ /#{content}/
+  end
+end
