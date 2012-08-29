@@ -123,3 +123,9 @@ Then /^file "([^\"]*)" should( not)? contain "([^\"]*)"$/ do |path, boolean, con
     @output.should_not =~ /#{content}/
   end
 end
+
+Then /^package "([^\"]*)" should be installed$/ do |package|
+  command = "dpkg --list"
+  @output = @connection.exec!(command)
+  @output.should =~ /#{package}/
+end
