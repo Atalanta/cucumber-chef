@@ -93,3 +93,46 @@ Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |bool
     @output.should_not =~ /#{$servers[name][key.downcase.to_sym]}/i
   end
 end
+
+Then /^path "([^\"]*)" should exist$/ do |dir|
+  parent = File.dirname dir
+  child = File.basename dir
+  command = "ls %s" % [
+    parent
+  ]
+  @output = @connection.exec!(command)
+  @output.should =~ /#{child}/
+end
+
+Then /^path "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
+  command = "stat -c %%U:%%G %s" % [
+    path
+  ]
+  @output = @connection.exec!(command)
+  @output.should =~ /#{owner}/
+end
+
+Then /^file "([^\"]*)" should( not)? contain "([^\"]*)"$/ do |path, boolean, content|
+  command = "cat %s" % [
+    path
+  ]
+  @output = @connection.exec!(command)
+  if (!boolean)
+    @output.should =~ /#{content}/
+  else
+    @output.should_not =~ /#{content}/
+  end
+end
+
+Then /^package "([^\"]*)" should be installed$/ do |package|
+  command = ""
+  if system "which dpkg > /dev/null"
+    command = "dpkg --list"
+  elsif system "which yum > /dev/null"
+    command = "yum list"
+# could easily add more cases here, if I knew what they were :)
+  end
+
+  @output = @connection.exec!(command)
+  @output.should =~ /#{package}/
+end
