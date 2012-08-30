@@ -125,7 +125,14 @@ Then /^file "([^\"]*)" should( not)? contain "([^\"]*)"$/ do |path, boolean, con
 end
 
 Then /^package "([^\"]*)" should be installed$/ do |package|
-  command = "dpkg --list"
+  command = ""
+  if system "which dpkg > /dev/null"
+    command = "dpkg --list"
+  elsif system "which yum > /dev/null"
+    command = "yum list"
+# could easily add more cases here, if I knew what they were :)
+  end
+
   @output = @connection.exec!(command)
   @output.should =~ /#{package}/
 end
