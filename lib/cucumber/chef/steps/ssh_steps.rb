@@ -126,10 +126,10 @@ end
 
 Then /^package "([^\"]*)" should be installed$/ do |package|
   command = ""
-  if system "which dpkg > /dev/null"
-    command = "dpkg --list"
-  elsif system "which yum > /dev/null"
-    command = "yum list"
+  if (dpkg = @connection.exec!("which dpkg 2> /dev/null")).length > 0
+    command = "#{dpkg.chomp} --get-selections"
+  elsif (yum = @connection.exec!("which yum 2> /dev/null")).length > 0
+    command = "#{yum.chomp} -q list installed"
 # could easily add more cases here, if I knew what they were :)
   end
 

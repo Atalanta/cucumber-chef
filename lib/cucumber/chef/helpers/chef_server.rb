@@ -37,6 +37,16 @@ module Cucumber::Chef::Helpers::ChefServer
 
 ################################################################################
 
+  def load_cookbook(cookbook, cookbook_path)
+    if !File.exists?(File.expand_path(cookbook_path))
+      raise "Cookbook path does not exist!"
+    end
+    ::Chef::CookbookUploader.new(cookbook, cookbook_path, :force => true).upload_cookbook
+    log("chef-server", "uploaded cookbook '#{cookbook}' from file '#{cookbook_path}'")
+  end
+
+################################################################################
+
   def load_role(role, role_path)
     if !File.exists?(File.expand_path(role_path))
       raise "Role path does not exist!"

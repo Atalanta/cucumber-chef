@@ -30,3 +30,9 @@ And /^the following roles have been updated:$/ do |table|
     load_role(entry['role'], entry['role_path'])
   end
 end
+
+And /^the following cookbooks have been uploaded:$/ do |table|
+  table.hashes.each do |entry|
+    load_cookbook(entry['cookbook'], entry['cookbook_path'])
+  end
+end

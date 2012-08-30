@@ -428,13 +428,12 @@ class CucumberChef < Thor
     load_config
 
     puts
-    root_path = Cucumber::Chef.locate_parent(".cucumber-chef")
-    features_path = File.expand_path(File.join(root_path, "features"))
+    features_path = Cucumber::Chef.locate_parent(".cucumber-chef")
 
     unless (File.exists?(features_path) && File.directory?(features_path))
-      raise Error, "Features directory '#{features_path}' does not exist."
+      raise Error, "Directory '#{features_path}' does not exist."
     else
-      puts("Using features directory: #{features_path}")
+      puts("Using directory: #{features_path}")
     end
 
     runner = Cucumber::Chef::TestRunner.new(features_path)
