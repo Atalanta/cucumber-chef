@@ -51,9 +51,9 @@ module Cucumber
 
         @stdout.puts("Executing Cucumber-Chef Test Runner")
         remote_path = File.join("/", "home", "ubuntu", "features")
-        cucumber_options = args.flatten.compact.uniq.join(" ")
+        cucumber_options = args.flatten.compact.join(" ")
         env = ( destroy ? "DESTROY=1" : nil )
-        command = [ "cd #{remote_path}", "&&", "sudo", env, "cucumber", cucumber_options, "--exclude support/roles", "--exclude support/data_bags", "--exclude support/keys", "." ].flatten.compact.join(" ")
+        command = [ "cd #{remote_path}", "&&", "sudo", env, "cucumber", cucumber_options, "--exclude support/cookbooks", "--exclude support/roles", "--exclude support/data_bags", "--exclude support/keys", "." ].flatten.compact.join(" ")
 
         @ssh.exec(command)
       end
