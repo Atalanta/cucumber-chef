@@ -50,7 +50,7 @@ module Cucumber
         upload_project
 
         @stdout.puts("Executing Cucumber-Chef Test Runner")
-        remote_path = File.join("/", "home", "ubuntu", "chef_repo", "features")
+        remote_path = File.join("/", "home", "ubuntu", "features")
         cucumber_options = args.flatten.compact.uniq.join(" ")
         env = ( destroy ? "DESTROY=1" : nil )
         command = [ "cd #{remote_path}", "&&", "sudo", env, "cucumber", cucumber_options, "--exclude support/roles", "--exclude support/data_bags", "--exclude support/keys", "." ].flatten.compact.join(" ")
@@ -66,7 +66,7 @@ module Cucumber
       def reset_project
         @stdout.print("Cleaning up any previous test runs...")
         Cucumber::Chef.spinner do
-          remote_path = File.join("/", "home", "ubuntu", "chef_repo")
+          remote_path = File.join("/", "home", "ubuntu", "features")
 
           command = "rm -rf #{remote_path}"
           @ssh.exec(command, :silence => true)
@@ -80,7 +80,7 @@ module Cucumber
         @stdout.print("Uploading files required for this test run...")
         Cucumber::Chef.spinner do
           local_path = File.join(@features_path)
-          remote_path = File.join("/", "home", "ubuntu", "chef_repo")
+          remote_path = File.join("/", "home", "ubuntu", "features")
           @ssh.upload(local_path, remote_path)
 
           root_path = Cucumber::Chef.locate_parent(".chef")
