@@ -136,3 +136,25 @@ Then /^package "([^\"]*)" should be installed$/ do |package|
   @output = @connection.exec!(command)
   @output.should =~ /#{package}/
 end
+
+# This regex is a little ugly, but it's so we can accept any of these
+#
+# * "foo" is running
+# * service "foo" is running
+# * application "foo" is running
+# * process "foo" is running
+# 
+# basically because I couldn't decide what they should be called. Maybe there's
+# an Official Cucumber-chef Opinion on this. Still, Rubular is fun :)
+
+# TiL that in Ruby regexes, "?:" marks a non-capturing group, which is how this
+# works
+Then /^(?:(?:service|application|process)? )?"([^\"]*)" should( not)? be running$/ do |service, boolean|
+  command = "ps ax"
+  @output = @connection.exec!(command)
+  if (!boolean)
+    @output.should =~ /#{service}/
+  else
+    @output.should_not =~ /#{service}/
+  end
+end
