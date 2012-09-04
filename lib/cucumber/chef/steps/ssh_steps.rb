@@ -112,6 +112,8 @@ Then /^path "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
   @output.should =~ /#{owner}/
 end
 
+# attempt at multiline match. Fail.
+#Then /^file "([^\"]*)" should( not)? contain\n? *(?:"")?"([^\"]*)"(?:"")?$/ do |path, boolean, content|
 Then /^file "([^\"]*)" should( not)? contain "([^\"]*)"$/ do |path, boolean, content|
   command = "cat %s" % [
     path
