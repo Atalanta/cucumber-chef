@@ -112,17 +112,44 @@ Then /^path "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
   @output.should =~ /#{owner}/
 end
 
-# attempt at multiline match. Fail.
-#Then /^file "([^\"]*)" should( not)? contain\n? *(?:"")?"([^\"]*)"(?:"")?$/ do |path, boolean, content|
-Then /^file "([^\"]*)" should( not)? contain "([^\"]*)"$/ do |path, boolean, content|
+# we can now match multi-line strings. We want to match *contiguous lines*
+Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
   command = "cat %s" % [
     path
   ]
-  @output = @connection.exec!(command)
+
+# turn the command-line output and the expectation string into Arrays and strip
+# leading and trailing cruft from members
+  @output = @connection.exec!(command).split("\n").map{ |i| i.strip }
+  content = content.split("\n").map{ |i| i.strip }
+
+# assume no match
+  match = false
+  count = 0
+
+# step through the command output array
+  while count < @output.length
+    current = @output[count]
+
+# if we get a match with the start of the expectation
+    if @output[count] == content[0]
+
+# take a slice of the same size as that expectation
+      slice = @output[count..count + content.length - 1]
+
+# and see if they match
+      if content == slice
+        match = true
+      end
+    end
+    count += 1
+  end
+
+# there's a neater way to express this logic, but it's 17:30 and I'm going home
   if (!boolean)
-    @output.should =~ /#{content}/
+    match.should == true
   else
-    @output.should_not =~ /#{content}/
+    match.should == false
   end
 end
 
