@@ -94,17 +94,29 @@ Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |bool
   end
 end
 
-Then /^path "([^\"]*)" should exist$/ do |dir|
-  parent = File.dirname dir
-  child = File.basename dir
+Then /^(path|directory|file) "([^\"]*)" should exist$/ do |type, path|
+  parent = File.dirname path
+  child = File.basename path
   command = "ls %s" % [
     parent
   ]
   @output = @connection.exec!(command)
   @output.should =~ /#{child}/
+
+# if a specific type (directory|file) was specified, test for it
+  command = "stat -c %%F %s" % [
+    path
+  ]
+  @output = @connection.exec!(command)
+  if type == "file"
+    @output.should =~ /regular file/
+  end
+  if type == "directory"
+    @output.should =~ /directory/
+  end
 end
 
-Then /^path "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
+Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
   command = "stat -c %%U:%%G %s" % [
     path
   ]
