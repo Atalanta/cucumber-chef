@@ -94,7 +94,7 @@ Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |bool
   end
 end
 
-Then /^(path|directory|file) "([^\"]*)" should exist$/ do |type, path|
+Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   parent = File.dirname path
   child = File.basename path
   command = "ls %s" % [
@@ -108,12 +108,24 @@ Then /^(path|directory|file) "([^\"]*)" should exist$/ do |type, path|
     path
   ]
   @output = @connection.exec!(command)
-  if type == "file"
-    @output.should =~ /regular file/
+  types = {
+    "file" => /regular file/,
+    "directory" => /directory/,
+    "symlink" => /symbolic link/
+  }
+
+  if types.keys.include? type
+    @output.should =~ types[type]
   end
-  if type == "directory"
-    @output.should =~ /directory/
-  end
+#  if type == "file"
+#    @output.should =~ /regular file/
+#  end
+#  if type == "directory"
+#    @output.should =~ /directory/
+#  end
+#  if type == "symlink"
+#    @output.should =~ /symbolic link/
+#  end
 end
 
 Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
