@@ -94,17 +94,41 @@ Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |bool
   end
 end
 
-Then /^path "([^\"]*)" should exist$/ do |dir|
-  parent = File.dirname dir
-  child = File.basename dir
+Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
+  parent = File.dirname path
+  child = File.basename path
   command = "ls %s" % [
     parent
   ]
   @output = @connection.exec!(command)
   @output.should =~ /#{child}/
+
+# if a specific type (directory|file) was specified, test for it
+  command = "stat -c %%F %s" % [
+    path
+  ]
+  @output = @connection.exec!(command)
+  types = {
+    "file" => /regular file/,
+    "directory" => /directory/,
+    "symlink" => /symbolic link/
+  }
+
+  if types.keys.include? type
+    @output.should =~ types[type]
+  end
+#  if type == "file"
+#    @output.should =~ /regular file/
+#  end
+#  if type == "directory"
+#    @output.should =~ /directory/
+#  end
+#  if type == "symlink"
+#    @output.should =~ /symbolic link/
+#  end
 end
 
-Then /^path "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
+Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
   command = "stat -c %%U:%%G %s" % [
     path
   ]
@@ -112,15 +136,44 @@ Then /^path "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
   @output.should =~ /#{owner}/
 end
 
-Then /^file "([^\"]*)" should( not)? contain "([^\"]*)"$/ do |path, boolean, content|
+# we can now match multi-line strings. We want to match *contiguous lines*
+Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
   command = "cat %s" % [
     path
   ]
-  @output = @connection.exec!(command)
+
+# turn the command-line output and the expectation string into Arrays and strip
+# leading and trailing cruft from members
+  @output = @connection.exec!(command).split("\n").map{ |i| i.strip }
+  content = content.split("\n").map{ |i| i.strip }
+
+# assume no match
+  match = false
+  count = 0
+
+# step through the command output array
+  while count < @output.length
+    current = @output[count]
+
+# if we get a match with the start of the expectation
+    if @output[count] == content[0]
+
+# take a slice of the same size as that expectation
+      slice = @output[count..count + content.length - 1]
+
+# and see if they match
+      if content == slice
+        match = true
+      end
+    end
+    count += 1
+  end
+
+# there's a neater way to express this logic, but it's 17:30 and I'm going home
   if (!boolean)
-    @output.should =~ /#{content}/
+    match.should == true
   else
-    @output.should_not =~ /#{content}/
+    match.should == false
   end
 end
 
@@ -135,4 +188,26 @@ Then /^package "([^\"]*)" should be installed$/ do |package|
 
   @output = @connection.exec!(command)
   @output.should =~ /#{package}/
+end
+
+# This regex is a little ugly, but it's so we can accept any of these
+#
+# * "foo" is running
+# * service "foo" is running
+# * application "foo" is running
+# * process "foo" is running
+# 
+# basically because I couldn't decide what they should be called. Maybe there's
+# an Official Cucumber-chef Opinion on this. Still, Rubular is fun :)
+
+# TiL that in Ruby regexes, "?:" marks a non-capturing group, which is how this
+# works
+Then /^(?:(?:service|application|process)? )?"([^\"]*)" should( not)? be running$/ do |service, boolean|
+  command = "ps ax"
+  @output = @connection.exec!(command)
+  if (!boolean)
+    @output.should =~ /#{service}/
+  else
+    @output.should_not =~ /#{service}/
+  end
 end
