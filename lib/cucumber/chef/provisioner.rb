@@ -172,7 +172,7 @@ module Cucumber
           cookbook_repo = ::Chef::CookbookLoader.new(@cookbooks_path)
           cookbook_repo.each do |name, cookbook|
             $logger.debug { "::Chef::CookbookUploader(#{name}) ATTEMPT" }
-            ::Chef::CookbookUploader.new(cookbook, @cookbooks_path, :force => true).upload_cookbook
+            ::Chef::CookbookUploader.new(cookbook, @cookbooks_path, :force => true).upload_cookbooks
             $logger.debug { "::Chef::CookbookUploader(#{name}) UPLOADED" }
           end
           #@command.knife([ "cookbook upload cucumber-chef", "-o", @cookbooks_path ], :silence => true)
