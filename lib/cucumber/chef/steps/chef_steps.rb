@@ -36,3 +36,9 @@ And /^the following cookbooks have been uploaded:$/ do |table|
     load_cookbook(entry['cookbook'], entry['cookbook_path'])
   end
 end
+
+And /^the following environments have been updated:$/ do |table|
+  table.hashes.each do |entry|
+    load_environment(entry['environment'], entry['environment_path'])
+  end
+end
