@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+require 'pry'
+require 'cucumber-chef'
+
+##
+#
+# Welcome to the Cucumber-Chef pry console!
+#
+##
+binding.pry

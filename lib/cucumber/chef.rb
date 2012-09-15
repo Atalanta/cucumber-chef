@@ -38,29 +38,29 @@ require 'ubuntu_ami'
 
 ################################################################################
 
+require 'cucumber/chef/version'
+
 module Cucumber
   module Chef
 
     class Error < StandardError; end
+
+    autoload :Bootstrap, 'cucumber/chef/bootstrap'
+    autoload :Bootstrap, 'cucumber/chef/bootstrap'
+    autoload :Command, 'cucumber/chef/command'
+    autoload :Config, 'cucumber/chef/config'
+    autoload :Logger, 'cucumber/chef/logger'
+    autoload :Provisioner, 'cucumber/chef/provisioner'
+    autoload :SSH, 'cucumber/chef/ssh'
+    autoload :TCPSocket, 'cucumber/chef/tcp_socket'
+    autoload :Template, 'cucumber/chef/template'
+    autoload :TestLab, 'cucumber/chef/test_lab'
+    autoload :TestRunner, 'cucumber/chef/test_runner'
 
     require 'cucumber/chef/utility'
     extend(Cucumber::Chef::Utility)
 
   end
 end
-
-################################################################################
-
-require 'cucumber/chef/bootstrap'
-require 'cucumber/chef/command'
-require 'cucumber/chef/config'
-require 'cucumber/chef/logger'
-require 'cucumber/chef/provisioner'
-require 'cucumber/chef/ssh'
-require 'cucumber/chef/tcp_socket'
-require 'cucumber/chef/template'
-require 'cucumber/chef/test_lab'
-require 'cucumber/chef/test_runner'
-require 'cucumber/chef/version'
 
 ################################################################################
