@@ -58,7 +58,7 @@ class CucumberChef < Thor
       end
 
       $logger = Cucumber::Chef::Logger.new
-      $logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
+      Cucumber::Chef.is_rc? and ($logger.level = Cucumber::Chef::Logger::DEBUG)
 
       message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
       puts(set_color(message, :green, true))
