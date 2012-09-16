@@ -1,81 +1,89 @@
-Given /^I have no public keys set$/ do
-  @auth_methods = %w(password)
-end
+# Given /^I have no public keys set$/ do
+#   @auth_methods = %w(password)
+# end
 
-Then /^I can ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
-  @auth_methods ||= %w(publickey password)
+# Then /^I can ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
+#   @auth_methods ||= %w(publickey password)
 
-  credentials = table.hashes
-  credentials.each do |creds|
-    lambda {
-      Net::SSH.start(session["hostname"], creds["username"], :password => creds["password"], :auth_methods => @auth_methods)
-    }.should_not raise_error(Net::SSH::AuthenticationFailed)
-  end
-end
+#   credentials = table.hashes
+#   credentials.each do |creds|
+#     lambda {
+#       $drb_test_lab.ssh = Cucumber::Chef::SSH.new
+#       creds["hostname"] and ($drb_test_lab.ssh.config[:host] = creds["hostname"])
+#       creds["username"] and ($drb_test_lab.ssh.config[:ssh_user] = creds["username"])
+#       creds["password"] and ($drb_test_lab.ssh.config[:ssh_password] = creds["password"])
+#       creds["keyfile"] and ($drb_test_lab.ssh.config[:identity_file] = creds["keyfile"])
+#       # $drb_test_lab.ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{$drb_test_lab.ssh.config[:ssh_user]}")
+#       # $drb_test_lab.ssh.exec("nohup sudo cc-server #{Cucumber::Chef.external_ip}")
 
-Then /^I can ssh to the following hosts with these credentials:$/ do |table|
-  @keys ||= []
-  @auth_methods ||= %w(password)
-  session_details = table.hashes
+#       #Net::SSH.start(session["hostname"], creds["username"], :password => creds["password"], :auth_methods => @auth_methods)
+#     }.should_not raise_error(Net::SSH::AuthenticationFailed)
+#   end
+# end
 
-  session_details.each do |session|
-    # initialize a list of keys and auth methods for just this session, as
-    # session can have session-specific keys mixed with global keys
-    session_keys = Array.new(@keys)
-    session_auth_methods = Array.new(@auth_methods)
+# Then /^I can ssh to the following hosts with these credentials:$/ do |table|
+#   @keys ||= []
+#   @auth_methods ||= %w(password)
+#   session_details = table.hashes
 
-    # you can pass in a keyfile in the session details, so we need to
-    if session["keyfile"]
-      session_keys << session["keyfile"]
-      session_auth_methods << "publickey"
-    end
+#   session_details.each do |session|
+#     # # initialize a list of keys and auth methods for just this session, as
+#     # # session can have session-specific keys mixed with global keys
+#     # session_keys = Array.new(@keys)
+#     # session_auth_methods = Array.new(@auth_methods)
 
-    lambda {
-      @connection = Net::SSH.start(session["hostname"],
-                                   session["username"],
-                                   :password => session["password"],
-                                   :auth_methods => session_auth_methods,
-                                   :keys => session_keys)
-    }.should_not raise_error
-  end
-end
+#     # # you can pass in a keyfile in the session details, so we need to
+#     # if session["keyfile"]
+#     #   session_keys << session["keyfile"]
+#     #   session_auth_methods << "publickey"
+#     # end
 
-Given /^I have the following public keys:$/ do |table|
-  @keys = []
-  public_key_paths = table.hashes
+#     lambda {
+#       $drb_test_lab.ssh = Cucumber::Chef::SSH.new
+#       session["hostname"] and ($drb_test_lab.ssh.config[:host] = session["hostname"])
+#       session["username"] and ($drb_test_lab.ssh.config[:ssh_user] = session["username"])
+#       session["password"] and ($drb_test_lab.ssh.config[:ssh_password] = session["password"])
+#       session["keyfile"] and ($drb_test_lab.ssh.config[:identity_file] = session["keyfile"])
+#       $drb_test_lab.ssh.exec("hostname")
+#     }.should_not raise_error
+#   end
+# end
 
-  public_key_paths.each do |key|
-    File.exist?(key["keyfile"]).should be_true
-    FileUtils.chmod(0600, key["keyfile"])
-    @keys << key["keyfile"]
-  end
+# Given /^I have the following public keys:$/ do |table|
+#   @keys = []
+#   public_key_paths = table.hashes
 
-  @auth_methods ||= %w(password)
-  @auth_methods << "publickey"
-end
+#   public_key_paths.each do |key|
+#     File.exist?(key["keyfile"]).should be_true
+#     FileUtils.chmod(0600, key["keyfile"])
+#     @keys << key["keyfile"]
+#   end
+
+#   @auth_methods ||= %w(password)
+#   @auth_methods << "publickey"
+# end
 
 When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
-  @keys = []
-  @auth_methods ||= %w(password)
   session = table.hashes.first
-  session_keys = Array.new(@keys)
-  session_auth_methods = Array.new(@auth_methods)
-  if session["keyfile"]
-    session_keys << session["keyfile"]
-    session_auth_methods << "publickey"
-  end
-
   lambda {
-    @connection = Net::SSH.start(hostname,
-                                 session["username"],
-                                 :password => session["password"],
-                                 :auth_methods => session_auth_methods,
-                                 :keys => session_keys)
+
+    @connection = Cucumber::Chef::SSH.new
+
+    @connection.config[:proxy] = true
+    @connection.config[:proxy_host] = $test_lab.labs_running.first.public_ip_address
+    @connection.config[:proxy_ssh_user] = "ubuntu"
+    @connection.config[:proxy_identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@connection.config[:proxy_ssh_user]}")
+
+    hostname and (@connection.config[:host] = hostname)
+    session["username"] and (@connection.config[:ssh_user] = session["username"])
+    session["password"] and (@connection.config[:ssh_password] = session["password"])
+    session["keyfile"] and (@connection.config[:identity_file] = session["keyfile"])
+
   }.should_not raise_error
 end
 
 And /^I run "([^\"]*)"$/ do |command|
-  @output = @connection.exec!(command)
+  @output = @connection.exec(command, :silence => true)
 end
 
 Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
@@ -100,14 +108,14 @@ Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   command = "ls %s" % [
     parent
   ]
-  @output = @connection.exec!(command)
+  @output = @connection.exec(command)
   @output.should =~ /#{child}/
 
 # if a specific type (directory|file) was specified, test for it
   command = "stat -c %%F %s" % [
     path
   ]
-  @output = @connection.exec!(command)
+  @output = @connection.exec(command)
   types = {
     "file" => /regular file/,
     "directory" => /directory/,
@@ -132,7 +140,7 @@ Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |pa
   command = "stat -c %%U:%%G %s" % [
     path
   ]
-  @output = @connection.exec!(command)
+  @output = @connection.exec(command)
   @output.should =~ /#{owner}/
 end
 
@@ -144,7 +152,7 @@ Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
 
 # turn the command-line output and the expectation string into Arrays and strip
 # leading and trailing cruft from members
-  @output = @connection.exec!(command).split("\n").map{ |i| i.strip }
+  @output = @connection.exec(command).split("\n").map{ |i| i.strip }
   content = content.split("\n").map{ |i| i.strip }
 
 # assume no match
@@ -179,14 +187,14 @@ end
 
 Then /^package "([^\"]*)" should be installed$/ do |package|
   command = ""
-  if (dpkg = @connection.exec!("which dpkg 2> /dev/null")).length > 0
+  if (dpkg = @connection.exec("which dpkg 2> /dev/null")).length > 0
     command = "#{dpkg.chomp} --get-selections"
-  elsif (yum = @connection.exec!("which yum 2> /dev/null")).length > 0
+  elsif (yum = @connection.exec("which yum 2> /dev/null")).length > 0
     command = "#{yum.chomp} -q list installed"
 # could easily add more cases here, if I knew what they were :)
   end
 
-  @output = @connection.exec!(command)
+  @output = @connection.exec(command)
   @output.should =~ /#{package}/
 end
 
@@ -196,7 +204,7 @@ end
 # * service "foo" is running
 # * application "foo" is running
 # * process "foo" is running
-# 
+#
 # basically because I couldn't decide what they should be called. Maybe there's
 # an Official Cucumber-chef Opinion on this. Still, Rubular is fun :)
 
@@ -204,7 +212,7 @@ end
 # works
 Then /^(?:(?:service|application|process)? )?"([^\"]*)" should( not)? be running$/ do |service, boolean|
   command = "ps ax"
-  @output = @connection.exec!(command)
+  @output = @connection.exec(command)
   if (!boolean)
     @output.should =~ /#{service}/
   else
