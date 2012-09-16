@@ -2,7 +2,6 @@ require 'rspec/expectations'
 require 'cucumber/chef'
 require 'cucumber/chef/helpers'
 require 'cucumber/chef/steps'
-require 'cucumber/chef/version'
 
 class CustomWorld
   include Cucumber::Chef
@@ -19,24 +18,27 @@ $logger = Cucumber::Chef::Logger.new
 Cucumber::Chef.is_rc? and ($logger.level = Cucumber::Chef::Logger::DEBUG)
 
 message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
-puts(message)
+print("  * #{message}")
 $logger.info { message }
 
 Cucumber::Chef::Config.load
 if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
 
-  $ssh = Cucumber::Chef::SSH.new
-  $ssh.config[:host] = $test_lab.labs_running.first.public_ip_address
-  $ssh.config[:ssh_user] = "ubuntu"
-  $ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{$ssh.config[:ssh_user]}")
-  $ssh.exec("nohup sudo cc-server #{Cucumber::Chef.external_ip}")
+  # fire up our drb server
+  ssh = Cucumber::Chef::SSH.new
+  ssh.config[:host] = $test_lab.labs_running.first.public_ip_address
+  ssh.config[:ssh_user] = "ubuntu"
+  ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
+  ssh.exec("nohup sudo cc-server #{Cucumber::Chef.external_ip}")
   Cucumber::Chef.spinner do
     Cucumber::Chef::TCPSocket.new($test_lab.labs_running.first.public_ip_address, 8787, "\n\n").wait
   end
 
+  # load our test lab knife config
   knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
   Chef::Config.from_file(knife_rb)
 
+  # initialize our drb object
   $drb_test_lab ||= DRbObject.new_with_uri("druby://#{$test_lab.labs_running.first.public_ip_address}:8787")
   $drb_test_lab and DRb.start_service
   $drb_test_lab.servers = Hash.new(nil)
@@ -45,6 +47,8 @@ else
   puts("No running cucumber-chef test labs to connect to!")
   exit(1)
 end
+
+puts(" - connected to test lab")
 
 ################################################################################
 
@@ -79,13 +83,17 @@ After do |scenario|
 
   Kernel.exit if scenario.failed?
 
-  # cleanup non-persistent lxc containers on exit
+  # cleanup non-persistent lxc containers between tests
   $drb_test_lab.servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
     $drb_test_lab.server_destroy(name)
   end
 
 end
 
+################################################################################
+
 Kernel.at_exit do
   $drb_test_lab.shutdown
 end
+
+################################################################################
