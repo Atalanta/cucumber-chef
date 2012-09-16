@@ -44,8 +44,8 @@ Gem::Specification.new do |s|
   s.add_dependency("thor", ">= 0.15.2")
   s.add_dependency("rake", ">= 0.9.2")
   s.add_dependency("ubuntu_ami", ">= 0.4.0")
+  s.add_dependency("rspec", ">= 2.10.0")
 
-  s.add_development_dependency("rspec", ">= 2.10.0")
   s.add_development_dependency("simplecov", ">= 0.6.4")
   s.add_development_dependency("pry")
 
