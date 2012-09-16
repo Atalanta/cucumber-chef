@@ -13,19 +13,49 @@ World do
   CustomWorld.new
 end
 
-$servers = Hash.new(nil)
+################################################################################
 
-Before do
-  knife_rb = Cucumber::Chef.locate(:file, ".chef", "knife.rb")
+$logger = Cucumber::Chef::Logger.new
+Cucumber::Chef.is_rc? and ($logger.level = Cucumber::Chef::Logger::DEBUG)
+
+message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
+puts(message)
+$logger.info { message }
+
+Cucumber::Chef::Config.load
+if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
+
+  $ssh = Cucumber::Chef::SSH.new
+  $ssh.config[:host] = $test_lab.labs_running.first.public_ip_address
+  $ssh.config[:ssh_user] = "ubuntu"
+  $ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{$ssh.config[:ssh_user]}")
+  $ssh.exec("nohup sudo cc-server #{Cucumber::Chef.external_ip}")
+  Cucumber::Chef.spinner do
+    Cucumber::Chef::TCPSocket.new($test_lab.labs_running.first.public_ip_address, 8787, "\n\n").wait
+  end
+
+  knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
   Chef::Config.from_file(knife_rb)
 
-  $servers_bin ||= (Cucumber::Chef.locate(:file, ENV['HOME'], "servers.bin") rescue File.expand_path(File.join(ENV['HOME'], "servers.bin")))
+  $drb_test_lab ||= DRbObject.new_with_uri("druby://#{$test_lab.labs_running.first.public_ip_address}:8787")
+  $drb_test_lab and DRb.start_service
+  $drb_test_lab.servers = Hash.new(nil)
+
+else
+  puts("No running cucumber-chef test labs to connect to!")
+  exit(1)
+end
+
+################################################################################
+
+Before do
+  $servers_bin ||= (File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "servers.bin") rescue File.expand_path(File.join(ENV['HOME'], "servers.bin")))
 
   # cleanup previous lxc containers if asked
-  if (ENV['DESTROY'] == "1")
+  if ENV['DESTROY']
     log("servers", "are being destroyed")
-    servers.each do |name|
-      server_destroy(name)
+    $drb_test_lab.servers.each do |name|
+      $drb_test_lab.server_destroy(name)
     end
     File.exists?($servers_bin) && File.delete($servers_bin)
   else
@@ -33,24 +63,29 @@ Before do
   end
 
   if File.exists?($servers_bin)
-    $servers = Marshal.load(IO.read($servers_bin))
+    $drb_test_lab.servers = (Marshal.load(IO.read($servers_bin)) rescue Hash.new(nil))
   end
 
-  chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
-                         :validation_client_name => "chef-validator")
+  $drb_test_lab.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
+                                   :validation_client_name => "chef-validator")
 end
 
-After do |scenario|
-  @connection.close if @connection
+################################################################################
 
+After do |scenario|
   File.open($servers_bin, 'w') do |f|
-    f.puts(Marshal.dump($servers))
+    f.puts(Marshal.dump($drb_test_lab.servers))
   end
 
   Kernel.exit if scenario.failed?
 
   # cleanup non-persistent lxc containers on exit
-  $servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
-    server_destroy(name)
+  $drb_test_lab.servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
+    $drb_test_lab.server_destroy(name)
   end
+
+end
+
+Kernel.at_exit do
+  $drb_test_lab.shutdown
 end
