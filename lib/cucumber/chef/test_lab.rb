@@ -323,10 +323,12 @@ module Cucumber
           security_group.authorize_port_range(22..22) if port_ranges.none?{ |port_range| port_range === 22 }
           security_group.authorize_port_range(4000..4000) if port_ranges.none?{ |port_range| port_range === 4000 }
           security_group.authorize_port_range(4040..4040) if port_ranges.none?{ |port_range| port_range === 4040 }
+          security_group.authorize_port_range(8787..8787) if port_ranges.none?{ |port_range| port_range === 8787 }
         elsif (security_group = @connection.security_groups.new(:name => security_group_name, :description => "cucumber-chef test lab")).save
           security_group.authorize_port_range(22..22)
           security_group.authorize_port_range(4000..4000)
           security_group.authorize_port_range(4040..4040)
+          security_group.authorize_port_range(8787..8787)
         else
           raise TestLabError, "Could not find an existing or create a new AWS security group."
         end
