@@ -12,7 +12,7 @@ Feature: Perform test driven infrastructure with Cucumber-Chef
     * the chef-client has been run on "<%= @project %>"
     * I ssh to "<%= @project %>" with the following credentials:
       | username | keyfile |
-      | root | ../.ssh/id_rsa |
+      | root | ./.cucumber-chef/id_rsa-ubuntu |
 
   Scenario: Can connect to the provisioned server via SSH authentication
     When I run "hostname"
