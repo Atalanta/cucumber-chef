@@ -154,7 +154,7 @@ module Cucumber
 ################################################################################
 
       mode            :user
-      prerelease      true
+      prerelease      (Cucumber::Chef.is_rc? ? true : false)
 
       provider        :aws
       librarian_chef  false
