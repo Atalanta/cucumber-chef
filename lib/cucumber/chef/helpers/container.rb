@@ -25,6 +25,9 @@ module Cucumber::Chef::Helpers::Container
 
   def container_create(name, distro, release, arch)
     unless container_exists?(name)
+      chef_server_node_destroy(name)
+      chef_server_client_destroy(name)
+
       cache_rootfs = container_cache_root(name, distro, release, arch)
       log(name, "has triggered first time lxc distro cache build; this will take a while") if !File.exists?(cache_rootfs)
 
@@ -34,9 +37,9 @@ module Cucumber::Chef::Helpers::Container
       omnibus_chef_client = File.join("/", "opt", "opscode", "bin", "chef-client")
       if !File.exists?(File.join(cache_rootfs, omnibus_chef_client))
         case distro.downcase
-        when "ubuntu":
-          %x(chroot #{cache_rootfs} /bin/bash -c 'apt-get -y --force-yes install wget' 2>&1)
-        when "fedora":
+        when "ubuntu" then
+          %x( chroot #{cache_rootfs} /bin/bash -c 'apt-get -y --force-yes install wget' 2>&1 )
+        when "fedora" then
           %x( yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server )
         end
         %x( chroot #{cache_rootfs} /bin/bash -c 'wget http://opscode.com/chef/install.sh -O - | bash' 2>&1 )
@@ -110,7 +113,7 @@ module Cucumber::Chef::Helpers::Container
       f.puts("lxc.network.flags = up")
       f.puts("lxc.network.link = br0")
       f.puts("lxc.network.name = eth0")
-      f.puts("lxc.network.hwaddr = #{$servers[name][:mac]}")
+      f.puts("lxc.network.hwaddr = #{@servers[name][:mac]}")
       f.puts("lxc.network.ipv4 = 0.0.0.0")
     end
   end
@@ -131,18 +134,18 @@ module Cucumber::Chef::Helpers::Container
 
   def container_cache_root(name, distro, release, arch)
     case distro.downcase
-    when "ubuntu":
+    when "ubuntu" then
       cache_root = File.join("/", "var", "cache", "lxc", release, "rootfs-#{arch}")
-    when "fedora":
+    when "fedora" then
       cache_root = File.join("/", "var", "cache", "lxc", distro, arch, release, "rootfs")
     end
   end
 
   def container_create_command(name, distro, release, arch)
     case distro.downcase
-    when "ubuntu":
+    when "ubuntu" then
       "lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release} --arch #{arch}"
-    when "fedora":
+    when "fedora" then
       "lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release}"
     end
   end
