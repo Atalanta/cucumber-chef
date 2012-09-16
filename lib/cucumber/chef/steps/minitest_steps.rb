@@ -20,10 +20,10 @@
 ################################################################################
 
 When /^I enable the running of MiniTest suites for "(.*?)"$/ do |name|
-  enable_minitest(name)
+  $drb_test_lab.enable_minitest(name)
 end
 
 Then /^the tests should run and pass on "(.*?)"$/ do |name|
-  results = run_minitests(name)
+  results = $drb_test_lab.run_minitests(name)
   results.last.scan(/assertions.*(\d).*failures.*(\d).*errors.*(\d).*skips/).flatten.map { |v| v.to_i }.should == [0,0,0]
 end
