@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+require 'drb/drb'
+require 'drb/acl'
+require 'cucumber-chef'
+require 'cucumber/chef/helpers'
+# require 'cucumber/chef/version'
+
+class FrontObject
+  class << self
+    include Cucumber::Chef
+    include Cucumber::Chef::Helpers
+  end
+end
+
+list = %w( allow 192.168.1.1 )
+ARGV[0] and (list += [ 'allow', ARGV[0] ])
+list += %w( deny all )
+puts "ACL List: #{list.inspect}"
+acl = ACL.new(list, ACL::ALLOW_DENY)
+# acl = ACL.new(list)
+
+URI="druby://localhost:8787"
+FRONT_OBJECT=FrontObject
+$SAFE = 1
+
+DRb.start_service(URI, FRONT_OBJECT)
+puts("Started DRb service; joining thread...")
+DRb.thread.join
