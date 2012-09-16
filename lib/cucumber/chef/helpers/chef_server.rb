@@ -63,6 +63,29 @@ module Cucumber::Chef::Helpers::ChefServer
 
 ################################################################################
 
+  def load_environment(environment, environment_path)
+    if !File.exists?(File.expand_path(environment_path))
+      raise "Environment path does not exist!"
+    end
+    ::Chef::Config[:environment_path] = environment_path
+    environment = ::Chef::Environment.json_create(
+      JSON.load(
+        File.open(
+          File.join( 
+            environment_path,
+            "%s.json" % [
+              environment
+            ]
+          )
+        )
+      )
+    )
+    environment.save
+    log("chef-server", "updated environment '#{environment}' from file '#{environment_path}'")
+ end
+
+################################################################################
+
   def create_databag(databag)
     @rest ||= ::Chef::REST.new(Chef::Config[:chef_server_url])
     @rest.post_rest("data", { "name" => databag })
