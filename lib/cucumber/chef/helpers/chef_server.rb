@@ -43,6 +43,7 @@ module Cucumber::Chef::Helpers::ChefServer
     end
     cookbook_repo = ::Chef::CookbookLoader.new(cookbook_path)
     cookbook_repo.each do |name, cbook|
+      next if name != cookbook
       ::Chef::CookbookUploader.new(cbook, cookbook_path, :force => true).upload_cookbooks
       log("chef-server", "uploaded cookbook '#{cookbook}' from path '#{cookbook_path}'")
     end
