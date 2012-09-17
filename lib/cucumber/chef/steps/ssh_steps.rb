@@ -17,7 +17,7 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
 end
 
 And /^I run "([^\"]*)"$/ do |command|
-  @output = @connection.exec(command, :silence => true)
+  @output = @connection.exec(command, :silence => true).output
 end
 
 Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
@@ -42,14 +42,14 @@ Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   command = "ls %s" % [
     parent
   ]
-  @output = @connection.exec(command)
+  @output = @connection.exec(command).output
   @output.should =~ /#{child}/
 
 # if a specific type (directory|file) was specified, test for it
   command = "stat -c %%F %s" % [
     path
   ]
-  @output = @connection.exec(command)
+  @output = @connection.exec(command).output
   types = {
     "file" => /regular file/,
     "directory" => /directory/,
@@ -74,7 +74,7 @@ Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |pa
   command = "stat -c %%U:%%G %s" % [
     path
   ]
-  @output = @connection.exec(command)
+  @output = @connection.exec(command).output
   @output.should =~ /#{owner}/
 end
 
@@ -86,7 +86,7 @@ Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
 
 # turn the command-line output and the expectation string into Arrays and strip
 # leading and trailing cruft from members
-  @output = @connection.exec(command).split("\n").map{ |i| i.strip }
+  @output = @connection.exec(command).output.split("\n").map{ |i| i.strip }
   content = content.split("\n").map{ |i| i.strip }
 
 # assume no match
@@ -121,9 +121,9 @@ end
 
 Then /^package "([^\"]*)" should be installed$/ do |package|
   command = ""
-  if (dpkg = @connection.exec("which dpkg 2> /dev/null")).length > 0
+  if (dpkg = @connection.exec("which dpkg 2> /dev/null").output).length > 0
     command = "#{dpkg.chomp} --get-selections"
-  elsif (yum = @connection.exec("which yum 2> /dev/null")).length > 0
+  elsif (yum = @connection.exec("which yum 2> /dev/null").output).length > 0
     command = "#{yum.chomp} -q list installed"
 # could easily add more cases here, if I knew what they were :)
   end
@@ -146,7 +146,7 @@ end
 # works
 Then /^(?:(?:service|application|process)? )?"([^\"]*)" should( not)? be running$/ do |service, boolean|
   command = "ps ax"
-  @output = @connection.exec(command)
+  @output = @connection.exec(command).output
   if (!boolean)
     @output.should =~ /#{service}/
   else
