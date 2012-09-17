@@ -49,6 +49,8 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency("simplecov", ">= 0.6.4")
   s.add_development_dependency("pry")
+  s.add_development_dependency("yard")
+  s.add_development_dependency("redcarpet")
 
   s.files        = `git ls-files`.split("\n")
   s.test_files   = `git ls-files -- {test,spec,features}/*`.split("\n")
