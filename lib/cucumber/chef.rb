@@ -31,9 +31,6 @@ require 'erubis'
 require 'fog'
 require 'json'
 require 'mixlib/config'
-require 'net/ssh'
-require 'net/ssh/proxy/command'
-require 'net/sftp'
 require 'ubuntu_ami'
 require 'ztk'
 
@@ -52,7 +49,6 @@ module Cucumber
     autoload :Config, 'cucumber/chef/config'
     autoload :Logger, 'cucumber/chef/logger'
     autoload :Provisioner, 'cucumber/chef/provisioner'
-    autoload :TCPSocket, 'cucumber/chef/tcp_socket'
     autoload :Template, 'cucumber/chef/template'
     autoload :TestLab, 'cucumber/chef/test_lab'
 

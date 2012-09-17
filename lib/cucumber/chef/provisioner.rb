@@ -259,13 +259,13 @@ module Cucumber
       def wait_for_chef_server
         @stdout.print("Waiting for Chef-Server...")
         Cucumber::Chef.spinner do
-          Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 4000, "GET").wait
+          ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 4000, :data => "GET").wait
         end
         @stdout.puts("done.\n")
 
         @stdout.print("Waiting for Chef-WebUI...")
         Cucumber::Chef.spinner do
-          Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 4040, "GET").wait
+          ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 4040, :data => "GET").wait
         end
         @stdout.puts("done.\n")
       end
@@ -283,7 +283,7 @@ module Cucumber
 
         @stdout.print("Waiting for SSHD...")
         Cucumber::Chef.spinner do
-          Cucumber::Chef::TCPSocket.new(@server.public_ip_address, 22).wait
+          ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22).wait
         end
         @stdout.puts("done.\n")
 

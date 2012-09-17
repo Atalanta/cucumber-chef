@@ -31,7 +31,7 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 
   ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.user}")
   ssh.exec("nohup sudo cc-server #{Cucumber::Chef.external_ip}")
   Cucumber::Chef.spinner do
-    Cucumber::Chef::TCPSocket.new($test_lab.labs_running.first.public_ip_address, 8787, "\n\n").wait
+    ZTK::TCPSocketCheck.new(:host => $test_lab.labs_running.first.public_ip_address, :port => 8787, :data => "\n\n").wait
   end
 
   # load our test lab knife config

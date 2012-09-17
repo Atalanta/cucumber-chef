@@ -52,7 +52,7 @@ module Cucumber::Chef::Helpers::Server
       test_lab_config_dhcpd
       container_config_network(name)
       container_create(name, @servers[name][:distro], @servers[name][:release], @servers[name][:arch])
-      Cucumber::Chef::TCPSocket.new(@servers[name][:ip], 22).wait
+      ZTK::TCPSocketCheck.new(:host => @servers[name][:ip], :port => 22).wait
     end
   end
 
