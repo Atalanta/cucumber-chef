@@ -14,8 +14,9 @@ end
 
 ################################################################################
 
-$logger = Cucumber::Chef::Logger.new
-Cucumber::Chef.is_rc? and ($logger.level = Cucumber::Chef::Logger::DEBUG)
+# $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
+$logger = ZTK::Logger.new(Cucumber::Chef.log_file)
+Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
 message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
 print("  * #{message}")

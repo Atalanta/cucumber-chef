@@ -6,8 +6,8 @@ def run(command)
   @ssh.exec(command)
 end
 
-$logger = Cucumber::Chef::Logger.new
-$logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
+$logger = ZTK::Logger.new(Cucumber::Chef.log_file)
+Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
 message = "push-cucumber-chef v#{Cucumber::Chef::VERSION}"
 puts(message)

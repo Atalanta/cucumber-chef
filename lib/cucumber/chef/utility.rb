@@ -130,6 +130,12 @@ module Cucumber
         %x( wget -q -O - checkip.dyndns.org|sed -e 's/.*Current IP Address: //' -e 's/<.*$//' ).chomp
       end
 
+      def log_file
+        config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
+        FileUtils.mkdir_p(config_path)
+        File.join(config_path, "cucumber-chef.log")
+      end
+
 ################################################################################
 
     end

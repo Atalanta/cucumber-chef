@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 require 'cucumber-chef'
 
-$logger = Cucumber::Chef::Logger.new
-$logger.level = (Cucumber::Chef.is_rc? ? Cucumber::Chef::Logger::DEBUG : Cucumber::Chef::Logger::INFO)
+$logger = ZTK::Logger.new(Cucumber::Chef.log_file)
+Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
 # if we have bundler binstubs use that; otherwise attempt to detect
 knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
