@@ -55,7 +55,6 @@ module Cucumber
     autoload :TCPSocket, 'cucumber/chef/tcp_socket'
     autoload :Template, 'cucumber/chef/template'
     autoload :TestLab, 'cucumber/chef/test_lab'
-    autoload :TestRunner, 'cucumber/chef/test_runner'
 
     require 'cucumber/chef/utility'
     extend(Cucumber::Chef::Utility)

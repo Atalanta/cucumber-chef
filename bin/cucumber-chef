@@ -422,32 +422,6 @@ class CucumberChef < Thor
 
 ################################################################################
 
-  desc "test [cucumber-options]", "Test a project using the cucumber-chef test suite."
-  method_option :destroy, :type => :boolean, :desc => "destroy all containers before test run", :aliases => "-z", :default => false
-  def test(*args)
-    load_config
-
-    puts
-    root_path = Cucumber::Chef.locate_parent(".cucumber-chef")
-    features_path = File.expand_path(File.join(root_path, "features"))
-
-    unless (File.exists?(features_path) && File.directory?(features_path))
-      raise Error, "Features directory '#{features_path}' does not exist."
-    else
-      puts("Using features directory: #{features_path}")
-    end
-
-    runner = Cucumber::Chef::TestRunner.new(features_path)
-    runner.run(@options.destroy?, args)
-    puts
-
-  rescue Cucumber::Chef::Error => e
-    $logger.fatal { e.backtrace.join("\n") }
-    fatal(e)
-  end
-
-################################################################################
-
 end
 
 CucumberChef.start
