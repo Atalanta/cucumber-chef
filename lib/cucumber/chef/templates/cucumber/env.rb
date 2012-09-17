@@ -14,7 +14,6 @@ end
 
 ################################################################################
 
-# $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
 $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
 Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
