@@ -42,7 +42,7 @@ module Cucumber
         @ssh.config.user = "ubuntu"
         @ssh.config.keys = Cucumber::Chef::Config[:aws][:identity_file]
 
-        @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
+        # @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
 
         @cookbooks_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "cookbooks"))
         @roles_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "roles"))
