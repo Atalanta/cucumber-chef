@@ -47,7 +47,6 @@ module Cucumber
     autoload :Bootstrap, 'cucumber/chef/bootstrap'
     autoload :Command, 'cucumber/chef/command'
     autoload :Config, 'cucumber/chef/config'
-    autoload :Logger, 'cucumber/chef/logger'
     autoload :Provisioner, 'cucumber/chef/provisioner'
     autoload :Template, 'cucumber/chef/template'
     autoload :TestLab, 'cucumber/chef/test_lab'
