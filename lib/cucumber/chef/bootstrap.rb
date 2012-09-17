@@ -33,7 +33,7 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
+        @ssh = ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
         @config = Hash.new(nil)
         @config[:context] = Hash.new(nil)
       end
@@ -69,11 +69,11 @@ module Cucumber
 
         $logger.debug { "prepare(#{@config[:host]})" }
 
-        @ssh.config[:host] = @config[:host]
-        @ssh.config[:ssh_user] = @config[:ssh_user]
-        @ssh.config[:ssh_password] = @config[:ssh_password]
-        @ssh.config[:identity_file] = @config[:identity_file]
-        @ssh.config[:timeout] = 5
+        @ssh.config.host_name = @config[:host]
+        @ssh.config.user = @config[:ssh_user]
+        @ssh.config.password = @config[:ssh_password]
+        @ssh.config.keys = @config[:identity_file]
+        @ssh.config.timeout = 5
 
         $logger.debug { "template_file(#{@config[:template_file]})" }
         command = Cucumber::Chef::Template.render(@config[:template_file], @config[:context])

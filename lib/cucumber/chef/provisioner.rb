@@ -37,10 +37,10 @@ module Cucumber
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @ssh = Cucumber::Chef::SSH.new(@stdout, @stderr, @stdin)
-        @ssh.config[:host] = @server.public_ip_address
-        @ssh.config[:ssh_user] = "ubuntu"
-        @ssh.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+        @ssh = ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
+        @ssh.config.host_name = @server.public_ip_address
+        @ssh.config.user = "ubuntu"
+        @ssh.config.keys = Cucumber::Chef::Config[:aws][:identity_file]
 
         @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
 

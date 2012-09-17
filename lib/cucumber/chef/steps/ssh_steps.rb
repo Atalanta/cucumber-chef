@@ -2,17 +2,16 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   session = table.hashes.first
   lambda {
 
-    @connection = Cucumber::Chef::SSH.new
+    @connection = ZTK::SSH.new
 
-    @connection.config[:proxy] = true
-    @connection.config[:proxy_host] = $test_lab.labs_running.first.public_ip_address
-    @connection.config[:proxy_ssh_user] = "ubuntu"
-    @connection.config[:proxy_identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@connection.config[:proxy_ssh_user]}")
+    @connection.config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
+    @connection.config.proxy_user = "ubuntu"
+    @connection.config.proxy_keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@connection.config.proxy_user}")
 
-    hostname and (@connection.config[:host] = hostname)
-    session["username"] and (@connection.config[:ssh_user] = session["username"])
-    session["password"] and (@connection.config[:ssh_password] = session["password"])
-    session["keyfile"] and (@connection.config[:identity_file] = session["keyfile"])
+    hostname and (@connection.config.host_name = hostname)
+    session["username"] and (@connection.config.user = session["username"])
+    session["password"] and (@connection.config.password = session["password"])
+    session["keyfile"] and (@connection.config.keys = session["keyfile"])
 
   }.should_not raise_error
 end

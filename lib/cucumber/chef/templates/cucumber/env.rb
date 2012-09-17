@@ -25,10 +25,10 @@ Cucumber::Chef::Config.load
 if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
 
   # fire up our drb server
-  ssh = Cucumber::Chef::SSH.new
-  ssh.config[:host] = $test_lab.labs_running.first.public_ip_address
-  ssh.config[:ssh_user] = "ubuntu"
-  ssh.config[:identity_file] = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
+  ssh = ZTK::SSH.new
+  ssh.config.host_name = $test_lab.labs_running.first.public_ip_address
+  ssh.config.user = "ubuntu"
+  ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config[:ssh_user]}")
   ssh.exec("nohup sudo cc-server #{Cucumber::Chef.external_ip}")
   Cucumber::Chef.spinner do
     Cucumber::Chef::TCPSocket.new($test_lab.labs_running.first.public_ip_address, 8787, "\n\n").wait
