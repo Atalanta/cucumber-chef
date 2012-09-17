@@ -9,7 +9,7 @@ end
 $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
 Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
-message = "push-cucumber-chef v#{Cucumber::Chef::VERSION}"
+message = "cc-push v#{Cucumber::Chef::VERSION}"
 puts(message)
 $logger.info { message }
 
