@@ -155,7 +155,7 @@ module Cucumber
           }
 
           File.open(knife_rb, 'w') do |f|
-            f.puts(Cucumber::Chef::Template.render(template_file, context))
+            f.puts(ZTK::Template.render(template_file, context))
           end
         end
         @stdout.print("done.\n")

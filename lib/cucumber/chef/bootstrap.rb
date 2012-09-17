@@ -76,7 +76,7 @@ module Cucumber
         @ssh.config.timeout = 5
 
         $logger.debug { "template_file(#{@config[:template_file]})" }
-        command = Cucumber::Chef::Template.render(@config[:template_file], @config[:context])
+        command = ZTK::Template.render(@config[:template_file], @config[:context])
         command = "sudo #{command}" if @config[:use_sudo]
 
         $logger.debug { "begin(#{@config[:host]})" }

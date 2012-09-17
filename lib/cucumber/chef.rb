@@ -44,11 +44,9 @@ module Cucumber
     class Error < StandardError; end
 
     autoload :Bootstrap, 'cucumber/chef/bootstrap'
-    autoload :Bootstrap, 'cucumber/chef/bootstrap'
     autoload :Command, 'cucumber/chef/command'
     autoload :Config, 'cucumber/chef/config'
     autoload :Provisioner, 'cucumber/chef/provisioner'
-    autoload :Template, 'cucumber/chef/template'
     autoload :TestLab, 'cucumber/chef/test_lab'
 
     require 'cucumber/chef/utility'

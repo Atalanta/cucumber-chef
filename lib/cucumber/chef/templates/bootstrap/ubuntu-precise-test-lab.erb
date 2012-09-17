@@ -4,9 +4,9 @@ CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
 
 export DEBIAN_FRONTEND=noninteractive
 
-sed -i "s/127.0.0.1 localhost/127.0.0.1 <%= @config[:hostname] %> <%= @config[:hostname].split(".")[0] %> localhost/" /etc/hosts
-echo "<%= @config[:hostname] %>" | tee /etc/hostname
-hostname <%= @config[:hostname] %>
+sed -i "s/127.0.0.1 localhost/127.0.0.1 <%= @hostname %> <%= @hostname.split(".")[0] %> localhost/" /etc/hosts
+echo "<%= @hostname %>" | tee /etc/hostname
+hostname <%= @hostname %>
 
 echo "deb http://apt.opscode.com/ `lsb_release -cs`-0.10 main" | tee /etc/apt/sources.list.d/opscode.list
 mkdir -p /etc/apt/trusted.gpg.d
@@ -19,9 +19,9 @@ chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}/.gnupg
 apt-get -q -y upgrade
 
 cat <<EOF | debconf-set-selections
-chef chef/chef_server_url string http://<%= @config[:chef_server] %>:4000
-chef-solr chef-solr/amqp_password password <%= @config[:amqp_password] %>
-chef-server-webui chef-server-webui/admin_password password <%= @config[:admin_password] %>
+chef chef/chef_server_url string http://<%= @chef_server %>:4000
+chef-solr chef-solr/amqp_password password <%= @amqp_password %>
+chef-server-webui chef-server-webui/admin_password password <%= @admin_password %>
 EOF
 
 apt-get -q -y --force-yes install chef chef-server
@@ -56,7 +56,7 @@ EOF
 chmod +x ${KNIFE_CONFIG_EXP_FILE}
 ${KNIFE_CONFIG_EXP_FILE}
 
-knife client create <%= @config[:user] %> -d -a -f ${HOME}/.chef/<%= @config[:user] %>.pem
+knife client create <%= @user %> -d -a -f ${HOME}/.chef/<%= @user %>.pem
 
 chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
 
@@ -93,7 +93,7 @@ if [ ! -f /etc/chef/client.pem ]; then
 fi
 
 cat <<EOF > /etc/chef/first-boot.json
-<%= @config[:attributes].to_json %>
+<%= @attributes.to_json %>
 EOF
 
 touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}
