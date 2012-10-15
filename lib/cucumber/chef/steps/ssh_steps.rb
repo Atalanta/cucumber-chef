@@ -30,9 +30,9 @@ end
 
 Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |boolean, key, name|
   if (!boolean)
-    @output.should =~ /#{$servers[name][key.downcase.to_sym]}/i
+    @output.should =~ /#{$drb_test_lab.servers[name][key.downcase.to_sym]}/i
   else
-    @output.should_not =~ /#{$servers[name][key.downcase.to_sym]}/i
+    @output.should_not =~ /#{$drb_test_lab.servers[name][key.downcase.to_sym]}/i
   end
 end
 
