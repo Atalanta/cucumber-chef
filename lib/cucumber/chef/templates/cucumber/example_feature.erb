@@ -6,7 +6,7 @@ Feature: Perform test driven infrastructure with Cucumber-Chef
 
   Background:
     * I have a server called "<%= @project %>"
-    * "<%= @project %>" is running "ubuntu" "lucid"
+    * "<%= @project %>" is running "ubuntu" "precise"
     * "<%= @project %>" has been provisioned
     * the "chef-client::service" recipe has been added to the "<%= @project %>" run list
     * the chef-client has been run on "<%= @project %>"
