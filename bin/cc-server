@@ -1,15 +1,16 @@
 #!/usr/bin/env ruby
-
-if RUBY_VERSION < "1.9"
-  exit if fork
-  Process.setsid
-  exit if fork
-  Dir.chdir "/"
-  STDIN.reopen "/dev/null"
-  STDOUT.reopen "/dev/null", "a"
-  STDERR.reopen "/dev/null", "a"
-else
-  Process.daemon
+if !ENV['BACKGROUND'].nil?
+  if RUBY_VERSION < "1.9"
+    exit if fork
+    Process.setsid
+    exit if fork
+    Dir.chdir "/"
+    STDIN.reopen "/dev/null"
+    STDOUT.reopen "/dev/null", "a"
+    STDERR.reopen "/dev/null", "a"
+  else
+    Process.daemon
+  end
 end
 
 Dir.chdir(File.join("/home", "ubuntu"))
@@ -28,6 +29,11 @@ class FrontObject
   def initialize
     knife_rb = Cucumber::Chef.locate(:file, ".chef", "knife.rb")
     Chef::Config.from_file(knife_rb)
+
+    $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
+    Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
+
+    puts("cc-server v#{Cucumber::Chef::VERSION}")
   end
 
   def shutdown
