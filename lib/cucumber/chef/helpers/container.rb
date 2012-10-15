@@ -42,7 +42,7 @@ module Cucumber::Chef::Helpers::Container
         when "fedora" then
           %x( yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server )
         end
-        %x( chroot #{cache_rootfs} /bin/bash -c 'wget http://opscode.com/chef/install.sh -O - | bash' 2>&1 )
+        %x( chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh -O - | bash' 2>&1 )
         if distro.downcase == "fedora"
           %x( chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm' 2>&1 )
         end
