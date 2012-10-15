@@ -178,30 +178,67 @@ class CucumberChef < Thor
 
 ################################################################################
 
-  desc "teardown", "Teardown cucumber-chef test lab in Amazon EC2"
+  desc "teardown [container]", "Teardown the cucumber-chef test lab in Amazon EC2 or a test lab [container] if specified."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
-  def teardown
+  def teardown(*args)
     load_config
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new)
-      if yes?(set_color("Are you sure you want to teardown your cucumber-chef test lab?", :red, true))
-        count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
-        puts
-        puts(set_color("You have 5 seconds to abort!", :green, true))
-        puts
-        print(set_color("Self-destructing in", :green, true))
-        5.downto(1) do |x|
-          print(set_color("...#{x}", count_down_colors[x], true))
-          sleep(1)
+      if args.count == 0
+        if yes?(set_color("Are you sure you want to teardown your cucumber-chef test lab?", :red, true))
+          count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
+          puts
+          puts(set_color("You have 5 seconds to abort!", :green, true))
+          puts
+          print(set_color("Self-destructing in", :green, true))
+          5.downto(1) do |x|
+            print(set_color("...#{x}", count_down_colors[x], true))
+            sleep(1)
+          end
+          puts(set_color("...BOOM!", :red, true))
+          puts
+          test_lab.destroy
+        else
+          puts
+          puts(set_color("Whew! That was close!", :green, true))
         end
-        puts(set_color("...BOOM!", :red, true))
-        puts
-        test_lab.destroy
       else
-        puts
-        puts(set_color("Whew! That was close!", :green, true))
+        container = args[0]
+        if yes?(set_color("Are you sure you want to teardown the test lab containter '#{container}'?", :red, true))
+          count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
+          puts
+          puts(set_color("You have 5 seconds to abort!", :green, true))
+          puts
+          print(set_color("Self-destructing in", :green, true))
+          5.downto(1) do |x|
+            print(set_color("...#{x}", count_down_colors[x], true))
+            sleep(1)
+          end
+          puts(set_color("...BOOM!", :red, true))
+          puts
+
+          ssh = ZTK::SSH.new
+          ssh.config.host_name = test_lab.labs_running.first.public_ip_address
+          ssh.config.user = "ubuntu"
+          ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.user}")
+          ssh.exec("nohup sudo pkill -9 -f cc-server")
+          ssh.exec("nohup sudo BACKGROUND=yes cc-server #{Cucumber::Chef.external_ip}")
+          Cucumber::Chef.spinner do
+            ZTK::TCPSocketCheck.new(:host => test_lab.labs_running.first.public_ip_address, :port => 8787, :data => "\n\n").wait
+          end
+
+          # initialize our drb object
+          test_lab_drb ||= DRbObject.new_with_uri("druby://#{test_lab.labs_running.first.public_ip_address}:8787")
+          test_lab_drb and DRb.start_service
+          test_lab_drb.servers = Hash.new(nil)
+          test_lab_drb.server_destroy(container)
+        else
+          puts
+          puts(set_color("Whew! That was close!", :green, true))
+        end
       end
+
     else
       puts(set_color("Could not find a cucumber-chef test lab to teardown!", :red, true))
     end
