@@ -8,6 +8,9 @@ Feature: Perform test driven infrastructure with Cucumber-Chef
     * I have a server called "<%= @project %>"
     * "<%= @project %>" is running "ubuntu" "precise"
     * "<%= @project %>" has been provisioned
+    * the following cookbooks have been uploaded:
+      | cookbook | cookbook_path |
+      | chef-client | ./cookbooks |
     * the "chef-client::service" recipe has been added to the "<%= @project %>" run list
     * the chef-client has been run on "<%= @project %>"
     * I ssh to "<%= @project %>" with the following credentials:
