@@ -94,14 +94,26 @@ Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |bool
   end
 end
 
-Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
+Then /^(path|directory|file|symlink) "([^\"]*)" should( not)? exist$/ do |type, path, boolean|
   parent = File.dirname path
   child = File.basename path
   command = "ls %s" % [
     parent
   ]
-  @output = @connection.exec!(command)
-  @output.should =~ /#{child}/
+  @output = nil
+  begin
+    @output = @connection.exec!(command).strip
+  rescue NoMethodError
+    @output = ''
+  end
+
+  if (!boolean)
+    @output.should =~ /#{child}/
+#    @output.should == child
+  else
+    @output.should_not =~ /#{child}/
+#    @output.should_not == child
+  end
 
 # if a specific type (directory|file) was specified, test for it
   command = "stat -c %%F %s" % [
@@ -115,29 +127,66 @@ Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   }
 
   if types.keys.include? type
-    @output.should =~ types[type]
+    if (!boolean)
+      @output.should =~ types[type]
+    else
+      @output.should =~ /No such file or directory/
+    end
   end
-#  if type == "file"
-#    @output.should =~ /regular file/
-#  end
-#  if type == "directory"
-#    @output.should =~ /directory/
-#  end
-#  if type == "symlink"
-#    @output.should =~ /symbolic link/
-#  end
 end
 
-Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
+Then /^symlink "([^\"]*)" should (?:point|resolve) to "([^\"]*)"$/ do |link, target|
+  command = "readlink %s" % [
+    link
+  ]
+  @output = @connection.exec!(command)
+  @output.should =~ /#{target}/
+end
+
+Then /^(?:path|directory|file) "([^\"]*)" should be chmod "([^\"]*)"$/ do |path, mode|
+  command = "stat -c %%a %s" % [
+    path
+  ]
+  @output = "%04d" % [
+    @connection.exec!(command)
+  ]
+  @output.should =~ /#{mode}/
+end
+
+Then /^(?:path|directory|file) "([^\"]*)" should be owned( recursively)? by "([^\"]*)"$/ do |path, boolean, owner|
+  failing  = true
   command = "stat -c %%U:%%G %s" % [
     path
   ]
   @output = @connection.exec!(command)
-  @output.should =~ /#{owner}/
+#  @output.should =~ /#{owner}/
+  if @output =~ /#{owner}/
+    failing = false
+  end
+
+  if boolean
+    command = "find %s" % [
+      path
+    ]
+    @output = @connection.exec!(command).split "\n"
+    @output.each do |f|
+      command = "stat -c %%U:%%G %s" % [
+        f
+      ]
+      @output = @connection.exec!(command).strip
+      if @output !~ /#{owner}/
+        failing = true
+      end
+    end
+  end
+
+  failing.should == false
 end
 
 # we can now match multi-line strings. We want to match *contiguous lines*
 Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
+# so this is a pain
+#  command = "sudo cat %s" % [
   command = "cat %s" % [
     path
   ]
@@ -176,6 +225,43 @@ Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
     match.should == false
   end
 end
+
+#And /^when I curl this(?: one off)/ do |target|
+#  command = "curl -s '%s'" % [
+#    target
+#  ]
+#  @output = @connection.exec!(command) # .gsub!("\\", "")
+#end
+
+#Then /^the value of "([^\"]*)" should( not)? be "([^\"]*)"/ do |keys, boolean, value|
+#  def dig_into_json j, keys
+#    h = j[keys.shift]
+#    if h.class.name == "Hash"
+#      dig_into_json h, keys
+#    else
+#      return h
+#    end
+#  end
+#
+#  require 'json'
+#  j = JSON::[] @output
+#  k = keys.split("=>").map{ |i| i.strip }
+#
+#  v = dig_into_json j, k
+#
+#  if (!boolean)
+#    v.to_s.should == value
+#  else
+#    v.to_s.should_not == value
+#  end 
+#end
+#Then /^the output should( not)? contain/ do |boolean, content|
+#  if (!boolean)
+#    @output.should =~ /#{content}/
+#  else
+#    @output.should_not =~ /#{content}/
+#  end
+#end
 
 Then /^package "([^\"]*)" should be installed$/ do |package|
   command = ""
