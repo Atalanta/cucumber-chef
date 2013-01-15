@@ -299,22 +299,31 @@ class CucumberChef < Thor
       ssh = ZTK::SSH.new
 
       if args.size == 0
+        ssh_user = "ubuntu"
+        ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh_user}")
+        FileUtils.chmod(0400, ssh_private_key_file)
+
         ssh.config.host_name = test_lab.labs_running.first.public_ip_address
-        ssh.config.user = "ubuntu"
-        ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.user}")
+        ssh.config.user = ssh_user
+        ssh.config.keys = ssh_private_key_file
 
         puts([set_color("Attempting SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
         ssh.console
       else
         container = args[0]
 
+        ssh_user = "root"
+        proxy_ssh_user = "ubuntu"
+        ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{proxy_ssh_user}")
+        FileUtils.chmod(0400, ssh_private_key_file)
+
         ssh.config.proxy_host_name = test_lab.labs_running.first.public_ip_address
-        ssh.config.proxy_user = "ubuntu"
-        ssh.config.proxy_keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.proxy_user}")
+        ssh.config.proxy_user = proxy_ssh_user
+        ssh.config.proxy_keys = ssh_private_key_file
 
         ssh.config.host_name = container
-        ssh.config.user = "root"
-        ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.proxy_user}")
+        ssh.config.user = ssh_user
+        ssh.config.keys = ssh_private_key_file
 
         puts([set_color("Attempting SSH connection to cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
         ssh.console
