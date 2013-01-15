@@ -38,6 +38,7 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 
   # load our test lab knife config
   knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
   Chef::Config.from_file(knife_rb)
+  Chef::Config[:chef_server_url] = "http://#{$test_lab.labs_running.first.public_ip_address}:4000"
 
   # initialize our drb object
   $drb_test_lab ||= DRbObject.new_with_uri("druby://#{$test_lab.labs_running.first.public_ip_address}:8787")
