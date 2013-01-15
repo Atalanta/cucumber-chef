@@ -52,10 +52,11 @@ module Cucumber::Chef::Helpers::ChefServer
 ################################################################################
 
   def load_role(role, role_path)
-    if !File.exists?(File.expand_path(role_path))
-      raise "Role path does not exist!"
+    expanded_role_path = File.expand_path(role_path)
+    if !File.exists?(expanded_role_path)
+      raise "Role path, '#{expanded_role_path}', does not exist!"
     end
-    ::Chef::Config[:role_path] = role_path
+    ::Chef::Config[:role_path] = expanded_role_path
     role = ::Chef::Role.from_disk(role)
     role.save
     log("chef-server", "updated role '#{role}' from file '#{role_path}'")
