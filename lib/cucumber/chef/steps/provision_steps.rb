@@ -61,4 +61,5 @@ end
 
 And /^the chef-client has been run on "([^\"]*)"$/ do |name|
   $drb_test_lab.chef_run_client(name)
+  chef_client_artifacts(name)
 end
