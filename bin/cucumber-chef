@@ -301,7 +301,7 @@ class CucumberChef < Thor
       if args.size == 0
         ssh_user = "ubuntu"
         ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh_user}")
-        FileUtils.chmod(0400, ssh_private_key_file)
+        File.chmod(0400, ssh_private_key_file)
 
         ssh.config.host_name = test_lab.labs_running.first.public_ip_address
         ssh.config.user = ssh_user
@@ -315,7 +315,7 @@ class CucumberChef < Thor
         ssh_user = "root"
         proxy_ssh_user = "ubuntu"
         ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{proxy_ssh_user}")
-        FileUtils.chmod(0400, ssh_private_key_file)
+        File.chmod(0400, ssh_private_key_file)
 
         ssh.config.proxy_host_name = test_lab.labs_running.first.public_ip_address
         ssh.config.proxy_user = proxy_ssh_user
