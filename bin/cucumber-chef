@@ -251,6 +251,19 @@ class CucumberChef < Thor
 
 ################################################################################
 
+  desc "test", "depreciated"
+  def test
+    puts
+    puts(set_color("The test task is depreciated!  You should execute cucumber directly.", :red, true))
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+
   desc "up", "Startup the cucumber-chef test lab"
   def up
     load_config
