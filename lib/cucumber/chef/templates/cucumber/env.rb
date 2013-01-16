@@ -29,8 +29,8 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 
   ssh.config.host_name = $test_lab.labs_running.first.public_ip_address
   ssh.config.user = "ubuntu"
   ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.user}")
-  ssh.exec("nohup sudo pkill -9 -f cc-server")
-  ssh.exec("nohup sudo BACKGROUND=yes cc-server #{Cucumber::Chef.external_ip}")
+  ssh.exec("nohup sudo /bin/bash -c 'pkill -9 -f cc-server'")
+  ssh.exec("nohup sudo /bin/bash -c 'BACKGROUND=yes cc-server #{Cucumber::Chef.external_ip}'")
   Cucumber::Chef.spinner do
     ZTK::TCPSocketCheck.new(:host => $test_lab.labs_running.first.public_ip_address, :port => 8787, :data => "\n\n").wait
   end
@@ -73,7 +73,7 @@ Before do
   end
 
   $drb_test_lab.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
-                                   :validation_client_name => "chef-validator")
+                                       :validation_client_name => "chef-validator")
 end
 
 ################################################################################
