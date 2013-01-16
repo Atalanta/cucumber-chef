@@ -54,7 +54,8 @@ puts(" - connected to test lab")
 
 ################################################################################
 
-Before do
+Before do |scenario|
+  $scenario = scenario
   $servers_bin ||= (File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "servers.bin") rescue File.expand_path(File.join(ENV['HOME'], "servers.bin")))
 
   # cleanup previous lxc containers if asked
@@ -82,8 +83,6 @@ After do |scenario|
   File.open($servers_bin, 'w') do |f|
     f.puts(Marshal.dump($drb_test_lab.servers))
   end
-
-  Kernel.exit if scenario.failed?
 
   # cleanup non-persistent lxc containers between tests
   $drb_test_lab.servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
