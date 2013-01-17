@@ -52,10 +52,15 @@ end
 
 puts(" - connected to test lab")
 
+FileUtils.rm_rf(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "artifacts"))
+
 ################################################################################
 
 Before do |scenario|
+  # store the current scenario here; espcially since I don't know a better way to get at this information
+  # we use various aspects of the scenario to name our artifacts
   $scenario = scenario
+
   $servers_bin ||= (File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "servers.bin") rescue File.expand_path(File.join(ENV['HOME'], "servers.bin")))
 
   # cleanup previous lxc containers if asked
