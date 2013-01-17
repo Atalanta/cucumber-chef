@@ -49,6 +49,7 @@ end
   end
 end
 
+
 ################################################################################
 # CHEF-CLIENT
 ################################################################################
@@ -61,6 +62,23 @@ execute "set chef-client logging to debug" do
 
   only_if do
     %x( cat /etc/chef/client.rb | grep "log_level          :info" )
+    ($? == 0)
+  end
+end
+
+
+################################################################################
+# CHEF-SOLR / APACHE SOLR
+################################################################################
+service "chef-solr"
+
+execute "modify solr update-handler" do
+  command "sed -i \"s/<maxDocs>100</maxDocs>/<maxDocs>1</maxDocs>/\" /var/lib/chef/solr/conf/solrconfig.xml"
+
+  notifies :restart, "service[chef-solr]"
+
+  only_if do
+    %x( cat /var/lib/chef/solr/conf/solrconfig.xml | grep "<maxDocs>100</maxDocs>" )
     ($? == 0)
   end
 end
