@@ -44,7 +44,7 @@ module Cucumber::Chef::Helpers::ChefClient
 
   def chef_run_client(name,*args)
     chef_config_client(name)
-    command_run_remote(name, "/bin/rm -f /var/log/chef/client.log ; true")
+    command_run_remote(name, "/bin/rm -f /var/log/chef/client.log /var/chef/cache/chef-stacktrace.out ; true")
     output = command_run_remote(name, ["/usr/bin/chef-client -j /etc/chef/attributes.json -N #{name}", args].flatten.join(" "))
     log("chef-client", "ran on node '#{name}'")
     output
@@ -87,6 +87,10 @@ module Cucumber::Chef::Helpers::ChefClient
 ################################################################################
 
   def chef_client_artifacts(name)
+    # this is messy and needs to be refactored into a more configurable
+    # solution; but for now this should do the trick
+
+    artifacts = Hash.new
     ssh_user = "root"
     proxy_ssh_user = "ubuntu"
 
@@ -103,25 +107,43 @@ module Cucumber::Chef::Helpers::ChefClient
     ssh.config.user = ssh_user
     ssh.config.keys = ssh_private_key_file
 
-    scenario_tag = $scenario.name.gsub(" ", "_")
-
     feature_file = $scenario.file_colon_line.split(":").first
     feature_line = $scenario.file_colon_line.split(":").last
-    feature_tag = File.basename(feature_file.split("/")[1..-1].join("-"), ".feature")
+    scenario_tag = $scenario.name.gsub(" ", "_")
 
-    puts "feature_tag == #{feature_tag.inspect}"
+    feature_name = File.basename(feature_file, ".feature")
+    feature_dir = feature_file.split("/")[-2]
 
-    artifact_name = ([ feature_tag, name, scenario_tag ].join("-") + ".log").downcase
-    puts "artifact_name == #{artifact_name}"
+    artifacts = {
+      "chef-client-log" => "/var/log/chef/client.log",
+      "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"
+    }
 
-    local_path = File.expand_path(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "artifacts", artifact_name))
-    FileUtils.mkdir_p(File.dirname(local_path))
-    remote_path = File.join("/", "var", "log", "chef", "client.log")
+    artifacts.each do |label, remote_path|
+      result = ssh.exec("/bin/bash -c '[[ -f #{remote_path} ]] ; echo $?'", :silence => true)
+      if (result.output =~ /0/)
+        log("artifacts", "retrieving '#{File.basename(remote_path)}'")
 
-    ssh.download(remote_path, local_path)
-    File.chmod(0644, local_path)
+        local_path = File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "artifacts", feature_dir, "#{feature_name}.txt")
+        tmp_path = File.join("/tmp", label)
 
-    ssh.exec("rm -f #{remote_path}")
+        FileUtils.mkdir_p(File.dirname(local_path))
+        ssh.download(remote_path, tmp_path)
+        data = IO.read(tmp_path).chomp
+
+        message = "#{$scenario.name} (#{File.basename(feature_file)}:#{feature_line}:#{label})"
+        header = ("-" * message.length)
+
+        f = File.open(local_path, "a")
+        f.write("#{header}\n")
+        f.write("#{message}\n")
+        f.write("#{header}\n")
+        f.write("#{data}\n")
+
+        File.chmod(0644, local_path)
+      end
+    end
+    ssh.exec("/bin/rm -fv #{artifacts.values.join(' ')} ; true", :silence => true)
   end
 
 ################################################################################
