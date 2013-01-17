@@ -64,6 +64,22 @@ module Cucumber::Chef::Helpers::ChefServer
 
 ################################################################################
 
+  def get_databag(databag)
+    @rest ||= ::Chef::REST.new(Chef::Config[:chef_server_url])
+    @rest.get_rest("data/#{databag}")
+  rescue Net::HTTPServerException => e
+    raise unless e.to_s =~ /^404/
+  end
+
+  def destroy_databag(databag)
+    @rest ||= ::Chef::REST.new(Chef::Config[:chef_server_url])
+    @rest.delete_rest("data/#{databag}")
+  rescue Net::HTTPServerException => e
+    raise unless e.to_s =~ /^404/
+  end
+
+################################################################################
+
   def create_databag(databag)
     @rest ||= ::Chef::REST.new(Chef::Config[:chef_server_url])
     @rest.post_rest("data", { "name" => databag })
@@ -81,21 +97,24 @@ module Cucumber::Chef::Helpers::ChefServer
     items.each do |item|
       next if File.directory?(item)
 
+      item_name = %w( json rb ).collect{ |ext| (item =~ /#{ext}/ ? File.basename(item, ".#{ext}") : nil) }.compact.first
       item_path = File.basename(item)
       databag_item_path = File.expand_path(File.join(databag_path, item_path))
 
       data_bag_item = ::Chef::DataBagItem.new
       data_bag_item.data_bag(databag)
-      data_bag_item.raw_data = load_databag_item(databag_item_path)
+      raw_data = load_databag_item(databag_item_path)
+      data_bag_item.raw_data = raw_data.dup
       data_bag_item.save
+
+      loop do
+        chef_data = ::Chef::DataBagItem.load(databag, item_name).raw_data
+        break if chef_data == raw_data
+        log("chef-server", "waiting on data bag to update")
+        sleep(1)
+      end
       log("chef-server", "updated data bag item '#{databag}/#{item_path}' from file '#{databag_path}'")
     end
-
-    # TODO fix ghetto sleep
-    # databags don't always update right away; ghetto fix with a sleep
-    # for now.  likely needs to loop reading the databag back until it updates
-    # then return
-    sleep(3)
   end
 
 ################################################################################
