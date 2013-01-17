@@ -2,7 +2,8 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   session = table.hashes.first
   lambda {
 
-    @connection = ZTK::SSH.new
+    @connection ||= ZTK::SSH.new
+    (@connection.instance_variable_get("@ssh").close rescue nil)
 
     @connection.config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
     @connection.config.proxy_user = "ubuntu"
