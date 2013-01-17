@@ -73,7 +73,7 @@ end
 service "chef-solr"
 
 execute "modify solr update-handler" do
-  command "sed -i \"s/<maxDocs>100</maxDocs>/<maxDocs>1</maxDocs>/\" /var/lib/chef/solr/conf/solrconfig.xml"
+  command "sed -i \"s/<maxDocs>100<\/maxDocs>/<maxDocs>1<\/maxDocs>/\" /var/lib/chef/solr/conf/solrconfig.xml"
 
   notifies :restart, "service[chef-solr]"
 
