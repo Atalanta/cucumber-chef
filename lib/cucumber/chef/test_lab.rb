@@ -85,7 +85,7 @@ module Cucumber
         if @server
           @stdout.print("Waiting for SSHD...")
           Cucumber::Chef.spinner do
-            ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22).wait
+            ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
           end
           @stdout.puts("done.\n")
         end
@@ -131,7 +131,7 @@ module Cucumber
 
             @stdout.print("Waiting for SSHD...")
             Cucumber::Chef.spinner do
-              ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22).wait
+              ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
             end
             @stdout.puts("done.\n")
 
