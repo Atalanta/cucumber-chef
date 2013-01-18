@@ -155,15 +155,11 @@ end
 ################################################################################
 # CHEF-SOLR / APACHE SOLR
 ################################################################################
-service "chef-solr"
 
-execute "modify solr update-handler" do
-  command "sed -i \"s/<maxDocs>100<\\/maxDocs>/<maxDocs>1<\\/maxDocs>/\" /var/lib/chef/solr/conf/solrconfig.xml"
-
-  only_if do
-    %x( cat /var/lib/chef/solr/conf/solrconfig.xml | grep "<maxDocs>100</maxDocs>" )
-    ($? == 0)
-  end
+template "install custom solr config" do
+  path "/var/lib/chef/solr/conf/solrconfig.xml"
+  source "solrconfig.erb"
+  owner "chef"
+  group "chef"
+  mode "0644"
 end
-
-
