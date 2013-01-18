@@ -90,21 +90,17 @@ module Cucumber::Chef::Helpers::ChefClient
     # this is messy and needs to be refactored into a more configurable
     # solution; but for now this should do the trick
 
-    artifacts = Hash.new
-    ssh_user = "root"
-    proxy_ssh_user = "ubuntu"
-
-    ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{proxy_ssh_user}")
+    ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[:lab_user]}")
     File.chmod(0400, ssh_private_key_file)
 
     ssh = ZTK::SSH.new
 
     ssh.config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
-    ssh.config.proxy_user = proxy_ssh_user
+    ssh.config.proxy_user = Cucumber::Chef::Config[:lab_user]
     ssh.config.proxy_keys = ssh_private_key_file
 
     ssh.config.host_name = name
-    ssh.config.user = ssh_user
+    ssh.config.user = Cucumber::Chef::Config[:lxc_user]
     ssh.config.keys = ssh_private_key_file
 
     feature_file = $scenario.file_colon_line.split(":").first
@@ -114,12 +110,7 @@ module Cucumber::Chef::Helpers::ChefClient
     feature_name = File.basename(feature_file, ".feature")
     feature_dir = feature_file.split("/")[-2]
 
-    artifacts = {
-      "chef-client-log" => "/var/log/chef/client.log",
-      "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"
-    }
-
-    artifacts.each do |label, remote_path|
+    Cucumber::Chef::Config[:artifacts].each do |label, remote_path|
       result = ssh.exec("/bin/bash -c '[[ -f #{remote_path} ]] ; echo $?'", :silence => true)
       if (result.output =~ /0/)
         log("artifacts", "retrieving '#{File.basename(remote_path)}'")
@@ -143,7 +134,7 @@ module Cucumber::Chef::Helpers::ChefClient
         File.chmod(0644, local_path)
       end
     end
-    ssh.exec("/bin/rm -fv #{artifacts.values.join(' ')} ; true", :silence => true)
+    ssh.exec("/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')} ; true", :silence => true)
   end
 
 ################################################################################
