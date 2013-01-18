@@ -19,74 +19,13 @@
 ################################################################################
 
 
-%w( build-essential wget chkconfig ruby-full ruby-dev libxml2-dev libxslt1-dev ).each do |p|
-  package p
-end
-
-bash "install rubygems" do
-  code <<-EOH
-cd /tmp
-wget http://production.cf.rubygems.org/rubygems/rubygems-1.8.19.tgz
-tar zxf rubygems-1.8.19.tgz
-cd rubygems-1.8.19
-ruby setup.rb --no-format-executable
-  EOH
-end
-
-gem_package "cucumber-chef" do
-  gem_binary("/usr/bin/gem")
-
-  version(node['cucumber_chef']['version'])
-
-  if node['cucumber_chef']['prerelease']
-    options("--prerelease")
-  end
-end
-
-%w( rspec ).each do |g|
-  gem_package g do
-    gem_binary("/usr/bin/gem")
-  end
-end
-
-
-################################################################################
-# CHEF-CLIENT
-################################################################################
-service "chef-client"
-
-execute "set chef-client logging to debug" do
-  command "sed -i \"s/log_level          :info/log_level          :debug/\" /etc/chef/client.rb"
-
-  notifies :restart, "service[chef-client]"
-
-  only_if do
-    %x( cat /etc/chef/client.rb | grep "log_level          :info" )
-    ($? == 0)
-  end
-end
-
-
-################################################################################
-# CHEF-SOLR / APACHE SOLR
-################################################################################
-service "chef-solr"
-
-execute "modify solr update-handler" do
-  command "sed -i \"s/<maxDocs>100<\/maxDocs>/<maxDocs>1<\/maxDocs>/\" /var/lib/chef/solr/conf/solrconfig.xml"
-
-  notifies :restart, "service[chef-solr]"
-
-  only_if do
-    %x( cat /var/lib/chef/solr/conf/solrconfig.xml | grep "<maxDocs>100</maxDocs>" )
-    ($? == 0)
-  end
-end
-
-
 ################################################################################
 # SYSTEM TWEAKS
 ################################################################################
+
+%w( build-essential wget chkconfig ruby-full ruby-dev libxml2-dev libxslt1-dev ).each do |p|
+  package p
+end
 
 %w( root ubuntu ).each do |user|
   home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
@@ -164,3 +103,67 @@ template "install cucumber-chef motd" do
 
   not_if { File.exists?("/etc/motd") && !File.symlink?("/etc/motd") }
 end
+
+
+################################################################################
+# RUBY
+################################################################################
+bash "install rubygems" do
+  code <<-EOH
+cd /tmp
+wget http://production.cf.rubygems.org/rubygems/rubygems-1.8.19.tgz
+tar zxf rubygems-1.8.19.tgz
+cd rubygems-1.8.19
+ruby setup.rb --no-format-executable
+  EOH
+end
+
+gem_package "cucumber-chef" do
+  gem_binary("/usr/bin/gem")
+
+  version(node['cucumber_chef']['version'])
+
+  if node['cucumber_chef']['prerelease']
+    options("--prerelease")
+  end
+end
+
+%w( rspec ).each do |g|
+  gem_package g do
+    gem_binary("/usr/bin/gem")
+  end
+end
+
+
+################################################################################
+# CHEF-CLIENT
+################################################################################
+service "chef-client"
+
+execute "set chef-client logging to debug" do
+  command "sed -i \"s/log_level          :info/log_level          :debug/\" /etc/chef/client.rb"
+
+  notifies :restart, "service[chef-client]"
+
+  only_if do
+    %x( cat /etc/chef/client.rb | grep "log_level          :info" )
+    ($? == 0)
+  end
+end
+
+
+################################################################################
+# CHEF-SOLR / APACHE SOLR
+################################################################################
+service "chef-solr"
+
+execute "modify solr update-handler" do
+  command "sed -i \"s/<maxDocs>100<\\/maxDocs>/<maxDocs>1<\\/maxDocs>/\" /var/lib/chef/solr/conf/solrconfig.xml"
+
+  only_if do
+    %x( cat /var/lib/chef/solr/conf/solrconfig.xml | grep "<maxDocs>100</maxDocs>" )
+    ($? == 0)
+  end
+end
+
+
