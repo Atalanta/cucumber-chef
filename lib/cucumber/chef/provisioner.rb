@@ -39,7 +39,7 @@ module Cucumber
 
         @ssh = ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
         @ssh.config.host_name = @server.public_ip_address
-        @ssh.config.user = "ubuntu"
+        @ssh.config.user = Cucumber::Chef::Config[:lab_user]
         @ssh.config.keys = Cucumber::Chef::Config[:aws][:identity_file]
 
         # @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
@@ -91,7 +91,7 @@ module Cucumber
 
           bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
           bootstrap.config[:host] = @server.public_ip_address
-          bootstrap.config[:ssh_user] = "ubuntu"
+          bootstrap.config[:ssh_user] = Cucumber::Chef::Config[:lab_user]
           bootstrap.config[:use_sudo] = true
           bootstrap.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
           bootstrap.config[:template_file] = template_file
@@ -130,9 +130,10 @@ module Cucumber
           local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
           remote_path = File.join("/", "home", @ssh.config.user, ".ssh")
 
-          files = { "id_rsa" => "id_rsa-ubuntu" }
+          files = { "id_rsa" => "id_rsa-#{Cucumber::Chef::Config[:lab_user]}" }
           files.each do |remote_file, local_file|
             local = File.join(local_path, local_file)
+            File.exists?(local) and File.delete(local)
             @ssh.download(File.join(remote_path, remote_file), local)
             File.chmod(0600, local)
           end
