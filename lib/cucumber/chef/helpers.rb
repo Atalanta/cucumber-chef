@@ -35,13 +35,13 @@ module Cucumber
       require 'cucumber/chef/helpers/utility'
 
       def self.included(base)
-        base.send(:include, Cucumber::Chef::Helpers::ChefClient)
-        base.send(:include, Cucumber::Chef::Helpers::ChefServer)
-        base.send(:include, Cucumber::Chef::Helpers::Command)
-        base.send(:include, Cucumber::Chef::Helpers::Container)
-        base.send(:include, Cucumber::Chef::Helpers::Server)
-        base.send(:include, Cucumber::Chef::Helpers::TestLab)
-        base.send(:include, Cucumber::Chef::Helpers::Utility)
+        base.send(:include, ::Cucumber::Chef::Helpers::ChefClient)
+        base.send(:include, ::Cucumber::Chef::Helpers::ChefServer)
+        base.send(:include, ::Cucumber::Chef::Helpers::Command)
+        base.send(:include, ::Cucumber::Chef::Helpers::Container)
+        base.send(:include, ::Cucumber::Chef::Helpers::Server)
+        base.send(:include, ::Cucumber::Chef::Helpers::TestLab)
+        base.send(:include, ::Cucumber::Chef::Helpers::Utility)
       end
 
     end
