@@ -122,7 +122,7 @@ module Cucumber
           compute.describe_availability_zones
         end
       rescue Fog::Service::Error => err
-        message = "Invalid AWS credentials.  Please check your configuration."
+        message = "Invalid AWS credentials.  Please check your configuration. #{err.inspect}"
         $logger.fatal { message }
         raise ConfigError, message
       end
