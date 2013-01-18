@@ -5,6 +5,11 @@
 provider                        :aws
 librarian_chef                  <%= @librarian_chef %>
 
+artifacts                       ({ "chef-client-log" => "/var/log/chef/client.log",
+                                   "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out" })
+
+lxc_user                        "root"
+lab_user                        "ubuntu"
 
 ################################################################################
 # Provider: AWS
