@@ -1,1 +1,1 @@
-Create supporting roles here.
+Create supporting role definitions here.
