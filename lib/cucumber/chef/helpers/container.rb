@@ -29,7 +29,7 @@ module Cucumber::Chef::Helpers::Container
       chef_server_client_destroy(name)
 
       cache_rootfs = container_cache_root(name, distro, release, arch)
-      log(name, "has triggered first time lxc distro cache build; this will take a while") if !File.exists?(cache_rootfs)
+      log("$#{name}$ has triggered first time lxc distro cache build; this will take a while") if !File.exists?(cache_rootfs)
 
       command_run_local(container_create_command(name, distro, release, arch))
 

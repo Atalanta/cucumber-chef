@@ -23,20 +23,14 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
-  def detect_arch(distro)
-    case distro.downcase
-    when "ubuntu" then
-      ((RUBY_PLATFORM =~ /x86_64/) ? "amd64" : "i386")
-    when "fedora" then
-      ((RUBY_PLATFORM =~ /x86_64/) ? "amd64" : "i686")
-    end
-  end
-
   def server_create(name, attributes={})
     if ((attributes[:persist] && @servers[name]) || (@servers[name] && @servers[name][:persist]))
       attributes = @servers[name]
+      log("using existing server $#{name} #{server_tag(name)}$") if @servers[name]
     else
-      server_destroy(name) if (container_exists?(name) && (ENV['DESTROY'] == "1"))
+      if (container_exists?(name) && (ENV['DESTROY'] == "1"))
+        server_destroy(name)
+      end
       attributes = { :ip => generate_ip,
                      :mac => generate_mac,
                      :persist => true,
@@ -47,17 +41,19 @@ module Cucumber::Chef::Helpers::Server
     @servers = (@servers || Hash.new(nil)).merge(name => attributes)
     $current_server = @servers[name][:ip]
     if !server_running?(name)
-      log(name, "is being provisioned") if @servers[name]
-
+      log("please wait, creating server $#{name} #{server_tag(name)}$") if @servers[name]
       test_lab_config_dhcpd
       container_config_network(name)
       container_create(name, @servers[name][:distro], @servers[name][:release], @servers[name][:arch])
       ZTK::TCPSocketCheck.new(:host => @servers[name][:ip], :port => 22).wait
+    else
     end
   end
 
+################################################################################
+
   def server_destroy(name)
-    log(name, "is being destroyed") if @servers[name]
+    log("please wait, destroying server $#{name}$") if @servers[name]
 
     container_destroy(name)
   end
@@ -72,6 +68,29 @@ module Cucumber::Chef::Helpers::Server
 
   def servers
     containers
+  end
+
+################################################################################
+
+  def server(name)
+    @servers[name]
+  end
+
+################################################################################
+
+  def server_tag(name)
+    server(name).inspect.to_s
+  end
+
+################################################################################
+
+  def detect_arch(distro)
+    case distro.downcase
+    when "ubuntu" then
+      ((RUBY_PLATFORM =~ /x86_64/) ? "amd64" : "i386")
+    when "fedora" then
+      ((RUBY_PLATFORM =~ /x86_64/) ? "amd64" : "i686")
+    end
   end
 
 ################################################################################
