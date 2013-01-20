@@ -48,11 +48,11 @@ And /^"([^\"]*)" has been provisioned$/ do |name|
 end
 
 And /^the "([^\"]*)" role has been added to the "([^\"]*)" run list$/ do |role, name|
-  $test_lab.drb.chef_set_client_attributes(@servers[name], :run_list => ["role[#{role}]"])
+  $test_lab.drb.chef_set_client_attributes(name, :run_list => ["role[#{role}]"])
 end
 
 And /^the "([^\"]*)" recipe has been added to the "([^\"]*)" run list$/ do |recipe, name|
-  $test_lab.drb.chef_set_client_attributes(@servers[name], :run_list => ["recipe[#{recipe}]"])
+  $test_lab.drb.chef_set_client_attributes(name, :run_list => ["recipe[#{recipe}]"])
 end
 
 And /^"([^\"]*)" is in the "([^\"]*)" environment$/ do |name, environment|
