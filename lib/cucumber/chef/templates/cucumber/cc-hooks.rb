@@ -22,39 +22,46 @@ $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
 Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
 message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
-print("  * #{message}")
+puts("  * #{message}")
 $logger.info { message }
 
 Cucumber::Chef::Config.load
 if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
 
   # load our test lab knife config
-  knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
-  Chef::Config.from_file(knife_rb)
+  Chef::Config.from_file(Cucumber::Chef.knife_rb)
   Chef::Config[:chef_server_url] = "http://#{$test_lab.labs_running.first.public_ip_address}:4000"
 
   # fire up our drb server
-  ssh = ZTK::SSH.new
-  ssh.config.host_name = $test_lab.labs_running.first.public_ip_address
-  ssh.config.user = Cucumber::Chef::Config[:lab_user]
-  ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.user}")
-  ssh.exec("nohup sudo /bin/bash -c 'pkill -9 -f cc-server'")
-  ssh.exec("nohup sudo /bin/bash -c 'BACKGROUND=yes cc-server #{Cucumber::Chef.external_ip}'")
-  Cucumber::Chef.spinner do
-    ZTK::TCPSocketCheck.new(:host => $test_lab.labs_running.first.public_ip_address, :port => 8787, :data => "\n\n").wait
+  $test_lab.ssh.exec("sudo mkdir -p /home/#{$test_lab.ssh.config.user}/.cucumber-chef")
+  $test_lab.ssh.exec("sudo cp -f /home/#{$test_lab.ssh.config.user}/.chef/knife.rb /home/#{$test_lab.ssh.config.user}/.cucumber-chef/knife.rb")
+  $test_lab.ssh.exec("sudo chown -R #{$test_lab.ssh.config.user}:#{$test_lab.ssh.config.user} /home/#{$test_lab.ssh.config.user}/.cucumber-chef")
+
+  local_file = Cucumber::Chef.config_rb
+  remote_file = File.join("/", "home", $test_lab.ssh.config.user, ".cucumber-chef", "config.rb")
+  $test_lab.ssh.upload(local_file, remote_file)
+
+  $cc_server_thread = Thread.new do
+    $test_lab.ssh.exec("sudo pkill -9 -f cc-server")
+    $test_lab.ssh.exec("sudo cc-server #{Cucumber::Chef.external_ip}", :silence => false)
+
+    Kernel.at_exit do
+      $test_lab.ssh.close
+    end
   end
 
+  # Cucumber::Chef.spinner do
+  ZTK::TCPSocketCheck.new(:host => $test_lab.labs_running.first.public_ip_address, :port => 8787, :data => "\n\n").wait
+  # end
+
   # initialize our drb object
-  $drb_test_lab ||= DRbObject.new_with_uri("druby://#{$test_lab.labs_running.first.public_ip_address}:8787")
-  $drb_test_lab and DRb.start_service
-  $drb_test_lab.servers = Hash.new(nil)
+  $test_lab.drb
 
   FileUtils.rm_rf(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "artifacts"))
 else
-  puts("No running cucumber-chef test labs to connect to!")
+  puts("  X No running cucumber-chef test labs to connect to!")
   exit(1)
 end
-puts(" - connected to test lab")
 
 
 ################################################################################
@@ -71,8 +78,8 @@ Before do |scenario|
   # cleanup previous lxc containers if asked
   if ENV['DESTROY']
     log("servers", "are being destroyed")
-    $drb_test_lab.servers.each do |name|
-      $drb_test_lab.server_destroy(name)
+    $test_lab.drb.servers.each do |name|
+      $test_lab.drb.server_destroy(name)
     end
     File.exists?($servers_bin) && File.delete($servers_bin)
   else
@@ -80,10 +87,10 @@ Before do |scenario|
   end
 
   if File.exists?($servers_bin)
-    $drb_test_lab.servers = (Marshal.load(IO.read($servers_bin)) rescue Hash.new(nil))
+    $test_lab.drb.servers = (Marshal.load(IO.read($servers_bin)) rescue Hash.new(nil))
   end
 
-  $drb_test_lab.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
+  $test_lab.drb.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
                                        :validation_client_name => "chef-validator")
 end
 
@@ -94,12 +101,12 @@ end
 
 After do |scenario|
   File.open($servers_bin, 'w') do |f|
-    f.puts(Marshal.dump($drb_test_lab.servers))
+    f.puts(Marshal.dump($test_lab.drb.servers))
   end
 
   # cleanup non-persistent lxc containers between tests
-  $drb_test_lab.servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
-    $drb_test_lab.server_destroy(name)
+  $test_lab.drb.servers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
+    $test_lab.drb.server_destroy(name)
   end
 end
 
@@ -109,7 +116,8 @@ end
 ################################################################################
 
 Kernel.at_exit do
-  $drb_test_lab.shutdown
+  $test_lab.drb.shutdown
+  $cc_server_thread.kill
 end
 
 ################################################################################

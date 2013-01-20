@@ -2,8 +2,8 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   session = table.hashes.first
   lambda {
 
+    @connection and @connection.close
     @connection ||= ZTK::SSH.new
-    (@connection.instance_variable_get("@ssh").close rescue nil)
 
     @connection.config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
     @connection.config.proxy_user = "ubuntu"
@@ -31,9 +31,9 @@ end
 
 Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |boolean, key, name|
   if (!boolean)
-    @output.should =~ /#{$drb_test_lab.servers[name][key.downcase.to_sym]}/i
+    @output.should =~ /#{$test_lab.drb.servers[name][key.downcase.to_sym]}/i
   else
-    @output.should_not =~ /#{$drb_test_lab.servers[name][key.downcase.to_sym]}/i
+    @output.should_not =~ /#{$test_lab.drb.servers[name][key.downcase.to_sym]}/i
   end
 end
 

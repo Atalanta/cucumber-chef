@@ -50,6 +50,29 @@ module Cucumber
 
 ################################################################################
 
+      def ssh
+        if (!defined?(@ssh) || @ssh.nil?)
+          @ssh ||= ZTK::SSH.new
+          @ssh.config.host_name = self.labs_running.first.public_ip_address
+          @ssh.config.user = Cucumber::Chef::Config[:lab_user]
+          @ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@ssh.config.user}")
+        end
+        @ssh
+      end
+
+################################################################################
+
+      def drb
+        if (!defined?(@drb) || @drb.nil?)
+          @drb ||= DRbObject.new_with_uri("druby://#{self.labs_running.first.public_ip_address}:8787")
+          @drb and DRb.start_service
+          @drb.servers = Hash.new(nil)
+        end
+        @drb
+      end
+
+################################################################################
+
       def create
         if (lab_exists? && (@server = labs_running.first))
           @stdout.puts("A test lab already exists using the AWS credentials you have supplied; attempting to reprovision it.")

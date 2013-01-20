@@ -44,22 +44,22 @@ And /^"([^\"]*)" has a MAC address of "([^\"]*)"$/ do |name, mac|
 end
 
 And /^"([^\"]*)" has been provisioned$/ do |name|
-  $drb_test_lab.server_create(name, @servers[name])
+  $test_lab.drb.server_create(name, @servers[name])
 end
 
 And /^the "([^\"]*)" role has been added to the "([^\"]*)" run list$/ do |role, name|
-  $drb_test_lab.chef_set_client_attributes(@servers[name], :run_list => ["role[#{role}]"])
+  $test_lab.drb.chef_set_client_attributes(@servers[name], :run_list => ["role[#{role}]"])
 end
 
 And /^the "([^\"]*)" recipe has been added to the "([^\"]*)" run list$/ do |recipe, name|
-  $drb_test_lab.chef_set_client_attributes(@servers[name], :run_list => ["recipe[#{recipe}]"])
+  $test_lab.drb.chef_set_client_attributes(@servers[name], :run_list => ["recipe[#{recipe}]"])
 end
 
 And /^"([^\"]*)" is in the "([^\"]*)" environment$/ do |name, environment|
-  $drb_test_lab.chef_set_client_config(:environment => environment)
+  $test_lab.drb.chef_set_client_config(:environment => environment)
 end
 
 And /^the chef-client has been run on "([^\"]*)"$/ do |name|
-  $drb_test_lab.chef_run_client(name)
+  $test_lab.drb.chef_run_client(name)
   chef_client_artifacts(name)
 end
