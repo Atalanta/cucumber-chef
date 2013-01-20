@@ -29,24 +29,42 @@ module Cucumber::Chef::Helpers::ChefClient
       :log_level => :info,
       :log_location => "/var/log/chef/client.log",
       :chef_server_url => "https://api.opscode.com/organizations/#{config[:orgname]}",
-      :validation_client_name => "#{config[:orgname]}-validator"
+      :validation_client_name => "#{config[:orgname]}-validator",
+      :ssl_verify_mode => :verify_none,
+      :environment => nil # use default; i.e. set no value
     }).merge(config)
+    log("setting chef client config $#{@chef_client_config.inspect}$")
+
+    true
   end
 
 ################################################################################
 
   # call this before chef_run_client
   def chef_set_client_attributes(name, attributes={})
-    @chef_client_attributes = (@chef_client_attributes || {}).merge(attributes) { |k,o,n| (k = (o + n)) }
+    @servers[name] ||= Hash.new
+    @servers[name][:chef_client] = (@servers[name][:chef_client] || {}).merge(attributes) { |k,o,n| (k = (o + n).uniq) }
+    log("setting chef client attributes to $#{@servers[name][:chef_client].inspect}$ for container $#{name}$")
+
+    true
   end
 
 ################################################################################
 
   def chef_run_client(name,*args)
     chef_config_client(name)
-    command_run_remote(name, "/bin/rm -f /var/log/chef/client.log /var/chef/cache/chef-stacktrace.out ; true")
-    output = command_run_remote(name, ["/usr/bin/chef-client -j /etc/chef/attributes.json -N #{name}", args].flatten.join(" "))
-    log("chef-client", "ran on node '#{name}'")
+    artifacts =
+    log("removing artifacts #{Cucumber::Chef::Config[:artifacts].values.collect{|z| "$#{z}$" }.join(' ')}")
+    (command_run_remote(name, "/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}") rescue nil)
+
+    log("running chef client on container $#{name}$")
+
+    output = nil
+    bm = ::Benchmark.realtime do
+      output = command_run_remote(name, ["/usr/bin/chef-client --json-attributes /etc/chef/attributes.json --node-name #{name}", args].flatten.join(" "))
+    end
+    log("chef client run on container $#{name}$ took %0.4f seconds" % bm)
+
     output
   end
 
@@ -57,16 +75,15 @@ module Cucumber::Chef::Helpers::ChefClient
     client_rb = File.join("/", container_root(name), "etc/chef/client.rb")
     FileUtils.mkdir_p(File.dirname(client_rb))
 
+    max_key_size = @chef_client_config.keys.collect{ |z| z.to_s.size }.max
+
     File.open(client_rb, 'w') do |f|
       f.puts(Cucumber::Chef.generate_do_not_edit_warning("Chef Client Configuration"))
       f.puts
-      f.puts("log_level               :#{@chef_client_config[:log_level]}")
-      f.puts("log_location            \"#{@chef_client_config[:log_location]}\"")
-      f.puts("chef_server_url         \"#{@chef_client_config[:chef_server_url]}\"")
-      f.puts("ssl_verify_mode         :verify_none")
-      f.puts("validation_client_name  \"#{@chef_client_config[:validation_client_name]}\"")
-      f.puts("node_name               \"#{name}\"")
-      f.puts("environment             \"#{@chef_client_config[:environment]}\"") if @chef_client_config[:environment]
+      @chef_client_config.merge(:node_name => name).each do |(key,value)|
+        next if value.nil?
+        f.puts("%-#{max_key_size}s  %s" % [key, value.inspect])
+      end
       f.puts
       f.puts("Mixlib::Log::Formatter.show_time = true")
     end
@@ -74,7 +91,7 @@ module Cucumber::Chef::Helpers::ChefClient
     attributes_json = File.join("/", container_root(name), "etc", "chef", "attributes.json")
     FileUtils.mkdir_p(File.dirname(attributes_json))
     File.open(attributes_json, 'w') do |f|
-      f.puts((@chef_client_attributes || {}).to_json)
+      f.puts((@servers[name][:chef_client] || {}).to_json)
     end
 
     # make sure our log location is there
@@ -82,6 +99,8 @@ module Cucumber::Chef::Helpers::ChefClient
     FileUtils.mkdir_p(File.dirname(log_location))
 
     command_run_local("cp /etc/chef/validation.pem #{container_root(name)}/etc/chef/ 2>&1")
+
+    true
   end
 
 ################################################################################
@@ -113,7 +132,7 @@ module Cucumber::Chef::Helpers::ChefClient
     Cucumber::Chef::Config[:artifacts].each do |label, remote_path|
       result = ssh.exec("/bin/bash -c '[[ -f #{remote_path} ]] ; echo $?'", :silence => true)
       if (result.output =~ /0/)
-        log("artifacts", "retrieving '#{File.basename(remote_path)}'")
+        log("retrieving artifact $#{remote_path}$ from container $#{name}$")
 
         local_path = File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "artifacts", feature_dir, "#{feature_name}.txt")
         tmp_path = File.join("/tmp", label)
@@ -134,7 +153,8 @@ module Cucumber::Chef::Helpers::ChefClient
         File.chmod(0644, local_path)
       end
     end
-    ssh.exec("/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')} ; true", :silence => true)
+
+    true
   end
 
 ################################################################################
