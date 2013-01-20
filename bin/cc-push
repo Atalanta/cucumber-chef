@@ -3,31 +3,23 @@ require 'cucumber-chef'
 
 def run(command)
   puts "Executing: '#{command}'"
-  @ssh.exec(command)
+  $test_lab.ssh.exec(command)
 end
-
-$logger = ZTK::Logger.new(Cucumber::Chef.log_file)
-Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
 message = "cc-push v#{Cucumber::Chef::VERSION}"
 puts(message)
-$logger.info { message }
+Cucumber::Chef.logger.info { message }
 
 Cucumber::Chef::Config.load
-if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
-  @ssh = ZTK::SSH.new
-  @ssh.config.host_name = test_lab.labs_running.first.public_ip_address
-  @ssh.config.user = "ubuntu"
-  @ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@ssh.config.user}")
-
+if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
   gem_name = "cucumber-chef-#{Cucumber::Chef::VERSION}.gem"
 
-  puts %x(cd #{Cucumber::Chef.root} && gem build cucumber-chef.gemspec -V)
+  puts %Q(cd #{Cucumber::Chef.root} ; gem build cucumber-chef.gemspec -V)
 
   local_file = File.join(Cucumber::Chef.root, gem_name)
-  remote_file = File.join("/", "home", @ssh.config.user, gem_name)
-  puts("#{local_file} -> #{@ssh.config.user}@#{test_lab.labs_running.first.public_ip_address}:#{remote_file}")
-  @ssh.upload(local_file, remote_file)
+  remote_file = File.join("/", "home", $test_lab.ssh.config.user, gem_name)
+  puts("#{local_file} -> #{$test_lab.ssh.config.user}@#{$test_lab.labs_running.first.public_ip_address}:#{remote_file}")
+  $test_lab.ssh.upload(local_file, remote_file)
   FileUtils.rm_f(File.join(Cucumber::Chef.root, "*.gem"))
 
   run("cd #{File.dirname(remote_file)}; ls -la | grep 'cucumber-chef-'; sudo gem uninstall cucumber-chef -a -I -x -V; rm -f /usr/lib/ruby/gems/1.8/cache/#{gem_name}; sudo gem install #{gem_name} -l -V; rm -f *.gem")

@@ -1,16 +1,13 @@
 #!/usr/bin/env ruby
 require 'cucumber-chef'
 
-$logger = ZTK::Logger.new(Cucumber::Chef.log_file)
-Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
-
 # if we have bundler binstubs use that; otherwise attempt to detect
 knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
 knife = "/usr/bin/env knife" unless knife
 
 message = "cc-knife v#{Cucumber::Chef::VERSION}"
 puts(message)
-$logger.info { message }
+Cucumber::Chef.logger.info { message }
 
 Cucumber::Chef::Config.load
 if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)

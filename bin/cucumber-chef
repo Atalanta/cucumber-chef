@@ -3,6 +3,8 @@
 require 'thor'
 require 'cucumber-chef'
 
+$logger = Cucumber::Chef.logger
+
 class CucumberChef < Thor
   include Thor::Actions
 
@@ -58,9 +60,6 @@ class CucumberChef < Thor
         fatal("It does not look like you are inside a chef-repo!  Please relocate to one and execute your command again!")
         exit(255)
       end
-
-      $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
-      Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
       message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
       puts(set_color(message, :green, true))

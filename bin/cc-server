@@ -27,10 +27,9 @@ class FrontObject
   include Cucumber::Chef::Helpers
 
   def initialize
-    puts("  * cc-server v#{Cucumber::Chef::VERSION}")
-
-    $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
-    Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
+    message = "  * cc-server v#{Cucumber::Chef::VERSION}"
+    puts(message)
+    logger.info { message }
 
     Cucumber::Chef::Config.load
     Chef::Config.from_file(Cucumber::Chef.knife_rb)
@@ -38,6 +37,10 @@ class FrontObject
 
   def shutdown
     DRb.stop_service
+  end
+
+  def logger
+    Cucumber::Chef.logger
   end
 
 end
