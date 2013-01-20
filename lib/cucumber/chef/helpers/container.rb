@@ -25,9 +25,6 @@ module Cucumber::Chef::Helpers::Container
 
   def container_create(name, distro, release, arch)
     unless container_exists?(name)
-      chef_server_node_destroy(name)
-      chef_server_client_destroy(name)
-
       cache_rootfs = container_cache_root(name, distro, release, arch)
       log("$#{name}$ has triggered first time lxc distro cache build; this will take a while") if !File.exists?(cache_rootfs)
 
@@ -46,7 +43,7 @@ module Cucumber::Chef::Helpers::Container
         if distro.downcase == "fedora"
           %x( chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm' 2>&1 )
         end
-        command_run_local("lxc-destroy -n #{name} 2>&1")
+        command_run_local("lxc-destroy -n #{name}")
         command_run_local(container_create_command(name, distro, release, arch))
       end
 
@@ -72,24 +69,25 @@ module Cucumber::Chef::Helpers::Container
 
   def container_destroy(name)
     if container_exists?(name)
-      container_stop(name)
-      command_run_local("lxc-destroy -n #{name} 2>&1")
       chef_server_node_destroy(name)
       chef_server_client_destroy(name)
+      container_stop(name)
+      command_run_local("lxc-destroy -n #{name}")
+      log("destroyed container $#{name}$")
     end
   end
 
 ################################################################################
 
   def container_start(name)
-    status = command_run_local("lxc-info -n #{name} 2>&1")
+    status = command_run_local("lxc-info -n #{name}")
     if status.include?("STOPPED")
       command_run_local("lxc-start -d -n #{name}")
     end
   end
 
   def container_stop(name)
-    status = command_run_local("lxc-info -n #{name} 2>&1")
+    status = command_run_local("lxc-info -n #{name}")
     if status.include?("RUNNING")
       command_run_local("lxc-stop -n #{name}")
     end
@@ -98,7 +96,7 @@ module Cucumber::Chef::Helpers::Container
 ################################################################################
 
   def container_running?(name)
-    status = command_run_local("lxc-info -n #{name} 2>&1")
+    status = command_run_local("lxc-info -n #{name}")
     status.include?("RUNNING")
   end
 
