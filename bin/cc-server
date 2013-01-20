@@ -32,6 +32,7 @@ class FrontObject
     $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
     Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
+    Cucumber::Chef::Config.load
     Chef::Config.from_file(Cucumber::Chef.knife_rb)
   end
 
