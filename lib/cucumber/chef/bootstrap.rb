@@ -41,33 +41,33 @@ module Cucumber
 ################################################################################
 
       def run
-        $logger.debug { "config(#{@config.inspect})" }
+        Cucumber::Chef.logger.debug { "config(#{@config.inspect})" }
 
         if !@config[:template_file]
           message = "You must supply a 'template_file' option."
-          $logger.fatal { message }
+          Cucumber::Chef.logger.fatal { message }
           raise BootstrapError, message
         end
 
         if !@config[:host]
           message = "You must supply a 'host' option."
-          $logger.fatal { message }
+          Cucumber::Chef.logger.fatal { message }
           raise BootstrapError, message
         end
 
         if !@config[:ssh_user]
           message = "You must supply a 'ssh_user' option."
-          $logger.fatal { message }
+          Cucumber::Chef.logger.fatal { message }
           raise BootstrapError, message
         end
 
         if (!@config[:ssh_password] && !@config[:identity_file])
           message = "You must supply a 'ssh_password' or 'identity_file' option."
-          $logger.fatal { message }
+          Cucumber::Chef.logger.fatal { message }
           raise BootstrapError, message
         end
 
-        $logger.debug { "prepare(#{@config[:host]})" }
+        Cucumber::Chef.logger.debug { "prepare(#{@config[:host]})" }
 
         @ssh.config.host_name = @config[:host]
         @ssh.config.user = @config[:ssh_user]
@@ -75,13 +75,13 @@ module Cucumber
         @ssh.config.keys = @config[:identity_file]
         @ssh.config.timeout = 5
 
-        $logger.debug { "template_file(#{@config[:template_file]})" }
+        Cucumber::Chef.logger.debug { "template_file(#{@config[:template_file]})" }
         command = ZTK::Template.render(@config[:template_file], @config[:context])
         command = "sudo #{command}" if @config[:use_sudo]
 
-        $logger.debug { "begin(#{@config[:host]})" }
+        Cucumber::Chef.logger.debug { "begin(#{@config[:host]})" }
         @ssh.exec(command, :silence => true)
-        $logger.debug { "end(#{@config[:host]})" }
+        Cucumber::Chef.logger.debug { "end(#{@config[:host]})" }
       end
 
 ################################################################################

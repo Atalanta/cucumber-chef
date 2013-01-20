@@ -24,6 +24,9 @@ module Cucumber::Chef::Helpers::Utility
 ################################################################################
 
   def log(message)
+    Cucumber::Chef.logger.info { message.gsub("$", "'") }
+    return if !(ENV['VERBOSE'] == "1")
+
     pattern = [ "\033[0m\033[36m", "\033[1m" ]
 
     result = [ " \033[0m\033[34m[\033[1mCC\033[0m\033[34m] \033[36m" ]

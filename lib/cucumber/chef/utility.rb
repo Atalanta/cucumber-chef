@@ -41,46 +41,37 @@ module Cucumber
 ################################################################################
 
       def load_knife_config
-        $logger.debug { "attempting to load cucumber-chef test lab 'knife.rb'" }
+        logger.debug { "attempting to load cucumber-chef test lab 'knife.rb'" }
 
         knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
         ::Chef::Config.from_file(knife_rb)
 
-        $logger.debug { "load_knife_config(#{knife_rb})" }
+        logger.debug { "load_knife_config(#{knife_rb})" }
       end
 
 ################################################################################
 
       def locate(type, *args)
         pwd = Dir.pwd.split(File::SEPARATOR)
-        $logger.debug { "pwd='#{Dir.pwd}'" } if $logger
         (pwd.length - 1).downto(0) do |i|
           candidate = File.join(pwd[0..i], args)
-          $logger.debug { "candidate='#{candidate}'" } if $logger
           case type
           when :file
             if (File.exists?(candidate) && !File.directory?(candidate))
-              result = File.expand_path(candidate)
-              $logger.debug { "result='#{result}'" } if $logger
-              return result
+              return File.expand_path(candidate)
             end
           when :directory
             if (File.exists?(candidate) && File.directory?(candidate))
-              result = File.expand_path(candidate)
-              $logger.debug { "result='#{result}'" } if $logger
-              return result
+              return File.expand_path(candidate)
             end
           when :any
             if File.exists?(candidate)
-              result = File.expand_path(candidate)
-              $logger.debug { "result='#{result}'" } if $logger
-              return result
+              return File.expand_path(candidate)
             end
           end
         end
 
         message = "Could not locate #{type} '#{File.join(args)}'."
-        $logger.fatal { message } if $logger
         raise UtilityError, message
       end
 
@@ -155,6 +146,23 @@ module Cucumber
       end
 
 ################################################################################
+
+      def servers_bin
+        config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
+        FileUtils.mkdir_p(config_path)
+        File.join(config_path, "servers.bin")
+      end
+
+################################################################################
+
+      def logger
+        if (!defined?($logger) || $logger.nil?)
+          $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
+          Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
+        end
+
+        $logger
+      end
 
     end
 

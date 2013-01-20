@@ -116,8 +116,8 @@ module Cucumber
         @server
 
       rescue Exception => e
-        $logger.fatal { e.message }
-        $logger.fatal { "Backtrace:\n#{e.backtrace.join("\n")}" }
+        Cucumber::Chef.logger.fatal { e.message }
+        Cucumber::Chef.logger.fatal { "Backtrace:\n#{e.backtrace.join("\n")}" }
         raise TestLabError, e.message
       end
 
@@ -135,8 +135,8 @@ module Cucumber
         end
 
       rescue Exception => e
-        $logger.fatal { e.message }
-        $logger.fatal { e.backtrace.join("\n") }
+        Cucumber::Chef.logger.fatal { e.message }
+        Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
         raise TestLabError, e.message
       end
 
@@ -169,8 +169,8 @@ module Cucumber
         end
 
       rescue Exception => e
-        $logger.fatal { e.message }
-        $logger.fatal { e.backtrace.join("\n") }
+        Cucumber::Chef.logger.fatal { e.message }
+        Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
         raise TestLabError, e.message
       end
 
@@ -187,8 +187,8 @@ module Cucumber
         end
 
       rescue Exception => e
-        $logger.fatal { e.message }
-        $logger.fatal { e.backtrace.join("\n") }
+        Cucumber::Chef.logger.fatal { e.message }
+        Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
         raise TestLabError, e.message
       end
 
@@ -245,8 +245,8 @@ module Cucumber
         end
 
       rescue Exception => e
-        $logger.fatal { e.message }
-        $logger.fatal { e.backtrace.join("\n") }
+        Cucumber::Chef.logger.fatal { e.message }
+        Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
         raise TestLabError, e.message
       end
 
@@ -260,13 +260,13 @@ module Cucumber
 
       def labs
         results = @connection.servers.select do |server|
-          $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
+          Cucumber::Chef.logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
           ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
             server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
             VALID_STATES.any?{ |state| state == server.state } )
         end
         results.each do |server|
-          $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
+          Cucumber::Chef.logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
         end
         results
       end
@@ -275,13 +275,13 @@ module Cucumber
 
       def labs_running
         results = @connection.servers.select do |server|
-          $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
+          Cucumber::Chef.logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
           ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
             server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
             RUNNING_STATES.any?{ |state| state == server.state } )
         end
         results.each do |server|
-          $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
+          Cucumber::Chef.logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
         end
         results
       end
@@ -290,13 +290,13 @@ module Cucumber
 
       def labs_shutdown
         results = @connection.servers.select do |server|
-          $logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
+          Cucumber::Chef.logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
           ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
             server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
             SHUTDOWN_STATES.any?{ |state| state == server.state } )
         end
         results.each do |server|
-          $logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
+          Cucumber::Chef.logger.debug("results") { "ID=#{server.id}, state='#{server.state}'" }
         end
         results
       end
@@ -306,7 +306,7 @@ module Cucumber
       def nodes
         Cucumber::Chef.load_knife_config
         query = "tags:#{Cucumber::Chef::Config[:mode]} AND tags:#{Cucumber::Chef::Config[:user]}"
-        $logger.debug { "query(#{query})" }
+        Cucumber::Chef.logger.debug { "query(#{query})" }
         nodes, offset, total = ::Chef::Search::Query.new.search("node", URI.escape(query))
         nodes.compact
       end
@@ -314,7 +314,7 @@ module Cucumber
       def clients
         Cucumber::Chef.load_knife_config
         query = "tags:#{Cucumber::Chef::Config[:mode]} AND tags:#{Cucumber::Chef::Config[:user]}"
-        $logger.debug { "query(#{query})" }
+        Cucumber::Chef.logger.debug { "query(#{query})" }
         clients, offset, total = ::Chef::Search::Query.new.search("client", URI.escape(query))
         clients.compact
       end

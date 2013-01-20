@@ -26,7 +26,7 @@ module Cucumber::Chef::Helpers::Server
   def server_create(name, attributes={})
     if ((attributes[:persist] && @servers[name]) || (@servers[name] && @servers[name][:persist]))
       attributes = @servers[name]
-      log("using existing server $#{name} #{server_tag(name)}$") if @servers[name]
+      log("using existing container $#{name} #{server_tag(name)}$")
     else
       if (container_exists?(name) && (ENV['DESTROY'] == "1"))
         server_destroy(name)
@@ -41,20 +41,26 @@ module Cucumber::Chef::Helpers::Server
     @servers = (@servers || Hash.new(nil)).merge(name => attributes)
     $current_server = @servers[name][:ip]
     if !server_running?(name)
-      log("please wait, creating server $#{name} #{server_tag(name)}$") if @servers[name]
-      test_lab_config_dhcpd
-      container_config_network(name)
-      container_create(name, @servers[name][:distro], @servers[name][:release], @servers[name][:arch])
-      ZTK::TCPSocketCheck.new(:host => @servers[name][:ip], :port => 22).wait
+      log("please wait, creating container $#{name} #{server_tag(name)}$")
+      bm = ::Benchmark.realtime do
+        test_lab_config_dhcpd
+        container_config_network(name)
+        container_create(name, @servers[name][:distro], @servers[name][:release], @servers[name][:arch])
+      end
+      log("container '#{name}' creation took %0.4f seconds" % bm)
+
+      bm = ::Benchmark.realtime do
+        ZTK::TCPSocketCheck.new(:host => @servers[name][:ip], :port => 22).wait
+      end
+      log("container '#{name}' SSHD responded after %0.4f seconds" % bm)
     else
+      log("container '#{name}' is already running")
     end
   end
 
 ################################################################################
 
   def server_destroy(name)
-    log("please wait, destroying server $#{name}$") if @servers[name]
-
     container_destroy(name)
   end
 
@@ -72,14 +78,8 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
-  def server(name)
-    @servers[name]
-  end
-
-################################################################################
-
   def server_tag(name)
-    server(name).inspect.to_s
+    @servers[name].inspect.to_s
   end
 
 ################################################################################

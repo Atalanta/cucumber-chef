@@ -165,28 +165,28 @@ module Cucumber
 ################################################################################
 
       def upload_cookbook
-        $logger.debug { "Uploading cucumber-chef cookbooks..." }
+        Cucumber::Chef.logger.debug { "Uploading cucumber-chef cookbooks..." }
         @stdout.print("Uploading cucumber-chef cookbooks...")
 
         Cucumber::Chef.spinner do
           Cucumber::Chef.load_knife_config
           cookbook_repo = ::Chef::CookbookLoader.new(@cookbooks_path)
           cookbook_repo.each do |name, cookbook|
-            $logger.debug { "::Chef::CookbookUploader(#{name}) ATTEMPT" }
+            Cucumber::Chef.logger.debug { "::Chef::CookbookUploader(#{name}) ATTEMPT" }
             ::Chef::CookbookUploader.new(cookbook, @cookbooks_path, :force => true).upload_cookbooks
-            $logger.debug { "::Chef::CookbookUploader(#{name}) UPLOADED" }
+            Cucumber::Chef.logger.debug { "::Chef::CookbookUploader(#{name}) UPLOADED" }
           end
           #@command.knife([ "cookbook upload cucumber-chef", "-o", @cookbooks_path ], :silence => true)
         end
 
         @stdout.print("done.\n")
-        $logger.debug { "Successfully uploaded cucumber-chef test lab cookbooks." }
+        Cucumber::Chef.logger.debug { "Successfully uploaded cucumber-chef test lab cookbooks." }
       end
 
 ################################################################################
 
       def upload_role
-        $logger.debug { "Uploading cucumber-chef test lab role..." }
+        Cucumber::Chef.logger.debug { "Uploading cucumber-chef test lab role..." }
         @stdout.print("Uploading cucumber-chef test lab role...")
 
         Cucumber::Chef.spinner do
@@ -200,13 +200,13 @@ module Cucumber
         end
 
         @stdout.print("done.\n")
-        $logger.debug { "Successfully uploaded cucumber-chef test lab roles."}
+        Cucumber::Chef.logger.debug { "Successfully uploaded cucumber-chef test lab roles."}
       end
 
 ################################################################################
 
       def tag_node
-        $logger.debug { "Tagging cucumber-chef test lab node..." }
+        Cucumber::Chef.logger.debug { "Tagging cucumber-chef test lab node..." }
         @stdout.print("Tagging cucumber-chef test lab node...")
 
         Cucumber::Chef.spinner do
@@ -220,13 +220,13 @@ module Cucumber
         end
 
         @stdout.print("done.\n")
-        $logger.debug { "Successfully tagged cucumber-chef test lab node."}
+        Cucumber::Chef.logger.debug { "Successfully tagged cucumber-chef test lab node."}
       end
 
 ################################################################################
 
       def add_node_role
-        $logger.debug { "Setting up cucumber-chef test lab run list..." }
+        Cucumber::Chef.logger.debug { "Setting up cucumber-chef test lab run list..." }
         @stdout.print("Setting up cucumber-chef test lab run list...")
 
         Cucumber::Chef.spinner do
@@ -239,7 +239,7 @@ module Cucumber
           #@command.knife([ "node run_list add", HOSTNAME, "\"role[test_lab]\"" ], :silence => true)
         end
 
-        $logger.debug { "Successfully added roles to cucumber-chef test lab."}
+        Cucumber::Chef.logger.debug { "Successfully added roles to cucumber-chef test lab."}
         @stdout.print("done.\n")
       end
 

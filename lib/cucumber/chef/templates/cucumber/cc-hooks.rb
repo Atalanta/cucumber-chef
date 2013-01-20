@@ -18,12 +18,12 @@
 #
 ################################################################################
 
-$logger = ZTK::Logger.new(Cucumber::Chef.log_file)
-Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
+logger = ZTK::Logger.new(Cucumber::Chef.log_file)
+Cucumber::Chef.is_rc? and (logger.level = ZTK::Logger::DEBUG)
 
 message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
 puts("  * #{message}")
-$logger.info { message }
+logger.info { message }
 
 Cucumber::Chef::Config.load
 if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
