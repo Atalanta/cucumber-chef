@@ -1,6 +1,5 @@
 ################################################################################
 #
-#      Author: Stephen Nelson-Smith <stephen@atalanta-systems.com>
 #      Author: Zachary Patten <zachary@jovelabs.com>
 #   Copyright: Copyright (c) 2011-2013 Atalanta Systems Ltd
 #     License: Apache License, Version 2.0
@@ -19,39 +18,28 @@
 #
 ################################################################################
 
-require 'drb/drb'
-require 'readline'
-require 'socket'
-require 'stringio'
-
-################################################################################
-
-require 'chef'
-require 'chef/cookbook_uploader'
-require 'fog'
-require 'json'
-require 'mixlib/config'
-require 'ubuntu_ami'
-require 'ztk'
-
-################################################################################
-
-require 'cucumber/chef/version'
-
 module Cucumber
   module Chef
+    class Provider
 
-    class Error < StandardError; end
+      class VagrantError < Error; end
 
-    autoload :Bootstrap, 'cucumber/chef/bootstrap'
-    autoload :Config, 'cucumber/chef/config'
-    autoload :Provider, 'cucumber/chef/provider'
-    autoload :Provisioner, 'cucumber/chef/provisioner'
-    autoload :TestLab, 'cucumber/chef/test_lab'
+      class Vagrant
+        attr_accessor :stdout, :stderr, :stdin
 
-    require 'cucumber/chef/utility'
-    extend(Cucumber::Chef::Utility)
+################################################################################
 
+        def initialize(server, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
+          @server = server
+          @stdout, @stderr, @stdin = stdout, stderr, stdin
+          @stdout.sync = true if @stdout.respond_to?(:sync=)
+        end
+
+################################################################################
+
+      end
+
+    end
   end
 end
 
