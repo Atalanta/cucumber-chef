@@ -94,6 +94,9 @@ module Cucumber::Chef::Helpers::ChefServer
   def load_databag(databag, databag_path)
     create_databag(databag)
     items = Dir.glob(File.expand_path(File.join(databag_path, "*.{json,rb}")))
+    if (items.size == 0)
+      raise "Could not find any of the data bags you defined!"
+    end
     items.each do |item|
       next if File.directory?(item)
 
