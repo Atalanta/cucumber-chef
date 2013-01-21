@@ -169,7 +169,7 @@ module Cucumber
         @stdout.print("Uploading cucumber-chef cookbooks...")
 
         Cucumber::Chef.spinner do
-          Cucumber::Chef.load_knife_config
+          Cucumber::Chef.load_knife
           cookbook_repo = ::Chef::CookbookLoader.new(@cookbooks_path)
           cookbook_repo.each do |name, cookbook|
             Cucumber::Chef.logger.debug { "::Chef::CookbookUploader(#{name}) ATTEMPT" }
@@ -190,7 +190,7 @@ module Cucumber
         @stdout.print("Uploading cucumber-chef test lab role...")
 
         Cucumber::Chef.spinner do
-          Cucumber::Chef.load_knife_config
+          Cucumber::Chef.load_knife
           ::Chef::Config[:role_path] = @roles_path
           [ "test_lab" ].each do |name|
             role = ::Chef::Role.from_disk(name)
@@ -210,7 +210,7 @@ module Cucumber
         @stdout.print("Tagging cucumber-chef test lab node...")
 
         Cucumber::Chef.spinner do
-          Cucumber::Chef.load_knife_config
+          Cucumber::Chef.load_knife
           node = ::Chef::Node.load(HOSTNAME)
           [ Cucumber::Chef::Config[:mode].to_s, Cucumber::Chef::Config[:user].to_s ].each do |tag|
             node.tags << tag
@@ -230,7 +230,7 @@ module Cucumber
         @stdout.print("Setting up cucumber-chef test lab run list...")
 
         Cucumber::Chef.spinner do
-          Cucumber::Chef.load_knife_config
+          Cucumber::Chef.load_knife
           node = ::Chef::Node.load(HOSTNAME)
           [ "role[test_lab]" ].each do |entry|
             node.run_list << entry
