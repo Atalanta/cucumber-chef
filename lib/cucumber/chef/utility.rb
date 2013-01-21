@@ -205,6 +205,7 @@ module Cucumber
             "version" => Cucumber::Chef::VERSION,
             "uname" => %x(uname -a).chomp.strip,
             "chef_repo" => chef_repo,
+            "chef_version" => ::Chef::VERSION,
             "log_file" => log_file,
             "knife_rb" => knife_rb,
             "config_rb" => config_rb,
