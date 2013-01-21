@@ -3,7 +3,7 @@
 require 'thor'
 require 'cucumber-chef'
 
-$logger = Cucumber::Chef.logger
+# $logger = Cucumber::Chef.logger
 
 class CucumberChef < Thor
   include Thor::Actions
@@ -54,26 +54,12 @@ class CucumberChef < Thor
     end
 
     def load_config
+      tag = Cucumber::Chef.tag("cucumber-chef")
+      puts(set_color(tag, :green, true))
+      Cucumber::Chef.load_config(tag)
+      $logger = Cucumber::Chef.logger
 
-      chef_repo = (Cucumber::Chef.locate_parent(".chef") rescue nil)
-      if ( !chef_repo || ( !File.exists?(chef_repo) || !File.directory?(chef_repo) ) )
-        fatal("It does not look like you are inside a chef-repo!  Please relocate to one and execute your command again!")
-        exit(255)
-      end
-
-      message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
-      puts(set_color(message, :green, true))
-
-      $logger.info { "================================================================================" }
-      $logger.info { message }
-      $logger.info { "UNAME: %s" % %x( uname -a ).chomp.strip }
-      $logger.info { "Ruby Version: #{RUBY_VERSION}" }
-      $logger.info { "Ruby Patch Level: #{RUBY_PATCHLEVEL}" }
-      $logger.info { "Ruby Platform: #{RUBY_PLATFORM}" }
-      $logger.info { "Ruby Engine: #{RUBY_ENGINE}" }
-      $logger.info { "================================================================================" }
-
-      @options.test? ? Cucumber::Chef::Config.test : Cucumber::Chef::Config.load
+      @options.test? and Cucumber::Chef::Config.test
     end
 
     def fatal(message)
@@ -219,21 +205,13 @@ class CucumberChef < Thor
           puts(set_color("...BOOM!", :red, true))
           puts
 
-          ssh = ZTK::SSH.new
-          ssh.config.host_name = test_lab.labs_running.first.public_ip_address
-          ssh.config.user = "ubuntu"
-          ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.user}")
-          ssh.exec("nohup sudo pkill -9 -f cc-server")
-          ssh.exec("nohup sudo BACKGROUND=yes cc-server #{Cucumber::Chef.external_ip}")
+          test_lab.ssh.exec("nohup sudo pkill -9 -f cc-server")
+          test_lab.ssh.exec("nohup sudo BACKGROUND=yes cc-server #{Cucumber::Chef.external_ip}")
           Cucumber::Chef.spinner do
             ZTK::TCPSocketCheck.new(:host => test_lab.labs_running.first.public_ip_address, :port => 8787, :data => "\n\n").wait
           end
-
-          # initialize our drb object
-          test_lab_drb ||= DRbObject.new_with_uri("druby://#{test_lab.labs_running.first.public_ip_address}:8787")
-          test_lab_drb and DRb.start_service
-          test_lab_drb.servers = Hash.new(nil)
-          test_lab_drb.server_destroy(container)
+          test_lab.drb.servers = Hash.new(nil)
+          test_lab.drb.server_destroy(container)
         else
           puts
           puts(set_color("Whew! That was close!", :green, true))
@@ -310,34 +288,13 @@ class CucumberChef < Thor
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
-      ssh = ZTK::SSH.new
-
       if args.size == 0
-        ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[:lab_user]}")
-        File.chmod(0400, ssh_private_key_file)
-
-        ssh.config.host_name = test_lab.labs_running.first.public_ip_address
-        ssh.config.user = Cucumber::Chef::Config[:lab_user]
-        ssh.config.keys = ssh_private_key_file
-
         puts([set_color("Attempting SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
-        ssh.console
+        test_lab.ssh.console
       else
         container = args[0]
-
-        ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[:lab_user]}")
-        File.chmod(0400, ssh_private_key_file)
-
-        ssh.config.proxy_host_name = test_lab.labs_running.first.public_ip_address
-        ssh.config.proxy_user = Cucumber::Chef::Config[:lab_user]
-        ssh.config.proxy_keys = ssh_private_key_file
-
-        ssh.config.host_name = container
-        ssh.config.user = Cucumber::Chef::Config[:lxc_user]
-        ssh.config.keys = ssh_private_key_file
-
         puts([set_color("Attempting SSH connection to cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
-        ssh.console
+        test_lab.proxy_ssh(container).console
       end
 
     else
@@ -352,6 +309,39 @@ class CucumberChef < Thor
 
 ################################################################################
 
+  desc "log", "Streams the cucumber-chef local and test lab logs to the terminal."
+  def log
+    load_config
+
+    if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
+      $tail_thread_remote = Thread.new do
+        $test_lab.ssh.exec("tail -n 0 -f /home/#{$test_lab.ssh.config.user}/.cucumber-chef/cucumber-chef.log")
+
+        Kernel.at_exit do
+          $test_lab.ssh.close
+        end
+      end
+
+      log_file = File.open(Cucumber::Chef.log_file, "r")
+      log_file.seek(0, ::IO::SEEK_END)
+      loop do
+        if !(data = (log_file.readline rescue nil)).nil?
+          print(data)
+        else
+          sleep(1)
+        end
+      end
+
+      $tail_thread_remote.join
+    end
+
+    Kernel.at_exit do
+      $tail_thread_remote.kill
+    end
+  end
+
+################################################################################
+
   desc "diagnose <container>", "Provide diagnostics from the chef-client on the specified container."
   method_option :strace, :type => :boolean, :desc => "output the chef-client 'chef-stacktrace.out'", :aliases => "-s", :default => true
   method_option :log, :type => :boolean, :desc => "output the chef-client 'chef.log'", :aliases => "-l", :default => true
@@ -361,29 +351,19 @@ class CucumberChef < Thor
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
-      ssh = ZTK::SSH.new
-
-      ssh.config.proxy_host_name = test_lab.labs_running.first.public_ip_address
-      ssh.config.proxy_user = Cucumber::Chef::Config[:lab_user]
-      ssh.config.proxy_keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.proxy_user}")
-
-      ssh.config.host_name = container
-      ssh.config.user = Cucumber::Chef::Config[:lxc_user]
-      ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.proxy_user}")
-
       puts([set_color("Attempting to collect diagnostic information on cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
       if @options.strace?
         puts
         puts("chef-stacktrace.out:")
         puts(set_color("============================================================================", :bold))
-        ssh.exec("[[ -e /var/chef/cache/chef-stacktrace.out ]] && cat /var/chef/cache/chef-stacktrace.out")
+        test_lab.proxy_ssh(container).exec("[[ -e /var/chef/cache/chef-stacktrace.out ]] && cat /var/chef/cache/chef-stacktrace.out")
         print("\n")
       end
       if @options.log?
         puts
         puts("chef.log:")
         puts(set_color("============================================================================", :bold))
-        ssh.exec("[[ -e /var/log/chef/client.log ]] && tail -n #{@options.lines} /var/log/chef/client.log")
+        test_lab.proxy_ssh(container).exec("[[ -e /var/log/chef/client.log ]] && tail -n #{@options.lines} /var/log/chef/client.log")
       end
     end
     puts
@@ -417,16 +397,10 @@ class CucumberChef < Thor
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
-      ssh = ZTK::SSH.new
-
-      ssh.config.host_name = test_lab.labs_running.first.public_ip_address
-      ssh.config.user = "ubuntu"
-      ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{ssh.config.user}")
-
       puts(set_color("Getting container processes from cucumber-chef test lab...", :blue, true))
       puts
       puts(set_color("============================================================================", :bold))
-      ssh.exec("lxc-ps --lxc -- #{args.join(" ")}")
+      test_lab.ssh.exec("lxc-ps --lxc -- #{args.join(" ")}")
       print("\n")
     end
     puts
