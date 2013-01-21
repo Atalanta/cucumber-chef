@@ -26,7 +26,10 @@ module Cucumber::Chef::Helpers::Container
   def container_create(name, distro, release, arch)
     unless container_exists?(name)
       cache_rootfs = container_cache_root(name, distro, release, arch)
-      log("$#{name}$ has triggered first time lxc distro cache build; this will take a while") if !File.exists?(cache_rootfs)
+      if !File.exists?(cache_rootfs)
+        log("$#{name}$ has triggered building the lxc file cache for $#{distro}$")
+        log("this one time process per distro can take up to 10 minutes or longer depending on the test lab hardware")
+      end
 
       command_run_local(container_create_command(name, distro, release, arch))
 
@@ -37,13 +40,13 @@ module Cucumber::Chef::Helpers::Container
       if !File.exists?(omnibus_cache)
         case distro.downcase
         when "ubuntu" then
-          %x( chroot #{cache_rootfs} /bin/bash -c 'apt-get -y --force-yes install wget' 2>&1 )
+          command_run_local("chroot #{cache_rootfs} /bin/bash -c 'apt-get -y --force-yes install wget'")
         when "fedora" then
-          %x( yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server )
+          command_run_local("yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server")
         end
-        %x( chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh -O - | bash' 2>&1 )
+        command_run_local("chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh -O - | bash'")
         if distro.downcase == "fedora"
-          %x( chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm' 2>&1 )
+          command_run_local("chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm'")
         end
         command_run_local("lxc-destroy -n #{name}")
         command_run_local(container_create_command(name, distro, release, arch))
