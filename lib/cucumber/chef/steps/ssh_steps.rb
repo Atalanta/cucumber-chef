@@ -2,7 +2,7 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   session = table.hashes.first
   lambda {
 
-    @connection and @connection.close
+    @connection && @connection.ssh.close
     @connection ||= ZTK::SSH.new
 
     @connection.config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
@@ -19,6 +19,7 @@ end
 
 And /^I run "([^\"]*)"$/ do |command|
   @output = @connection.exec(command, :silence => true).output
+  Cucumber::Chef.logger.info { @output.chomp }
 end
 
 Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
