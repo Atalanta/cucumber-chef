@@ -1,9 +1,36 @@
+################################################################################
+
+# | id | hostname | username | keyfile |
+# | root | chef-client | root | keyfile |
+
+When /^I have the following SSH sessions:$/ do |table|
+  lambda {
+    @ssh_sessions ||= Hash.new
+    table.hashes.each do |hash|
+      id = hash["id"]
+      @ssh_sessions[id] and !@ssh_sessions[id].closed? and @ssh_sessions[id].close
+      @ssh_sessions[id] = ZTK::SSH.new
+
+      @ssh_sessions[id].config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
+      @ssh_sessions[id].config.proxy_user = "ubuntu"
+      @ssh_sessions[id].config.proxy_keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@ssh_sessions[id].config.proxy_user}")
+
+      hash['hostname'] and (@ssh_sessions[id].config.host_name = hash['hostname'])
+      hash['username'] and (@ssh_sessions[id].config.user = hash['username'])
+      hash['password'] and (@ssh_sessions[id].config.password = hash['password'])
+      hash['keyfile'] and (@ssh_sessions[id].config.keys = hash['keyfile'])
+    end
+  }.should_not raise_error
+end
+
+################################################################################
+
 When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table|
   session = table.hashes.first
   lambda {
 
-    @connection && @connection.ssh.close
-    @connection ||= ZTK::SSH.new
+    @connection and !@connection.ssh.closed? and @connection.ssh.close
+    @connection = ZTK::SSH.new
 
     @connection.config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
     @connection.config.proxy_user = "ubuntu"
