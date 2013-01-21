@@ -35,6 +35,8 @@ class CucumberChef < Thor
       source_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "cucumber", "chef", "templates", "cucumber"))
       destination_dir = Cucumber::Chef.locate_parent(".chef")
 
+      @is_rc = Cucumber::Chef.is_rc?
+
       CucumberChef.source_root source_dir
       templates = {
         "readme.erb" => "features/#{project}/README",
