@@ -24,24 +24,45 @@ module Cucumber::Chef::Helpers::Command
 ################################################################################
 
   def command_run_remote(name, command, expected_exit_code=0)
-    output = %x(ssh #{name} #{command} 2>&1)
-    raise "command_run_remote(#{command}) failed (#{$?})" if ($? != expected_exit_code)
+    command = %Q(ssh #{name} #{command} 2>&1)
+    logger.info { "command_run_remote(#{command})" }
+    output = %x(#{command})
+    if ($? != expected_exit_code)
+      message = "command_run_remote(#{command}) failed (code=#{$?},output='#{output.chomp}')"
+      logger.fatal { message }
+      logger.fatal { "output(#{output.chomp})" }
+      raise message
+    end
     output
   end
 
 ################################################################################
 
   def command_run_chroot(name, command, expected_exit_code=0)
-    output = %x(chroot #{container_root(name)} /bin/bash -c '#{command}' 2>&1)
-    raise "command_run_chroot(#{command}) failed (#{$?})" if ($? != expected_exit_code)
+    command = %Q(chroot #{container_root(name)} /bin/bash -c '#{command}' 2>&1)
+    logger.info { "command_run_chroot(#{command})" }
+    output = %x(#{command})
+    if ($? != expected_exit_code)
+      message = "command_run_chroot(#{command}) failed (#{$?})"
+      logger.fatal { message }
+      logger.fatal { "output(#{output.chomp})" }
+      raise message
+    end
     output
   end
 
 ################################################################################
 
   def command_run_local(command, expected_exit_code=0)
-    output = %x(/bin/bash -c '#{command}' 2>&1)
-    raise "command_run_local(#{command}) failed (#{$?})" if ($? != expected_exit_code)
+    command = %Q(/bin/bash -c '#{command}' 2>&1)
+    logger.info { "command_run_local(#{command})" }
+    output = %x(#{command})
+    if ($? != expected_exit_code)
+      message = "command_run_local(#{command}) failed (#{$?})"
+      logger.fatal { message }
+      logger.fatal { "output(#{output.chomp})" }
+      raise message
+    end
     output
   end
 
