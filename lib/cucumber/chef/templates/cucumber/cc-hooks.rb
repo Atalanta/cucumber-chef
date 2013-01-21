@@ -18,21 +18,11 @@
 #
 ################################################################################
 
-logger = ZTK::Logger.new(Cucumber::Chef.log_file)
-Cucumber::Chef.is_rc? and (logger.level = ZTK::Logger::DEBUG)
+tag = Cucumber::Chef.tag("cucumber-chef")
+puts("  * #{tag}")
+Cucumber::Chef.load_config(tag)
 
-message = "cucumber-chef v#{Cucumber::Chef::VERSION}"
-puts("  * #{message}")
-logger.info { message }
-
-Cucumber::Chef::Config.load
 if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
-
-  # load our test lab knife config
-  Chef::Config.from_file(Cucumber::Chef.knife_rb)
-  Chef::Config[:chef_server_url] = "http://#{$test_lab.labs_running.first.public_ip_address}:4000"
-
-  # fire up our drb server
   $test_lab.ssh.exec("sudo mkdir -p /home/#{$test_lab.ssh.config.user}/.cucumber-chef")
   $test_lab.ssh.exec("sudo cp -f /home/#{$test_lab.ssh.config.user}/.chef/knife.rb /home/#{$test_lab.ssh.config.user}/.cucumber-chef/knife.rb")
   $test_lab.ssh.exec("sudo chown -R #{$test_lab.ssh.config.user}:#{$test_lab.ssh.config.user} /home/#{$test_lab.ssh.config.user}/.cucumber-chef")
@@ -43,24 +33,24 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 
 
   $cc_server_thread = Thread.new do
     $test_lab.ssh.exec("sudo pkill -9 -f cc-server")
-    $test_lab.ssh.exec("sudo cc-server #{Cucumber::Chef.external_ip}", :silence => false)
+
+    destroy = (ENV['DESTROY'] == '1' ? 'DESTROY="1"' : nil)
+    verbose = (ENV['VERBOSE'] == '1' ? 'VERBOSE="1"' : nil)
+    command = ["sudo", destroy, verbose, "cc-server", Cucumber::Chef.external_ip].compact.join(" ")
+    $test_lab.ssh.exec(command, :silence => false)
 
     Kernel.at_exit do
       $test_lab.ssh.close
     end
   end
 
-  # Cucumber::Chef.spinner do
   ZTK::TCPSocketCheck.new(:host => $test_lab.labs_running.first.public_ip_address, :port => 8787, :data => "\n\n").wait
-  # end
-
-  # initialize our drb object
-  $test_lab.drb
 
   FileUtils.rm_rf(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "artifacts"))
 else
-  puts("  X No running cucumber-chef test labs to connect to!")
-  exit(1)
+  message = "No running cucumber-chef test labs to connect to!"
+  Cucumber::Chef.logger.fatal { message }
+  raise message
 end
 
 
@@ -73,21 +63,19 @@ Before do |scenario|
   # we use various aspects of the scenario to name our artifacts
   $scenario = scenario
 
-  $servers_bin ||= (File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "servers.bin") rescue File.expand_path(File.join(ENV['HOME'], "servers.bin")))
-
   # cleanup previous lxc containers if asked
   if ENV['DESTROY']
-    log("servers", "are being destroyed")
-    $test_lab.drb.servers.each do |name|
+    log("$containers$ are being destroyed")
+    $test_lab.drb.servers.each do |name, value|
       $test_lab.drb.server_destroy(name)
     end
-    File.exists?($servers_bin) && File.delete($servers_bin)
+    File.exists?(Cucumber::Chef.servers_bin) && File.delete(Cucumber::Chef.servers_bin)
   else
-    log("servers", "are being preserved")
+    log("$containers$ are being persisted")
   end
 
-  if File.exists?($servers_bin)
-    $test_lab.drb.servers = (Marshal.load(IO.read($servers_bin)) rescue Hash.new(nil))
+  if File.exists?(Cucumber::Chef.servers_bin)
+    $test_lab.drb.servers = (Marshal.load(IO.read(Cucumber::Chef.servers_bin)) rescue Hash.new(nil))
   end
 
   $test_lab.drb.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
@@ -100,7 +88,7 @@ end
 ################################################################################
 
 After do |scenario|
-  File.open($servers_bin, 'w') do |f|
+  File.open(Cucumber::Chef.servers_bin, 'w') do |f|
     f.puts(Marshal.dump($test_lab.drb.servers))
   end
 
