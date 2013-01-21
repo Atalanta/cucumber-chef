@@ -51,10 +51,10 @@ module Cucumber
 
       def self.load
         config_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "config.rb")
-        Cucumber::Chef.logger.info { "Attempting to load cucumber-chef configuration from '%s'." % config_rb }
+        Cucumber::Chef.logger.debug { "Attempting to load cucumber-chef configuration from '%s'." % config_rb }
         self.from_file(config_rb)
         self.verify
-        Cucumber::Chef.logger.info { "Successfully loaded cucumber-chef configuration from '%s'." % config_rb }
+        Cucumber::Chef.logger.debug { "Successfully loaded cucumber-chef configuration from '%s'." % config_rb }
 
         log_dump = self.duplicate(self.configuration)
         log_dump[:aws].merge!(:aws_access_key_id => "[REDACTED]", :aws_secret_access_key => "[REDACTED]")
