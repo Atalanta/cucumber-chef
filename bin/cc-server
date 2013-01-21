@@ -27,12 +27,10 @@ class FrontObject
   include Cucumber::Chef::Helpers
 
   def initialize
-    message = "  * cc-server v#{Cucumber::Chef::VERSION}"
-    puts(message)
-    logger.info { message }
-
-    Cucumber::Chef::Config.load
-    Chef::Config.from_file(Cucumber::Chef.knife_rb)
+    tag = Cucumber::Chef.tag("cc-server")
+    puts("  * #{tag}")
+    Cucumber::Chef.load_config(tag)
+    $logger = Cucumber::Chef.logger
   end
 
   def shutdown
@@ -40,7 +38,7 @@ class FrontObject
   end
 
   def logger
-    Cucumber::Chef.logger
+    $logger
   end
 
 end
