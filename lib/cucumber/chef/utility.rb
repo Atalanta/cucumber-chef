@@ -34,23 +34,6 @@ module Cucumber
 
 ################################################################################
 
-      def root
-        File.expand_path(File.join(File.dirname(__FILE__), "..", "..", ".."), File.dirname(__FILE__))
-      end
-
-################################################################################
-
-      def load_knife_config
-        logger.debug { "attempting to load cucumber-chef test lab 'knife.rb'" }
-
-        knife_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "knife.rb")
-        ::Chef::Config.from_file(knife_rb)
-
-        logger.debug { "load_knife_config(#{knife_rb})" }
-      end
-
-################################################################################
-
       def locate(type, *args)
         pwd = Dir.pwd.split(File::SEPARATOR)
         (pwd.length - 1).downto(0) do |i|
@@ -106,7 +89,7 @@ module Cucumber
 ################################################################################
 
       def generate_do_not_edit_warning(message=nil)
-        warning = []
+        warning = Array.new
         warning << "#"
         warning << "# WARNING: Automatically generated file; DO NOT EDIT!"
         warning << [ "# Cucumber-Chef v#{Cucumber::Chef::VERSION}", message ].compact.join(" ")
@@ -119,6 +102,12 @@ module Cucumber
 
       def external_ip
         %x( wget -q -O - checkip.dyndns.org|sed -e 's/.*Current IP Address: //' -e 's/<.*$//' ).chomp
+      end
+
+################################################################################
+
+      def root
+        File.expand_path(File.join(File.dirname(__FILE__), "..", "..", ".."), File.dirname(__FILE__))
       end
 
 ################################################################################
@@ -155,10 +144,84 @@ module Cucumber
 
 ################################################################################
 
+      def chef_repo
+        (Cucumber::Chef.locate_parent(".chef") rescue nil)
+      end
+
+################################################################################
+
+      def in_chef_repo?
+        ((chef_repo && File.exists?(chef_repo) && File.directory?(chef_repo)) ? true : false)
+      end
+
+      def tag(name=nil)
+        [ name, "v#{Cucumber::Chef::VERSION}" ].compact.join(" ")
+      end
+
+################################################################################
+
+      def load_config(name=nil)
+        if !in_chef_repo?
+          message = "It does not look like you are inside a chef-repo!  Please relocate to one and execute your command again!"
+          logger.fatal { message }
+          raise message
+        end
+        name and logger.info { "loading #{name}" }
+        logger.info { "load_config(#{Cucumber::Chef.config_rb})" }
+        Cucumber::Chef::Config.load
+        load_knife
+      end
+
+################################################################################
+
+      def load_knife
+        test_lab = (Cucumber::Chef::TestLab.new rescue nil)
+        if (test_lab && (test_lab.labs_running.count > 0))
+          if File.exists?(Cucumber::Chef.knife_rb)
+            logger.info { "load_knife(#{Cucumber::Chef.knife_rb})" }
+            ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
+
+            chef_server_url = "http://#{test_lab.labs_running.first.public_ip_address}:4000"
+            logger.info { "chef_server_url(#{chef_server_url})" }
+            ::Chef::Config[:chef_server_url] = chef_server_url
+          else
+            logger.warn { "We found the test lab; but the knife config '#{Cucumber::Chef.knife_rb}' was missing!" }
+          end
+        else
+          logger.info { "load_knife(#{Cucumber::Chef.knife_rb})" }
+          ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
+        end
+      end
+
+################################################################################
+
       def logger
         if (!defined?($logger) || $logger.nil?)
           $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
           Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
+
+          headers = {
+            "program" => $0.to_s,
+            "version" => Cucumber::Chef::VERSION,
+            "uname" => %x(uname -a).chomp.strip,
+            "chef_repo" => chef_repo,
+            "log_file" => log_file,
+            "knife_rb" => knife_rb,
+            "config_rb" => config_rb,
+            "servers_bin" => servers_bin,
+            "ruby_version" => RUBY_VERSION,
+            "ruby_patchlevel" => RUBY_PATCHLEVEL,
+            "ruby_platform" => RUBY_PLATFORM
+          }
+          if RUBY_VERSION >= "1.9"
+            headers.merge!("ruby_engine" => RUBY_ENGINE)
+          end
+          max_key_length = headers.keys.collect{ |key| key.to_s.length }.max
+
+          $logger.info { ("=" * 80) }
+          headers.sort.each do |key, value|
+            $logger.info { "%#{max_key_length}s: %s" % [ key.upcase, value.to_s ] }
+          end
         end
 
         $logger
