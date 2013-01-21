@@ -26,7 +26,7 @@ module Cucumber::Chef::Helpers::Server
   def server_create(name, attributes={})
     if ((attributes[:persist] && @servers[name]) || (@servers[name] && @servers[name][:persist]))
       attributes = @servers[name]
-      log("using existing container $#{name} #{server_tag(name)}$")
+      log("using existing attributes for container $#{name} #{server_tag(name)}$")
     else
       if (container_exists?(name) && (ENV['DESTROY'] == "1"))
         server_destroy(name)
