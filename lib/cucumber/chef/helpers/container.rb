@@ -31,8 +31,10 @@ module Cucumber::Chef::Helpers::Container
       command_run_local(container_create_command(name, distro, release, arch))
 
       # install omnibus into the distro/release file cache if it's not already there
-      omnibus_chef_client = File.join("/", "opt", "opscode", "bin", "chef-client")
-      if !File.exists?(File.join(cache_rootfs, omnibus_chef_client))
+      omnibus_chef_client = File.join("/", "opt", "chef", "bin", "chef-client")
+      omnibus_cache = File.join(cache_rootfs, omnibus_chef_client)
+      logger.info { "looking for omnibus cache in #{omnibus_cache}" }
+      if !File.exists?(omnibus_cache)
         case distro.downcase
         when "ubuntu" then
           %x( chroot #{cache_rootfs} /bin/bash -c 'apt-get -y --force-yes install wget' 2>&1 )
