@@ -52,12 +52,36 @@ module Cucumber
 
       def ssh
         if (!defined?(@ssh) || @ssh.nil?)
+          ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[:lab_user]}")
+          File.chmod(0400, ssh_private_key_file)
           @ssh ||= ZTK::SSH.new
+
           @ssh.config.host_name = self.labs_running.first.public_ip_address
           @ssh.config.user = Cucumber::Chef::Config[:lab_user]
-          @ssh.config.keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@ssh.config.user}")
+          @ssh.config.keys = ssh_private_key_file
         end
         @ssh
+      end
+
+################################################################################
+
+      def proxy_ssh(container)
+        container = container.to_sym
+        @proxy_ssh ||= Hash.new
+        if (!defined?(@proxy_ssh[container]) || @proxy_ssh[container].nil?)
+          ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[:lab_user]}")
+          File.chmod(0400, ssh_private_key_file)
+          @proxy_ssh[container] ||= ZTK::SSH.new
+
+          @proxy_ssh[container].config.proxy_host_name = self.labs_running.first.public_ip_address
+          @proxy_ssh[container].config.proxy_user = Cucumber::Chef::Config[:lab_user]
+          @proxy_ssh[container].config.proxy_keys = ssh_private_key_file
+
+          @proxy_ssh[container].config.host_name = container
+          @proxy_ssh[container].config.user = Cucumber::Chef::Config[:lxc_user]
+          @proxy_ssh[container].config.keys = ssh_private_key_file
+        end
+        @proxy_ssh[container]
       end
 
 ################################################################################
@@ -304,7 +328,7 @@ module Cucumber
 ################################################################################
 
       def nodes
-        Cucumber::Chef.load_knife_config
+        Cucumber::Chef.load_knife
         query = "tags:#{Cucumber::Chef::Config[:mode]} AND tags:#{Cucumber::Chef::Config[:user]}"
         Cucumber::Chef.logger.debug { "query(#{query})" }
         nodes, offset, total = ::Chef::Search::Query.new.search("node", URI.escape(query))
@@ -312,7 +336,7 @@ module Cucumber
       end
 
       def clients
-        Cucumber::Chef.load_knife_config
+        Cucumber::Chef.load_knife
         query = "tags:#{Cucumber::Chef::Config[:mode]} AND tags:#{Cucumber::Chef::Config[:user]}"
         Cucumber::Chef.logger.debug { "query(#{query})" }
         clients, offset, total = ::Chef::Search::Query.new.search("client", URI.escape(query))
