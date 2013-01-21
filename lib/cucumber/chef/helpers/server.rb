@@ -47,14 +47,14 @@ module Cucumber::Chef::Helpers::Server
         container_config_network(name)
         container_create(name, @servers[name][:distro], @servers[name][:release], @servers[name][:arch])
       end
-      log("container '#{name}' creation took %0.4f seconds" % bm)
+      log("container $#{name}$ creation took %0.4f seconds" % bm)
 
       bm = ::Benchmark.realtime do
         ZTK::TCPSocketCheck.new(:host => @servers[name][:ip], :port => 22).wait
       end
-      log("container '#{name}' SSHD responded after %0.4f seconds" % bm)
+      log("container $#{name}$ SSHD responded after %0.4f seconds" % bm)
     else
-      log("container '#{name}' is already running")
+      log("container $#{name}$ is already running")
     end
   end
 
