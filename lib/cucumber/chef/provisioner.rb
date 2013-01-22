@@ -39,6 +39,7 @@ module Cucumber
 
         @ssh = ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
         @ssh.config.host_name = @test_lab.public_ip
+        @ssh.config.port = @test_lab.ssh_port
         @ssh.config.user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
         @ssh.config.keys = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
 
@@ -86,7 +87,9 @@ module Cucumber
             "cucumber_chef" => {
               "version" => Cucumber::Chef::VERSION,
               "prerelease" => Cucumber::Chef::Config[:prerelease]
-            }
+            },
+            "lab_user" => Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user],
+            "lxc_user" => Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
           }
 
           bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
