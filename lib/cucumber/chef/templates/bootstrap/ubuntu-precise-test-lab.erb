@@ -4,7 +4,7 @@ CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
 
 export DEBIAN_FRONTEND=noninteractive
 
-sed -i "s/127.0.0.1 localhost/127.0.0.1 <%= @hostname %> <%= @hostname.split(".")[0] %> localhost/" /etc/hosts
+echo "127.0.0.1 <%= @hostname %>" | tee -a /etc/hosts
 echo "<%= @hostname %>" | tee /etc/hostname
 hostname <%= @hostname %>
 
