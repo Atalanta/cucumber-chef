@@ -41,7 +41,7 @@ module Cucumber
         when :aws then
           Cucumber::Chef::Provider::AWS.new(@stdout, @stderr, @stdin, @logger)
         when :vagrant then
-          nil
+          Cucumber::Chef::Provider::Vagrant.new(@stdout, @stderr, @stdin, @logger)
         end
       end
 
