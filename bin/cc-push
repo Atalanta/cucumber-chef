@@ -13,7 +13,7 @@ end
 
 tag = Cucumber::Chef.tag("cc-push")
 puts(tag)
-Cucumber::Chef.load_config(tag)
+Cucumber::Chef.boot(tag)
 $logger = Cucumber::Chef.logger
 
 if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)

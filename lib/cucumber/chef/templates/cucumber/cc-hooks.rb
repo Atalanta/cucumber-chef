@@ -20,7 +20,7 @@
 
 tag = Cucumber::Chef.tag("cucumber-chef")
 puts("  * #{tag}")
-Cucumber::Chef.load_config(tag)
+Cucumber::Chef.boot(tag)
 
 if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
   $test_lab.ssh.exec("sudo mkdir -p /home/#{$test_lab.ssh.config.user}/.cucumber-chef")

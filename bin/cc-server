@@ -27,7 +27,7 @@ class FrontObject
   def initialize
     tag = Cucumber::Chef.tag("cc-server")
     puts("  * #{tag}")
-    Cucumber::Chef.load_config(tag)
+    Cucumber::Chef.boot(tag)
     $logger = Cucumber::Chef.logger
     Dir.chdir(File.join("/home", Cucumber::Chef.lab_user))
   end

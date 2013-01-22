@@ -204,14 +204,14 @@ module Cucumber
 
 ################################################################################
 
-      def load_config(name=nil)
+      def boot(name=nil)
         if !in_chef_repo?
           message = "It does not look like you are inside a chef-repo!  Please relocate to one and execute your command again!"
           logger.fatal { message }
           raise message
         end
         name and logger.info { "loading #{name}" }
-        logger.info { "load_config(#{Cucumber::Chef.config_rb})" }
+        logger.info { "boot(#{Cucumber::Chef.config_rb})" }
         Cucumber::Chef::Config.load
         load_knife
       end

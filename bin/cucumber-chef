@@ -53,10 +53,10 @@ class CucumberChef < Thor
       end
     end
 
-    def load_config
+    def boot
       tag = Cucumber::Chef.tag("cucumber-chef")
       puts(set_color(tag, :green, true))
-      Cucumber::Chef.load_config(tag)
+      Cucumber::Chef.boot(tag)
       $logger = Cucumber::Chef.logger
 
       @is_rc = Cucumber::Chef.is_rc?
@@ -128,7 +128,7 @@ class CucumberChef < Thor
   desc "setup", "Setup cucumber-chef test lab in Amazon EC2"
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def setup
-    load_config
+    boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new)
@@ -170,7 +170,7 @@ class CucumberChef < Thor
   desc "teardown [container]", "Teardown the cucumber-chef test lab in Amazon EC2 or a test lab [container] if specified."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def teardown(*args)
-    load_config
+    boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new)
@@ -247,7 +247,7 @@ class CucumberChef < Thor
 
   desc "up", "Startup the cucumber-chef test lab"
   def up
-    load_config
+    boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new)
@@ -266,7 +266,7 @@ class CucumberChef < Thor
 
   desc "down", "Shutdown the cucumber-chef test lab"
   def down
-    load_config
+    boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new)
@@ -286,7 +286,7 @@ class CucumberChef < Thor
   desc "ssh [container]", "SSH to cucumber-chef test lab or [container] if specified."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def ssh(*args)
-    load_config
+    boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
@@ -313,7 +313,7 @@ class CucumberChef < Thor
 
   desc "log", "Streams the cucumber-chef local and test lab logs to the terminal."
   def log
-    load_config
+    boot
 
     if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
       $tail_thread_remote = Thread.new do
@@ -349,7 +349,7 @@ class CucumberChef < Thor
   method_option :log, :type => :boolean, :desc => "output the chef-client 'chef.log'", :aliases => "-l", :default => true
   method_option :lines, :type => :numeric, :desc => "output the last N lines of the chef-client 'chef.log'", :aliases => "-n", :default => 1
   def diagnose(container)
-    load_config
+    boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
@@ -380,7 +380,7 @@ class CucumberChef < Thor
   desc "displayconfig", "Display the current cucumber-chef config."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def displayconfig
-    load_config
+    boot
 
     details = {
       "root_dir" => Cucumber::Chef.root_dir,
@@ -415,7 +415,7 @@ class CucumberChef < Thor
 
   desc "ps [ps-options]", "Snapshot of the current cucumber-chef test lab container processes."
   def ps(*args)
-    load_config
+    boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
@@ -437,7 +437,7 @@ class CucumberChef < Thor
   desc "info", "Display information about the current test lab."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def info
-    load_config
+    boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new)
