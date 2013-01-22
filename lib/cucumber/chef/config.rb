@@ -27,12 +27,21 @@ module Cucumber
     class Config
       extend(Mixlib::Config)
 
-      KEYS = %w( mode provider ).map(&:to_sym) unless const_defined?(:KEYS)
-      MODES = %w( user test ).map(&:to_sym) unless const_defined?(:MODES)
-      PROVIDERS = %w( aws vagrant ).map(&:to_sym) unless const_defined?(:PROVIDERS)
-
-      PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file ).map(&:to_sym) unless const_defined?(:PROVIDER_AWS_KEYS)
-      PROVIDER_VAGRANT_KEYS = %w( ).map(&:to_sym) unless const_defined?(:PROVIDER_VAGRANT_KEYS)
+      unless const_defined?(:KEYS)
+        KEYS = %w(mode provider).map(&:to_sym)
+      end
+      unless const_defined?(:MODES)
+        MODES = %w(user test).map(&:to_sym)
+      end
+      unless const_defined?(:PROVIDERS)
+        PROVIDERS = %w(aws vagrant).map(&:to_sym)
+      end
+      unless const_defined?(:PROVIDER_AWS_KEYS)
+        PROVIDER_AWS_KEYS = %w(aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file).map(&:to_sym)
+      end
+      unless const_defined?(:PROVIDER_VAGRANT_KEYS)
+        PROVIDER_VAGRANT_KEYS = %w(identity_file).map(&:to_sym)
+      end
 
 ################################################################################
 
@@ -51,7 +60,7 @@ module Cucumber
       end
 
       def self.load
-        config_rb = Cucumber::Chef.locate(:file, ".cucumber-chef", "config.rb")
+        config_rb = Cucumber::Chef.config_rb
         Cucumber::Chef.logger.debug { "Attempting to load cucumber-chef configuration from '%s'." % config_rb }
         self.from_file(config_rb)
         self.verify
@@ -129,9 +138,8 @@ module Cucumber
       end
 
       def self.verify_provider_vagrant
-        # message = "Not yet implemented."
-        # Cucumber::Chef.logger.fatal { message }
-        # raise ConfigError, message
+        # NOOP
+        require 'vagrant'
       end
 
 ################################################################################
@@ -160,21 +168,21 @@ module Cucumber
       provider        :vagrant
       librarian_chef  false
 
-      user            ( ENV['OPSCODE_USER'] || ENV['USER'] )
+      user            (ENV['OPSCODE_USER'] || ENV['USER'])
 
-      artifacts       Hash[ "chef-client-log" => "/var/log/chef/client.log",
-                            "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out" ]
+      artifacts       ({"chef-client-log" => "/var/log/chef/client.log",
+                        "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"})
 
-      aws             Hash[ :lab_user => "ubuntu",
-                            :lxc_user => "root",
-                            :ubuntu_release => "precise",
-                            :aws_instance_arch => "i386",
-                            :aws_instance_disk_store => "ebs",
-                            :aws_instance_type => "m1.small",
-                            :aws_security_group => "cucumber-chef" ]
+      aws             ({:lab_user => "ubuntu",
+                        :lxc_user => "root",
+                        :ubuntu_release => "precise",
+                        :aws_instance_arch => "i386",
+                        :aws_instance_disk_store => "ebs",
+                        :aws_instance_type => "m1.small",
+                        :aws_security_group => "cucumber-chef"})
 
-      vagrant         Hash[ :lab_user => "vagrant",
-                            :lxc_user => "root" ]
+      vagrant         ({:lab_user => "vagrant",
+                        :lxc_user => "root"})
 
 ################################################################################
 
