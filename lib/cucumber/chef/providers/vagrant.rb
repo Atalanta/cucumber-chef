@@ -80,7 +80,19 @@ module Cucumber
 
         def private_ip
           raise "Not Implemented!"
+################################################################################
+
+        def ip
+          @vagrant.primary_vm.config.ssh.host
         end
+
+################################################################################
+
+        def ssh_port
+          @vagrant.primary_vm.config.vm.forwarded_ports.select{ |fwd_port| (fwd_port[:name] == "ssh") }.first[:hostport].to_i
+        end
+
+################################################################################
 
       end
 
