@@ -53,7 +53,6 @@ module Cucumber::Chef::Helpers::ChefClient
 
   def chef_run_client(name,*args)
     chef_config_client(name)
-    artifacts =
     log("removing artifacts #{Cucumber::Chef::Config[:artifacts].values.collect{|z| "$#{z}$" }.join(' ')}")
     (command_run_remote(name, "/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}") rescue nil)
 
