@@ -45,14 +45,14 @@ module Cucumber
 
         # @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
 
-        @cookbooks_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "cookbooks"))
-        @roles_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "chef_repo", "roles"))
+        @cookbooks_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "cookbooks")
+        @roles_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "roles")
       end
 
 ################################################################################
 
       def build
-        template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-test-lab.erb"))
+        template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-test-lab.erb")
 
         bootstrap(template_file)
         wait_for_chef_server
@@ -115,7 +115,7 @@ module Cucumber
       def download_chef_credentials
         @stdout.print("Downloading chef-server credentials...")
         Cucumber::Chef.spinner do
-          local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
+          local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s)
           remote_path = File.join("/", "home", @ssh.config.user, ".chef")
 
           files = [ "#{Cucumber::Chef::Config[:user]}.pem", "validation.pem" ]
@@ -131,10 +131,10 @@ module Cucumber
       def download_proxy_ssh_credentials
         @stdout.print("Downloading container SSH credentials...")
         Cucumber::Chef.spinner do
-          local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
+          local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s)
           remote_path = File.join("/", "home", @ssh.config.user, ".ssh")
 
-          files = { "id_rsa" => "id_rsa-#{Cucumber::Chef.lab_user}" }
+          files = { "id_rsa" => "id_rsa-#{@ssh.config.user}" }
           files.each do |remote_file, local_file|
             local = File.join(local_path, local_file)
             File.exists?(local) and File.delete(local)
@@ -150,8 +150,7 @@ module Cucumber
       def render_knife_rb
         @stdout.print("Building 'cc-knife' configuration...")
         Cucumber::Chef.spinner do
-          template_file = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb"))
-          knife_rb = File.expand_path(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "knife.rb"))
+          template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb")
 
           context = {
             :chef_server => @test_lab.public_ip,
@@ -159,7 +158,7 @@ module Cucumber
             :user => Cucumber::Chef::Config[:user]
           }
 
-          File.open(knife_rb, 'w') do |f|
+          File.open(Cucumber::Chef.knife_rb, 'w') do |f|
             f.puts(ZTK::Template.render(template_file, context))
           end
         end
