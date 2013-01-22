@@ -33,7 +33,7 @@ module Cucumber
         @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @provider = Cucumber::Chef::Provider.new
+        @provider = Cucumber::Chef::Provider.new(@stdout, @stderr, @stdin, @logger)
       end
 
 ################################################################################
