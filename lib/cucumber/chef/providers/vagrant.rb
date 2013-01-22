@@ -25,12 +25,12 @@ module Cucumber
       class VagrantError < Error; end
 
       class Vagrant
-        attr_accessor :stdout, :stderr, :stdin
+        attr_accessor :stdout, :stderr, :stdin, :logger
 
 ################################################################################
 
-        def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-          @stdout, @stderr, @stdin = stdout, stderr, stdin
+        def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
+          @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
           @stdout.sync = true if @stdout.respond_to?(:sync=)
         end
 
