@@ -40,16 +40,11 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 
     run_remote(<<-EOH
 sudo /bin/bash -c '
 cd #{File.dirname(remote_file)}
-
-gem uninstall ztk --all --ignore-dependencies --executables --verbose --backtrace
-gem cleanup ztk --verbose --backtrace
-gem install ztk --verbose --backtrace
-
 ls -la | grep 'cucumber-chef-'
-gem uninstall cucumber-chef --all --ignore-dependencies --executables --verbose --backtrace
+gem uninstall cucumber-chef --all --ignore-dependencies --executables --backtrace
 rm -fv /usr/lib/ruby/gems/1.8/cache/#{gem_name}
-gem cleanup cucumber-chef --verbose --backtrace
-gem install #{gem_name} --local --verbose --backtrace
+gem cleanup cucumber-chef --backtrace
+gem install #{remote_file} --backtrace
 rm -fv /home/#{$test_lab.ssh.config.user}/*.gem'
 EOH
     )
