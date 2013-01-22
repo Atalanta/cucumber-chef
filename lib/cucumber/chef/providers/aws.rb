@@ -281,14 +281,14 @@ module Cucumber
 ################################################################################
 
         def public_ip
-          !labs_exists? and raise "Can not supply the public IP of the test lab if none are running!"
+          !lab_exists? and raise "Can not supply the public IP of the test lab if none are running!"
           self.labs_running.first.public_ip_address
         end
 
 ################################################################################
 
         def private_ip
-          !labs_exists? and raise "Can not supply the private IP of the test lab if none are running!"
+          !lab_exists? and raise "Can not supply the private IP of the test lab if none are running!"
           self.labs_running.first.public_ip_address
         end
 
