@@ -27,17 +27,17 @@ module Cucumber
     class ProviderError < Error; end
 
     class Provider
-      attr_accessor :provider, :stdout, :stderr, :stdin, :logger
+      attr_accessor :stdout, :stderr, :stdin, :logger
 
       PROXY_METHODS = %w(create destroy start stop info lab_exists? labs labs_running labs_shutdown public_ip private_ip)
 
 ################################################################################
 
-      def initialize(provider, stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
+      def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
         @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @provider = case provider
+        @provider = case Cucumber::Chef::Config[:provider]
         when :aws then
           Cucumber::Chef::Provider::AWS.new(@stdout, @stderr, @stdin, @logger)
         when :vagrant then
