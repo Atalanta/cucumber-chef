@@ -25,13 +25,7 @@ module Cucumber
     class TestLabError < Error; end
 
     class TestLab
-      # attr_reader :connection, :server
-      attr_accessor :stdout, :stderr, :stdin, :logger
-
-      INVALID_STATES = %w( terminated pending )
-      RUNNING_STATES =  %w( running starting-up )
-      SHUTDOWN_STATES = %w( shutdown stopping stopped shutting-down )
-      VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
+      attr_accessor :provider, :stdout, :stderr, :stdin, :logger
 
 ################################################################################
 
@@ -39,7 +33,7 @@ module Cucumber
         @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @provider = Cucumber::Chef::Provider.new(Cucumber::Chef::Config[:provider])
+        @provider = Cucumber::Chef::Provider.new
       end
 
 ################################################################################
