@@ -213,16 +213,16 @@ module Cucumber
         name and logger.info { "loading #{name}" }
         logger.info { "boot(#{Cucumber::Chef.config_rb})" }
         Cucumber::Chef::Config.load
-        load_knife
+        load_chef_config
       end
 
 ################################################################################
 
-      def load_knife
+      def load_chef_config
         test_lab = (Cucumber::Chef::TestLab.new rescue nil)
         if (test_lab && ((test_lab.labs_running.count rescue 0) > 0))
           if File.exists?(Cucumber::Chef.knife_rb)
-            logger.info { "load_knife(#{Cucumber::Chef.knife_rb})" }
+            logger.info { "load_chef_config(#{Cucumber::Chef.knife_rb})" }
             ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
 
             chef_server_url = "http://#{test_lab.public_ip}:4000"
@@ -232,7 +232,7 @@ module Cucumber
             logger.warn { "We found the test lab; but the knife config '#{Cucumber::Chef.knife_rb}' was missing!" }
           end
         else
-          logger.info { "load_knife(#{Cucumber::Chef.knife_rb})" }
+          logger.info { "load_chef_config(#{Cucumber::Chef.knife_rb})" }
           ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
         end
       end
