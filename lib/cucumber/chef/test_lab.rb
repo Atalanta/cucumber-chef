@@ -85,10 +85,12 @@ module Cucumber
 
 ################################################################################
 
-      Cucumber::Chef::Provider::PROXY_METHODS.each do |method_name|
-        define_method(method_name) do
-          Cucumber::Chef.logger.debug { "test_lab: #{method_name}" }
-          @provider.send(method_name.to_sym)
+      def method_missing(method_name, *method_args)
+        if Cucumber::Chef::Provider::PROXY_METHODS.include?(method_name.to_s)
+          Cucumber::Chef.logger.debug { "test_lab: #{method_name} #{method_args.inspect}" }
+          @provider.send(method_name.to_sym, *method_args)
+        else
+          super(method_name, *method_args)
         end
       end
 
