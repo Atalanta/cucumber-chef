@@ -129,9 +129,9 @@ module Cucumber
       end
 
       def self.verify_provider_vagrant
-        message = "Not yet implemented."
-        Cucumber::Chef.logger.fatal { message }
-        raise ConfigError, message
+        # message = "Not yet implemented."
+        # Cucumber::Chef.logger.fatal { message }
+        # raise ConfigError, message
       end
 
 ################################################################################
