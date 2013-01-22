@@ -29,8 +29,7 @@ module Cucumber
 
 ################################################################################
 
-        def initialize(server, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-          @server = server
+        def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
           @stdout, @stderr, @stdin = stdout, stderr, stdin
           @stdout.sync = true if @stdout.respond_to?(:sync=)
         end
