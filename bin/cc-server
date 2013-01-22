@@ -13,8 +13,6 @@ if !ENV['BACKGROUND'].nil?
   end
 end
 
-Dir.chdir(File.join("/home", "ubuntu"))
-
 require 'drb/drb'
 require 'drb/acl'
 require 'cucumber-chef'
@@ -31,6 +29,7 @@ class FrontObject
     puts("  * #{tag}")
     Cucumber::Chef.load_config(tag)
     $logger = Cucumber::Chef.logger
+    Dir.chdir(File.join("/home", Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]))
   end
 
   def shutdown
