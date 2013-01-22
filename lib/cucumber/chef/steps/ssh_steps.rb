@@ -38,9 +38,23 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
     @connection.config.proxy_keys = Cucumber::Chef.lab_identity
 
     hostname and (@connection.config.host_name = hostname)
-    session["username"] and (@connection.config.user = session["username"])
     session["password"] and (@connection.config.password = session["password"])
-    session["keyfile"] and (@connection.config.keys = session["keyfile"])
+
+    if username = session["username"]
+      if username == "$lxc$"
+        @connection.config.user = Cucumber::Chef.lxc_user
+      else
+        @connection.config.user = username
+      end
+    end
+
+    if keyfile = session["keyfile"]
+      if keyfile == "$lxc$"
+        @connection.config.keys = Cucumber::Chef.lxc_identity
+      else
+        @connection.config.keys = keyfile
+      end
+    end
 
   }.should_not raise_error
 end
