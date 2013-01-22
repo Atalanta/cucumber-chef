@@ -32,6 +32,7 @@ module Cucumber
       PROVIDERS = %w( aws vagrant ).map(&:to_sym) unless const_defined?(:PROVIDERS)
 
       PROVIDER_AWS_KEYS = %w( aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file ).map(&:to_sym) unless const_defined?(:PROVIDER_AWS_KEYS)
+      PROVIDER_VAGRANT_KEYS = %w( ).map(&:to_sym) unless const_defined?(:PROVIDER_VAGRANT_KEYS)
 
 ################################################################################
 
