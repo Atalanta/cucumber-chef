@@ -202,20 +202,6 @@ module Cucumber
                 @stdout.puts("  http://#{lab.public_ip_address}:4040/")
               end
               @stdout.puts
-              if (labs_running.include?(lab) && (n = nodes))
-                @stdout.puts
-                @stdout.puts("Nodes:")
-                n.each do |node|
-                  @stdout.puts("  * #{node.name} (#{node.cloud.public_ipv4})")
-                end
-              end
-              if (labs_running.include?(lab) && (c = clients))
-                @stdout.puts
-                @stdout.puts("Clients:")
-                c.each do |client|
-                  @stdout.puts("  * #{client.name}")
-                end
-              end
             end
           else
             @stdout.puts("There are no cucumber-chef test labs to display information for!")
