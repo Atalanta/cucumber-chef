@@ -34,14 +34,22 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = ">= 1.3.6"
   s.licenses = ["Apache 2.0"]
 
-  s.add_dependency("chef", ">= 0.10.10")
-  s.add_dependency("cucumber", ">= 1.2.0")
+  # Chef
+  s.add_dependency("chef", ">= 0.10.0")
+
+  # Providers
   s.add_dependency("fog", ">= 1.3.1")
-  s.add_dependency("mixlib-config", ">= 1.1.2")
+  s.add_dependency("vagrant", ">= 1.0.5")
+
+  # TDD
+  s.add_dependency("cucumber", ">= 1.2.0")
+  s.add_dependency("rspec", ">= 2.10.0")
+
+  # Support
   s.add_dependency("thor", ">= 0.15.2")
+  s.add_dependency("mixlib-config", ">= 1.1.2")
   s.add_dependency("rake", ">= 0.9.2")
   s.add_dependency("ubuntu_ami", ">= 0.4.0")
-  s.add_dependency("rspec", ">= 2.10.0")
   s.add_dependency("ztk", ">= 0.0.15")
 
   s.add_development_dependency("simplecov", ">= 0.6.4")
