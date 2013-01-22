@@ -40,12 +40,12 @@ module Cucumber
 
       def ssh
         if (!defined?(@ssh) || @ssh.nil?)
-          ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[:lab_user]}")
+          ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}")
           File.chmod(0400, ssh_private_key_file)
           @ssh ||= ZTK::SSH.new
 
           @ssh.config.host_name = self.public_ip
-          @ssh.config.user = Cucumber::Chef::Config[:lab_user]
+          @ssh.config.user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
           @ssh.config.keys = ssh_private_key_file
         end
         @ssh
@@ -57,16 +57,16 @@ module Cucumber
         container = container.to_sym
         @proxy_ssh ||= Hash.new
         if (!defined?(@proxy_ssh[container]) || @proxy_ssh[container].nil?)
-          ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[:lab_user]}")
+          ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}")
           File.chmod(0400, ssh_private_key_file)
           @proxy_ssh[container] ||= ZTK::SSH.new
 
           @proxy_ssh[container].config.proxy_host_name = self.public_ip
-          @proxy_ssh[container].config.proxy_user = Cucumber::Chef::Config[:lab_user]
+          @proxy_ssh[container].config.proxy_user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
           @proxy_ssh[container].config.proxy_keys = ssh_private_key_file
 
           @proxy_ssh[container].config.host_name = container
-          @proxy_ssh[container].config.user = Cucumber::Chef::Config[:lxc_user]
+          @proxy_ssh[container].config.user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
           @proxy_ssh[container].config.keys = ssh_private_key_file
         end
         @proxy_ssh[container]

@@ -109,17 +109,17 @@ module Cucumber::Chef::Helpers::ChefClient
     # this is messy and needs to be refactored into a more configurable
     # solution; but for now this should do the trick
 
-    ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[:lab_user]}")
+    ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}")
     File.chmod(0400, ssh_private_key_file)
 
     ssh = ZTK::SSH.new
 
     ssh.config.proxy_host_name = $test_lab.public_ip
-    ssh.config.proxy_user = Cucumber::Chef::Config[:lab_user]
+    ssh.config.proxy_user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
     ssh.config.proxy_keys = ssh_private_key_file
 
     ssh.config.host_name = name
-    ssh.config.user = Cucumber::Chef::Config[:lxc_user]
+    ssh.config.user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
     ssh.config.keys = ssh_private_key_file
 
     feature_file = $scenario.file_colon_line.split(":").first

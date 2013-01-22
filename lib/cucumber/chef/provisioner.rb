@@ -39,7 +39,7 @@ module Cucumber
 
         @ssh = ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
         @ssh.config.host_name = @test_lab.public_ip
-        @ssh.config.user = Cucumber::Chef::Config[:lab_user]
+        @ssh.config.user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
         @ssh.config.keys = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
 
         # @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
@@ -79,7 +79,7 @@ module Cucumber
       def bootstrap(template_file)
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config[:user]
 
-        @stdout.print("Bootstrapping AWS EC2 instance...")
+        @stdout.print("Bootstrapping #{Cucumber::Chef::Config[:provider].upcase} instance...")
         Cucumber::Chef.spinner do
           attributes = {
             "run_list" => "role[test_lab]",
@@ -92,7 +92,7 @@ module Cucumber
           bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
           bootstrap.config[:host] = @test_lab.public_ip
           bootstrap.config[:port] = @test_lab.ssh_port
-          bootstrap.config[:ssh_user] = Cucumber::Chef::Config[:lab_user]
+          bootstrap.config[:ssh_user] = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
           bootstrap.config[:use_sudo] = true
           bootstrap.config[:identity_file] = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
           bootstrap.config[:template_file] = template_file
@@ -131,7 +131,7 @@ module Cucumber
           local_path = Cucumber::Chef.locate(:directory, ".cucumber-chef")
           remote_path = File.join("/", "home", @ssh.config.user, ".ssh")
 
-          files = { "id_rsa" => "id_rsa-#{Cucumber::Chef::Config[:lab_user]}" }
+          files = { "id_rsa" => "id_rsa-#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}" }
           files.each do |remote_file, local_file|
             local = File.join(local_path, local_file)
             File.exists?(local) and File.delete(local)
