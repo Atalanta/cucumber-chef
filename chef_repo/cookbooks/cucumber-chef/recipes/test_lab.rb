@@ -27,7 +27,7 @@
   package p
 end
 
-%w( root ubuntu ).each do |user|
+[ "root", node.lab_user ].flatten.each do |user|
   home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
 
   directory "create .ssh directory for #{user}" do
@@ -69,6 +69,7 @@ end
     path "#{home_dir}/.ssh/id_rsa"
     owner user
     group user
+    mode "0400"
   end
 
   file "ensure ssh public key ownership for #{user}" do
