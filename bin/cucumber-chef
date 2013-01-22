@@ -382,8 +382,28 @@ class CucumberChef < Thor
   def displayconfig
     load_config
 
+    details = {
+      "root_dir" => Cucumber::Chef.root_dir,
+      "home_dir" => Cucumber::Chef.home_dir,
+      "log_file" => Cucumber::Chef.log_file,
+      "config_rb" => Cucumber::Chef.config_rb,
+      "servers_bin" => Cucumber::Chef.servers_bin,
+      "knife_rb" => Cucumber::Chef.knife_rb,
+      "chef_repo" => Cucumber::Chef.chef_repo,
+      "bootstrap_identity" => Cucumber::Chef.bootstrap_identity,
+      "lab_user" => Cucumber::Chef.lab_user,
+      "lab_identity" => Cucumber::Chef.lab_identity,
+      "lxc_user" => Cucumber::Chef.lxc_user,
+      "lxc_identity" => Cucumber::Chef.lxc_identity
+    }
+
     puts
     say(Cucumber::Chef::Config.configuration.to_yaml, :bold)
+    puts
+    max_key_length = details.collect{ |k,v| k.to_s.length }.max
+    details.each do |key,value|
+      puts("%#{max_key_length}s = %s" % [key.downcase, value.inspect])
+    end
     puts
 
   rescue Cucumber::Chef::Error => e
