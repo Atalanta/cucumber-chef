@@ -28,7 +28,10 @@ require 'stringio'
 
 require 'chef'
 require 'chef/cookbook_uploader'
+
 require 'fog'
+require 'vagrant'
+
 require 'json'
 require 'mixlib/config'
 require 'ubuntu_ami'
