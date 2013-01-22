@@ -105,6 +105,8 @@ module Cucumber
       end
 
 ################################################################################
+# Path Helpers
+################################################################################
 
       def chef_repo
         (Cucumber::Chef.locate_parent(".chef") rescue nil)
@@ -161,6 +163,8 @@ module Cucumber
       end
 
 ################################################################################
+# Bootstraping SSH Helpers
+################################################################################
 
       def bootstrap_user
         Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
@@ -173,6 +177,8 @@ module Cucumber
       end
 
 ################################################################################
+# Test Lab SSH Helpers
+################################################################################
 
       def lab_user
         Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
@@ -184,6 +190,8 @@ module Cucumber
         lab_identity
       end
 
+################################################################################
+# Container SSH Helpers
 ################################################################################
 
       def lxc_user
@@ -203,6 +211,8 @@ module Cucumber
       end
 
 ################################################################################
+# BOOT
+################################################################################
 
       def boot(name=nil)
         if !in_chef_repo?
@@ -216,6 +226,8 @@ module Cucumber
         load_chef_config
       end
 
+################################################################################
+# Load Chef::Config
 ################################################################################
 
       def load_chef_config
@@ -245,21 +257,23 @@ module Cucumber
           Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
           headers = {
-            "program" => $0.to_s,
-            "version" => Cucumber::Chef::VERSION,
-            "uname" => %x(uname -a).chomp.strip,
-            "chef_repo" => chef_repo,
-            "chef_version" => ::Chef::VERSION,
-            "log_file" => log_file,
+            "program" => $0.to_s.inspect,
+            "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
+            "uname" => %x(uname -a).chomp.strip.inspect,
+            "chef_repo" => chef_repo.inspect,
+            "chef_version" => ::Chef::VERSION.inspect,
+            "vagrant_version" => ::Vagrant::VERSION.inspect,
+            "fog_version" => ::Fog::VERSION.inspect,
+            "log_file" => log_file.inspect,
             # "config_rb" => config_rb,
             # "knife_rb" => knife_rb,
-            "servers_bin" => servers_bin,
-            "ruby_version" => RUBY_VERSION,
-            "ruby_patchlevel" => RUBY_PATCHLEVEL,
-            "ruby_platform" => RUBY_PLATFORM
+            "servers_bin" => servers_bin.inspect,
+            "ruby_version" => RUBY_VERSION.inspect,
+            "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
+            "ruby_platform" => RUBY_PLATFORM.inspect
           }
           if RUBY_VERSION >= "1.9"
-            headers.merge!("ruby_engine" => RUBY_ENGINE)
+            headers.merge!("ruby_engine" => RUBY_ENGINE.inspect)
           end
           max_key_length = headers.keys.collect{ |key| key.to_s.length }.max
 
