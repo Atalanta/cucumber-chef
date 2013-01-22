@@ -29,7 +29,7 @@ module Cucumber
     class Provider
       attr_accessor :stdout, :stderr, :stdin, :logger
 
-      PROXY_METHODS = %w(create destroy start stop info lab_exists? labs labs_running labs_shutdown public_ip private_ip)
+      PROXY_METHODS = %w(create destroy start stop info lab_exists? labs labs_running labs_shutdown public_ip private_ip ssh_port)
 
 ################################################################################
 
