@@ -106,14 +106,32 @@ module Cucumber
 
 ################################################################################
 
-      def root
+      def chef_repo
+        (Cucumber::Chef.locate_parent(".chef") rescue nil)
+      end
+
+      def in_chef_repo?
+        ((chef_repo && File.exists?(chef_repo) && File.directory?(chef_repo)) ? true : false)
+      end
+
+################################################################################
+
+      def root_dir
         File.expand_path(File.join(File.dirname(__FILE__), "..", "..", ".."), File.dirname(__FILE__))
       end
 
 ################################################################################
 
+      def home_dir
+        home_dir = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
+        FileUtils.mkdir_p(File.dirname(home_dir))
+        home_dir
+      end
+
+################################################################################
+
       def log_file
-        log_file = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef", "cucumber-chef.log")
+        log_file = File.join(Cucumber::Chef.home_dir, "cucumber-chef.log")
         FileUtils.mkdir_p(File.dirname(log_file))
         log_file
       end
@@ -121,7 +139,7 @@ module Cucumber
 ################################################################################
 
       def config_rb
-        config_rb = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef", "config.rb")
+        config_rb = File.join(Cucumber::Chef.home_dir, "config.rb")
         FileUtils.mkdir_p(File.dirname(config_rb))
         config_rb
       end
@@ -129,7 +147,7 @@ module Cucumber
 ################################################################################
 
       def knife_rb
-        knife_rb = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef", Cucumber::Chef::Config[:provider].to_s, "knife.rb")
+        knife_rb = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "knife.rb")
         FileUtils.mkdir_p(File.dirname(knife_rb))
         knife_rb
       end
@@ -137,12 +155,16 @@ module Cucumber
 ################################################################################
 
       def servers_bin
-        servers_bin = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef", Cucumber::Chef::Config[:provider].to_s, "servers.bin")
+        servers_bin = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "servers.bin")
         FileUtils.mkdir_p(File.dirname(servers_bin))
         servers_bin
       end
 
 ################################################################################
+
+      def bootstrap_user
+        Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
+      end
 
       def bootstrap_identity
         bootstrap_identity = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
@@ -150,12 +172,14 @@ module Cucumber
         bootstrap_identity
       end
 
+################################################################################
+
       def lab_user
         Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
       end
 
       def lab_identity
-        lab_identity = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{lab_user}")
+        lab_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "id_rsa-#{lab_user}")
         File.exists?(lab_identity) && File.chmod(0400, lab_identity)
         lab_identity
       end
@@ -167,22 +191,12 @@ module Cucumber
       end
 
       def lxc_identity
-        lxc_identity = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{lab_user}")
+        lxc_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "id_rsa-#{lab_user}")
         File.exists?(lxc_identity) && File.chmod(0400, lxc_identity)
         lxc_identity
       end
 
 ################################################################################
-
-      def chef_repo
-        (Cucumber::Chef.locate_parent(".chef") rescue nil)
-      end
-
-################################################################################
-
-      def in_chef_repo?
-        ((chef_repo && File.exists?(chef_repo) && File.directory?(chef_repo)) ? true : false)
-      end
 
       def tag(name=nil)
         [ name, "v#{Cucumber::Chef::VERSION}" ].compact.join(" ")
@@ -237,8 +251,8 @@ module Cucumber
             "chef_repo" => chef_repo,
             "chef_version" => ::Chef::VERSION,
             "log_file" => log_file,
-            "knife_rb" => knife_rb,
-            "config_rb" => config_rb,
+            # "config_rb" => config_rb,
+            # "knife_rb" => knife_rb,
             "servers_bin" => servers_bin,
             "ruby_version" => RUBY_VERSION,
             "ruby_patchlevel" => RUBY_PATCHLEVEL,
