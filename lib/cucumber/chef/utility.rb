@@ -101,7 +101,7 @@ module Cucumber
 ################################################################################
 
       def external_ip
-        %x( wget -q -O - checkip.dyndns.org|sed -e 's/.*Current IP Address: //' -e 's/<.*$//' ).chomp
+        %x(wget -q -O - checkip.dyndns.org|sed -e 's/.*Current IP Address: //' -e 's/<.*$//').chomp.strip
       end
 
 ################################################################################
