@@ -67,9 +67,10 @@ module Cucumber
           raise BootstrapError, message
         end
 
-        Cucumber::Chef.logger.debug { "prepare(#{@config[:host]})" }
+        Cucumber::Chef.logger.debug { "prepare(#{@config[:host]}:#{@config[:port]})" }
 
         @ssh.config.host_name = @config[:host]
+        @ssh.config.port = @config[:port] if @config[:port]
         @ssh.config.user = @config[:ssh_user]
         @ssh.config.password = @config[:ssh_password]
         @ssh.config.keys = @config[:identity_file]
@@ -79,9 +80,9 @@ module Cucumber
         command = ZTK::Template.render(@config[:template_file], @config[:context])
         command = "sudo #{command}" if @config[:use_sudo]
 
-        Cucumber::Chef.logger.debug { "begin(#{@config[:host]})" }
+        Cucumber::Chef.logger.debug { "begin(#{@config[:host]}:#{@config[:port]})" }
         @ssh.exec(command, :silence => true)
-        Cucumber::Chef.logger.debug { "end(#{@config[:host]})" }
+        Cucumber::Chef.logger.debug { "end(#{@config[:host]}:#{@config[:port]})" }
       end
 
 ################################################################################
