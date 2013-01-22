@@ -12,8 +12,8 @@ When /^I have the following SSH sessions:$/ do |table|
       @ssh_sessions[id] = ZTK::SSH.new
 
       @ssh_sessions[id].config.proxy_host_name = $test_lab.public_ip
-      @ssh_sessions[id].config.proxy_user = "ubuntu"
-      @ssh_sessions[id].config.proxy_keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@ssh_sessions[id].config.proxy_user}")
+      @ssh_sessions[id].config.proxy_user = Cucumber::Chef.lab_user
+      @ssh_sessions[id].config.proxy_keys = Cucumber::Chef.lab_identity
 
       hash['hostname'] and (@ssh_sessions[id].config.host_name = hash['hostname'])
       hash['username'] and (@ssh_sessions[id].config.user = hash['username'])
@@ -33,8 +33,9 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
     @connection = ZTK::SSH.new
 
     @connection.config.proxy_host_name = $test_lab.public_ip
-    @connection.config.proxy_user = "ubuntu"
-    @connection.config.proxy_keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@connection.config.proxy_user}")
+    @connection.config.proxy_port = $test_lab.ssh_port
+    @connection.config.proxy_user = Cucumber::Chef.lab_user
+    @connection.config.proxy_keys = Cucumber::Chef.lab_identity
 
     hostname and (@connection.config.host_name = hostname)
     session["username"] and (@connection.config.user = session["username"])

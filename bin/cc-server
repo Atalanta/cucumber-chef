@@ -29,7 +29,7 @@ class FrontObject
     puts("  * #{tag}")
     Cucumber::Chef.load_config(tag)
     $logger = Cucumber::Chef.logger
-    Dir.chdir(File.join("/home", Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]))
+    Dir.chdir(File.join("/home", Cucumber::Chef.lab_user))
   end
 
   def shutdown

@@ -40,14 +40,12 @@ module Cucumber
 
       def ssh
         if (!defined?(@ssh) || @ssh.nil?)
-          ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}")
-          File.chmod(0400, ssh_private_key_file)
           @ssh ||= ZTK::SSH.new
 
           @ssh.config.host_name = self.public_ip
           @ssh.config.port = self.ssh_port
-          @ssh.config.user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
-          @ssh.config.keys = ssh_private_key_file
+          @ssh.config.user = Cucumber::Chef.lab_user
+          @ssh.config.keys = Cucumber::Chef.lab_identity
         end
         @ssh
       end
@@ -58,18 +56,16 @@ module Cucumber
         container = container.to_sym
         @proxy_ssh ||= Hash.new
         if (!defined?(@proxy_ssh[container]) || @proxy_ssh[container].nil?)
-          ssh_private_key_file = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}")
-          File.chmod(0400, ssh_private_key_file)
           @proxy_ssh[container] ||= ZTK::SSH.new
 
           @proxy_ssh[container].config.proxy_host_name = self.public_ip
           @proxy_ssh[container].config.proxy_port = self.ssh_port
-          @proxy_ssh[container].config.proxy_user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
-          @proxy_ssh[container].config.proxy_keys = ssh_private_key_file
+          @proxy_ssh[container].config.proxy_user = Cucumber::Chef.lab_user
+          @proxy_ssh[container].config.proxy_keys = Cucumber::Chef.lab_identity
 
           @proxy_ssh[container].config.host_name = container
-          @proxy_ssh[container].config.user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
-          @proxy_ssh[container].config.keys = ssh_private_key_file
+          @proxy_ssh[container].config.user = Cucumber::Chef.lxc_user
+          @proxy_ssh[container].config.keys = Cucumber::Chef.lxc_identity
         end
         @proxy_ssh[container]
       end

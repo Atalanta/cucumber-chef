@@ -28,7 +28,7 @@ module Cucumber::Chef::Helpers::Container
       cache_rootfs = container_cache_root(name, distro, release, arch)
       if !File.exists?(cache_rootfs)
         log("$#{name}$ has triggered building the lxc file cache for $#{distro}$")
-        log("this one time process per distro can take up to 10 minutes or longer depending on the test lab hardware")
+        log("this one time process per distro can take up to 10 minutes or longer depending on the test lab")
       end
 
       command_run_local(container_create_command(name, distro, release, arch))
@@ -55,13 +55,13 @@ module Cucumber::Chef::Helpers::Container
       command_run_local("mkdir -p #{container_root(name)}/root/.ssh")
       command_run_local("chmod 0755 #{container_root(name)}/root/.ssh")
       command_run_local("cat /root/.ssh/id_rsa.pub | tee -a #{container_root(name)}/root/.ssh/authorized_keys")
-      command_run_local("cat /home/#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}/.ssh/id_rsa.pub | tee -a #{container_root(name)}/root/.ssh/authorized_keys")
+      command_run_local("cat /home/#{Cucumber::Chef.lab_user}/.ssh/id_rsa.pub | tee -a #{container_root(name)}/root/.ssh/authorized_keys")
 
-      command_run_local("mkdir -p #{container_root(name)}/home/#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}/.ssh")
-      command_run_local("chmod 0755 #{container_root(name)}/home/#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}/.ssh")
-      command_run_local("cat /root/.ssh/id_rsa.pub | tee -a #{container_root(name)}/home/#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}/.ssh/authorized_keys")
-      command_run_local("cat /home/#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}/.ssh/id_rsa.pub | tee -a #{container_root(name)}/home/#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}/.ssh/authorized_keys")
-      command_run_local("chown -R #{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}:#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]} #{container_root(name)}/home/#{Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]}/.ssh")
+      command_run_local("mkdir -p #{container_root(name)}/home/#{Cucumber::Chef.lab_user}/.ssh")
+      command_run_local("chmod 0755 #{container_root(name)}/home/#{Cucumber::Chef.lab_user}/.ssh")
+      command_run_local("cat /root/.ssh/id_rsa.pub | tee -a #{container_root(name)}/home/#{Cucumber::Chef.lab_user}/.ssh/authorized_keys")
+      command_run_local("cat /home/#{Cucumber::Chef.lab_user}/.ssh/id_rsa.pub | tee -a #{container_root(name)}/home/#{Cucumber::Chef.lab_user}/.ssh/authorized_keys")
+      command_run_local("chown -R #{Cucumber::Chef.lab_user}:#{Cucumber::Chef.lab_user} #{container_root(name)}/home/#{Cucumber::Chef.lab_user}/.ssh")
 
       command_run_local("rm #{container_root(name)}/etc/motd")
       command_run_local("cp /etc/motd #{container_root(name)}/etc/motd")

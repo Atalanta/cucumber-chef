@@ -113,33 +113,63 @@ module Cucumber
 ################################################################################
 
       def log_file
-        config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
-        FileUtils.mkdir_p(config_path)
-        File.join(config_path, "cucumber-chef.log")
-      end
-
-################################################################################
-
-      def knife_rb
-        config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
-        FileUtils.mkdir_p(config_path)
-        File.join(config_path, "knife.rb")
+        log_file = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef", "cucumber-chef.log")
+        FileUtils.mkdir_p(File.dirname(log_file))
+        log_file
       end
 
 ################################################################################
 
       def config_rb
-        config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
-        FileUtils.mkdir_p(config_path)
-        File.join(config_path, "config.rb")
+        config_rb = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef", "config.rb")
+        FileUtils.mkdir_p(File.dirname(config_rb))
+        config_rb
+      end
+
+################################################################################
+
+      def knife_rb
+        knife_rb = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef", Cucumber::Chef::Config[:provider].to_s, "knife.rb")
+        FileUtils.mkdir_p(File.dirname(knife_rb))
+        knife_rb
       end
 
 ################################################################################
 
       def servers_bin
-        config_path = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
-        FileUtils.mkdir_p(config_path)
-        File.join(config_path, "servers.bin")
+        servers_bin = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef", Cucumber::Chef::Config[:provider].to_s, "servers.bin")
+        FileUtils.mkdir_p(File.dirname(servers_bin))
+        servers_bin
+      end
+
+################################################################################
+
+      def bootstrap_identity
+        bootstrap_identity = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
+        File.exists?(bootstrap_identity) && File.chmod(0400, bootstrap_identity)
+        bootstrap_identity
+      end
+
+      def lab_user
+        Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
+      end
+
+      def lab_identity
+        lab_identity = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{lab_user}")
+        File.exists?(lab_identity) && File.chmod(0400, lab_identity)
+        lab_identity
+      end
+
+################################################################################
+
+      def lxc_user
+        Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
+      end
+
+      def lxc_identity
+        lxc_identity = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{lab_user}")
+        File.exists?(lxc_identity) && File.chmod(0400, lxc_identity)
+        lxc_identity
       end
 
 ################################################################################
