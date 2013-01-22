@@ -181,7 +181,7 @@ module Cucumber
             logger.info { "load_knife(#{Cucumber::Chef.knife_rb})" }
             ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
 
-            chef_server_url = "http://#{test_lab.labs_running.first.public_ip_address}:4000"
+            chef_server_url = "http://#{test_lab.public_ip}:4000"
             logger.info { "chef_server_url(#{chef_server_url})" }
             ::Chef::Config[:chef_server_url] = chef_server_url
           else

@@ -11,7 +11,7 @@ When /^I have the following SSH sessions:$/ do |table|
       @ssh_sessions[id] and !@ssh_sessions[id].closed? and @ssh_sessions[id].close
       @ssh_sessions[id] = ZTK::SSH.new
 
-      @ssh_sessions[id].config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
+      @ssh_sessions[id].config.proxy_host_name = $test_lab.public_ip
       @ssh_sessions[id].config.proxy_user = "ubuntu"
       @ssh_sessions[id].config.proxy_keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@ssh_sessions[id].config.proxy_user}")
 
@@ -32,7 +32,7 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
     @connection and !@connection.ssh.closed? and @connection.ssh.close
     @connection = ZTK::SSH.new
 
-    @connection.config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
+    @connection.config.proxy_host_name = $test_lab.public_ip
     @connection.config.proxy_user = "ubuntu"
     @connection.config.proxy_keys = Cucumber::Chef.locate(:file, ".cucumber-chef", "id_rsa-#{@connection.config.proxy_user}")
 

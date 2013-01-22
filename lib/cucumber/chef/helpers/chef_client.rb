@@ -114,7 +114,7 @@ module Cucumber::Chef::Helpers::ChefClient
 
     ssh = ZTK::SSH.new
 
-    ssh.config.proxy_host_name = $test_lab.labs_running.first.public_ip_address
+    ssh.config.proxy_host_name = $test_lab.public_ip
     ssh.config.proxy_user = Cucumber::Chef::Config[:lab_user]
     ssh.config.proxy_keys = ssh_private_key_file
 

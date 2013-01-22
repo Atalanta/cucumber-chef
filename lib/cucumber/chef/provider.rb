@@ -18,8 +18,8 @@
 #
 ################################################################################
 
-require 'providers/aws'
-require 'providers/vagrant'
+require 'cucumber/chef/providers/aws'
+require 'cucumber/chef/providers/vagrant'
 
 module Cucumber
   module Chef
@@ -27,14 +27,31 @@ module Cucumber
     class ProviderError < Error; end
 
     class Provider
-      attr_accessor :stdout, :stderr, :stdin
+      attr_accessor :provider, :stdout, :stderr, :stdin, :logger
+
+      PROXY_METHODS = %w(create destroy start stop info lab_exists? labs labs_running labs_shutdown public_ip private_ip)
 
 ################################################################################
 
-      def initialize(server, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-        @server = server
-        @stdout, @stderr, @stdin = stdout, stderr, stdin
+      def initialize(provider, stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
+        @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
         @stdout.sync = true if @stdout.respond_to?(:sync=)
+
+        @provider = case provider
+        when :aws then
+          Cucumber::Chef::Provider::AWS.new(@stdout, @stderr, @stdin, @logger)
+        when :vagrant then
+          nil
+        end
+      end
+
+################################################################################
+
+      Cucumber::Chef::Provider::PROXY_METHODS.each do |method_name|
+        define_method(method_name) do
+          Cucumber::Chef.logger.debug { "provider: #{method_name}" }
+          @provider.send(method_name.to_sym)
+        end
       end
 
 ################################################################################
