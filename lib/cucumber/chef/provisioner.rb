@@ -40,7 +40,7 @@ module Cucumber
         @ssh = ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
         @ssh.config.host_name = @test_lab.public_ip
         @ssh.config.user = Cucumber::Chef::Config[:lab_user]
-        @ssh.config.keys = Cucumber::Chef::Config[:aws][:identity_file]
+        @ssh.config.keys = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
 
         # @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
 
@@ -91,9 +91,10 @@ module Cucumber
 
           bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
           bootstrap.config[:host] = @test_lab.public_ip
+          bootstrap.config[:port] = @test_lab.ssh_port
           bootstrap.config[:ssh_user] = Cucumber::Chef::Config[:lab_user]
           bootstrap.config[:use_sudo] = true
-          bootstrap.config[:identity_file] = Cucumber::Chef::Config[:aws][:identity_file]
+          bootstrap.config[:identity_file] = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
           bootstrap.config[:template_file] = template_file
           bootstrap.config[:context][:hostname] = HOSTNAME
           bootstrap.config[:context][:chef_server] = HOSTNAME
