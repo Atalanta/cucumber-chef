@@ -37,6 +37,52 @@ module Cucumber
 
 ################################################################################
 
+        def create
+          raise "Not Implemented!"
+
+          self
+        end
+
+        def destroy
+          raise "Not Implemented!"
+        end
+
+        def start
+          raise "Not Implemented!"
+        end
+
+        def stop
+          raise "Not Implemented!"
+        end
+
+        def info
+          raise "Not Implemented!"
+        end
+
+        def labs_exists?
+          raise "Not Implemented!"
+        end
+
+        def labs
+          raise "Not Implemented!"
+        end
+
+        def labs_running
+          raise "Not Implemented!"
+        end
+
+        def labs_shutdown
+          raise "Not Implemented!"
+        end
+
+        def public_ip
+          raise "Not Implemented!"
+        end
+
+        def private_ip
+          raise "Not Implemented!"
+        end
+
       end
 
     end
