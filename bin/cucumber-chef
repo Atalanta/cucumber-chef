@@ -186,7 +186,7 @@ class CucumberChef < Thor
           puts
 
           ZTK::Benchmark.bench("Destroy #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
-            test_lab.drb.server_destroy(container)
+            test_lab.destroy
           end
         else
           puts
