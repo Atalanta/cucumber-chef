@@ -170,7 +170,7 @@ class CucumberChef < Thor
   def destroy(*args)
     boot
 
-    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
+    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.exists?
       if args.count == 0
         test_lab.status
 
