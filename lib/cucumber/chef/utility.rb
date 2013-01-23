@@ -68,26 +68,6 @@ module Cucumber
 
 ################################################################################
 
-      def spinner(stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-        spinning_chars = %w[| / - \\]
-        count = 0
-        spinner = Thread.new do
-          while count do
-            stdout.print spinning_chars[(count+=1) % spinning_chars.length]
-            stdout.flush if stdout.respond_to?(:flush)
-            sleep(0.25)
-            stdout.print "\b"
-            stdout.flush if stdout.respond_to?(:flush)
-          end
-        end
-        yield.tap do
-          count = false
-          spinner.join
-        end
-      end
-
-################################################################################
-
       def generate_do_not_edit_warning(message=nil)
         warning = Array.new
         warning << "#"
