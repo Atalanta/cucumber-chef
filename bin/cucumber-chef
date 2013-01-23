@@ -237,7 +237,7 @@ class CucumberChef < Thor
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.dead?
-      ZTK::Benchmark.bench("Booting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ") do
+      ZTK::Benchmark.bench("Booting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
         test_lab.up
       end
     else
@@ -259,7 +259,7 @@ class CucumberChef < Thor
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
-      ZTK::Benchmark.bench("Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ") do
+      ZTK::Benchmark.bench("Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
         test_lab.halt
       end
     else
