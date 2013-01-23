@@ -106,11 +106,12 @@ module Cucumber
 ################################################################################
 
         def alive?
-          (self.state == :running)
+          RUNNING_STATES.include?(self.state)
         end
 
         def dead?
-          (self.state != :running)
+          SHUTDOWN_STATES.include?(self.state)
+        end
         end
 
 ################################################################################
