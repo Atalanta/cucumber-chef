@@ -56,12 +56,11 @@ module Cucumber::Chef::Helpers::Container
       command_run_local("chmod 0755 #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}")
       command_run_local("cat #{File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa.pub")} | tee -a #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh", "authorized_keys")}")
 
-      command_run_local("rm -f #{container_root(name)}/etc/motd")
-      command_run_local("cp /etc/motd #{container_root(name)}/etc/motd")
-      command_run_local("echo '    You are now logged in to the #{name} container!\n' >> #{container_root(name)}/etc/motd")
-      # command_run_local("sed -i 's/localhost #{name}/#{name}.test-lab #{name} localhost/' #{container_root(name)}/etc/hosts")
-      command_run_local("echo \"127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}\" | tee -a /etc/hosts")
-      command_run_local("echo '#{name}.test-lab' | tee #{container_root(name)}/etc/hostname")
+      command_run_local("rm -f #{File.join(container_root(name), "etc", "motd")}")
+      command_run_local("cp /etc/motd #{File.join(container_root(name), "etc", "motd")}")
+      command_run_local("echo '    You are now logged in to the #{name} container!\n' >> #{File.join(container_root(name), "etc", "motd")}")
+      command_run_local("echo \"127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}\" | tee -a #{File.join(container_root(name), "etc", "hosts")}")
+      command_run_local("echo '#{name}.test-lab' | tee #{File.join(container_root(name), "etc", "hostname")}")
     end
     container_start(name)
   end
