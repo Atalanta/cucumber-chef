@@ -118,7 +118,7 @@ module Cucumber
 
 ################################################################################
 
-        def start
+        def up
           if (lab_exists? && (@server = labs_shutdown.first))
             if @server.start
 
@@ -152,7 +152,7 @@ module Cucumber
 
 ################################################################################
 
-        def stop
+        def down
           if (lab_exists? && (@server = labs_running.first))
             if @server.stop
               @stdout.puts("Successfully shutdown cucumber-chef test lab!")

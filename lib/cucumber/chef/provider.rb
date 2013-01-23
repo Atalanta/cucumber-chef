@@ -29,7 +29,7 @@ module Cucumber
     class Provider
       attr_accessor :stdout, :stderr, :stdin, :logger
 
-      PROXY_METHODS = %w(create destroy start stop info status lab_exists? labs labs_running labs_shutdown id state username ip port chef_server_webui public_ip)
+      PROXY_METHODS = %w(create destroy up down status lab_exists? labs labs_running labs_shutdown id state username ip port chef_server_webui public_ip)
 
 ################################################################################
 
@@ -78,10 +78,6 @@ module Cucumber
         Cucumber::Chef.logger.fatal { e.message }
         Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
         raise ProviderError, e.message
-      end
-
-      def info
-        status
       end
 
 ################################################################################

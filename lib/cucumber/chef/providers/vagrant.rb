@@ -62,12 +62,12 @@ module Cucumber
           @env.cli("destroy", "--force")
         end
 
-        def start
+        def up
           @env.cli("up")
         end
 
-        def stop
-          @env.cli("suspend")
+        def down
+          @env.cli("halt")
         end
 
 ################################################################################
