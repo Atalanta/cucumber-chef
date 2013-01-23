@@ -82,7 +82,7 @@ module Cucumber
             @stdout.puts("%#{max_key_length}s: %s" % [key,value.inspect])
           end
         else
-          @stdout.puts("There are no cucumber-chef test labs to display information for!")
+          raise ProviderError, "No test labs exists!"
         end
 
       rescue Exception => e
