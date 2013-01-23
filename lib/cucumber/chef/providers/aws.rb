@@ -55,8 +55,7 @@ module Cucumber
 
         def create
           if (exists? && alive?)
-            @stdout.puts("A test lab already exists using the AWS credentials you have supplied; attempting to reprovision it.")
-            @server = labs_running.first
+            @stdout.puts("A test lab already exists using the #{Cucumber::Chef::Config.provider.upcase} credentials you have supplied; attempting to reprovision it.")
           else
             server_definition = {
               :image_id => Cucumber::Chef::Config.aws_image_id,
@@ -69,10 +68,10 @@ module Cucumber
             }
 
             if (@server = @connection.servers.create(server_definition))
-              ZTK::Benchmark.bench("Waiting for EC2 instance", @stdout) do
+              ZTK::Benchmark.bench("Waiting for #{Cucumber::Chef::Config.provider.upcase} instance", @stdout) do
                 @server.wait_for { ready? }
               end
-              ZTK::Benchmark.bench("Tagging EC2 instance", @stdout) do
+              ZTK::Benchmark.bench("Tagging #{Cucumber::Chef::Config.provider.upcase} instance", @stdout) do
                 tag_server
               end
               ZTK::Benchmark.bench("Waiting for SSHD", @stdout) do

@@ -72,8 +72,7 @@ module Cucumber
       def bootstrap
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
-        @stdout.print("Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance...")
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", @stdout) do
           chef_client_attributes = {
             "run_list" => "role[test_lab]",
             "cucumber_chef" => {
@@ -107,14 +106,12 @@ module Cucumber
           command = "sudo /bin/bash #{remote_bootstrap_filename}"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
-        @stdout.print("done.\n")
       end
 
 ################################################################################
 
       def download_chef_credentials
-        @stdout.print("Downloading chef-server credentials...")
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Downloading chef-server credentials", @stdout) do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
 
@@ -123,14 +120,12 @@ module Cucumber
             @test_lab.bootstrap_ssh.download(File.join(remote_path, file), File.join(local_path, file))
           end
         end
-        @stdout.print("done.\n")
       end
 
 ################################################################################
 
       def download_proxy_ssh_credentials
-        @stdout.print("Downloading container SSH credentials...")
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Downloading proxy SSH credentials", @stdout) do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
@@ -142,14 +137,12 @@ module Cucumber
             File.chmod(0600, local)
           end
         end
-        @stdout.print("done.\n")
       end
 
 ################################################################################
 
       def render_knife_rb
-        @stdout.print("Building 'cc-knife' configuration...")
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Building 'cc-knife' configuration", @stdout) do
           template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb")
 
           context = {
@@ -162,16 +155,13 @@ module Cucumber
             f.puts(ZTK::Template.render(template_file, context))
           end
         end
-        @stdout.print("done.\n")
       end
 
 ################################################################################
 
       def upload_cookbook
         Cucumber::Chef.logger.debug { "Uploading cucumber-chef cookbooks..." }
-        @stdout.print("Uploading cucumber-chef cookbooks...")
-
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Uploading 'cucumber-chef' cookbooks", @stdout) do
           Cucumber::Chef.load_chef_config
           cookbook_repo = ::Chef::CookbookLoader.new(@cookbooks_path)
           cookbook_repo.each do |name, cookbook|
@@ -181,18 +171,13 @@ module Cucumber
           end
           #@command.knife([ "cookbook upload cucumber-chef", "-o", @cookbooks_path ], :silence => true)
         end
-
-        @stdout.print("done.\n")
-        Cucumber::Chef.logger.debug { "Successfully uploaded cucumber-chef test lab cookbooks." }
       end
 
 ################################################################################
 
       def upload_role
         Cucumber::Chef.logger.debug { "Uploading cucumber-chef test lab role..." }
-        @stdout.print("Uploading cucumber-chef test lab role...")
-
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Uploading 'cucumber-chef' roles", @stdout) do
           Cucumber::Chef.load_chef_config
           ::Chef::Config[:role_path] = @roles_path
           [ "test_lab" ].each do |name|
@@ -201,18 +186,13 @@ module Cucumber
           end
           #@command.knife([ "role from file", File.join(@roles_path, "test_lab.rb") ], :silence => true)
         end
-
-        @stdout.print("done.\n")
-        Cucumber::Chef.logger.debug { "Successfully uploaded cucumber-chef test lab roles."}
       end
 
 ################################################################################
 
       def tag_node
         Cucumber::Chef.logger.debug { "Tagging cucumber-chef test lab node..." }
-        @stdout.print("Tagging cucumber-chef test lab node...")
-
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Tagging 'cucumber-chef' node", @stdout) do
           Cucumber::Chef.load_chef_config
           node = ::Chef::Node.load(HOSTNAME)
           [ Cucumber::Chef::Config[:mode].to_s, Cucumber::Chef::Config[:user].to_s ].each do |tag|
@@ -221,18 +201,13 @@ module Cucumber
           end
           #@command.knife([ "tag create", HOSTNAME, Cucumber::Chef::Config[:mode] ], :silence => true)
         end
-
-        @stdout.print("done.\n")
-        Cucumber::Chef.logger.debug { "Successfully tagged cucumber-chef test lab node."}
       end
 
 ################################################################################
 
       def add_node_role
         Cucumber::Chef.logger.debug { "Setting up cucumber-chef test lab run list..." }
-        @stdout.print("Setting up cucumber-chef test lab run list...")
-
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Setting 'cucumber-chef' run list", @stdout) do
           Cucumber::Chef.load_chef_config
           node = ::Chef::Node.load(HOSTNAME)
           [ "role[test_lab]" ].each do |entry|
@@ -241,55 +216,38 @@ module Cucumber
           node.save
           #@command.knife([ "node run_list add", HOSTNAME, "\"role[test_lab]\"" ], :silence => true)
         end
-
-        Cucumber::Chef.logger.debug { "Successfully added roles to cucumber-chef test lab."}
-        @stdout.print("done.\n")
       end
 
 ################################################################################
 
       def chef_first_run
-        @stdout.print("Performing chef-client run to setup and configure the cucumber-chef test lab...")
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Performing chef-client run", @stdout) do
           command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
           command = "sudo #{command}"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
-        @stdout.print("done.\n")
       end
 
 ################################################################################
 
       def wait_for_chef_server
-        @stdout.print("Waiting for Chef-Server...")
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Waiting for the chef-server", @stdout) do
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4000, :data => "GET", :wait => 120).wait
         end
-        @stdout.puts("done.\n")
 
-        @stdout.print("Waiting for Chef-WebUI...")
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Waiting for the chef-server-webui", @stdout) do
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4040, :data => "GET", :wait => 120).wait
         end
-        @stdout.puts("done.\n")
       end
 
 ################################################################################
 
       def reboot_test_lab
-        @stdout.print("Rebooting test lab; please wait...")
-        ::ZTK::Spinner.spin do
+        ZTK::Benchmark.bench("Rebooting the test lab", @stdout) do
           command = "sudo reboot"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
-          sleep(10)
+          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => @test_lab.port, :wait => 120).wait
         end
-        @stdout.print("done.\n")
-
-        @stdout.print("Waiting for SSHD...")
-        ::ZTK::Spinner.spin do
-          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 22, :wait => 120).wait
-        end
-        @stdout.puts("done.\n")
 
         wait_for_chef_server
       end
