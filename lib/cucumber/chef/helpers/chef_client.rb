@@ -108,16 +108,7 @@ module Cucumber::Chef::Helpers::ChefClient
     # this is messy and needs to be refactored into a more configurable
     # solution; but for now this should do the trick
 
-    ssh = ZTK::SSH.new
-
-    ssh.config.proxy_host_name = $test_lab.ip
-    ssh.config.proxy_port = $test_lab.port
-    ssh.config.proxy_user = Cucumber::Chef.lab_user
-    ssh.config.proxy_keys = Cucumber::Chef.lab_identity
-
-    ssh.config.host_name = name
-    ssh.config.user = Cucumber::Chef.lxc_user
-    ssh.config.keys = Cucumber::Chef.lxc_identity
+    ssh = $test_lab.proxy_ssh(name)
 
     feature_file = $scenario.file_colon_line.split(":").first
     feature_line = $scenario.file_colon_line.split(":").last
