@@ -200,7 +200,7 @@ module Cucumber
       end
 
       def lab_hostname_full
-        "#{lab_hostname_s}.#{Cucumber::Chef::Config.test_lab[:tld]}"
+        "#{lab_hostname_short}.#{Cucumber::Chef::Config.test_lab[:tld]}"
       end
 
 ################################################################################
