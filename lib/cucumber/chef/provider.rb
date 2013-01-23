@@ -73,6 +73,8 @@ module Cucumber
           details.each do |key,value|
             @stdout.puts("%#{max_key_length}s: %s" % [key,value.inspect])
           end
+
+          details
         else
           raise ProviderError, "No test labs exists!"
         end
