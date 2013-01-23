@@ -53,7 +53,7 @@ module Cucumber::Chef::Helpers::Container
       end
 
       command_run_local("mkdir -p #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}")
-      command_run_local("chmod 0755 #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}")
+      command_run_local("chmod 0700 #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}")
       command_run_local("cat #{File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa.pub")} | tee -a #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh", "authorized_keys")}")
 
       command_run_local("rm -f #{File.join(container_root(name), "etc", "motd")}")
