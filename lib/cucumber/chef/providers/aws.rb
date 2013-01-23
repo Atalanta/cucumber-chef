@@ -47,7 +47,6 @@ module Cucumber
           ensure_security_group
 
           @server = filter_servers(@connection.servers, VALID_STATES)
-          @server.nil? and raise AWSError, "We could not locate an instance in a valid state!"
         end
 
 ################################################################################
@@ -65,7 +64,7 @@ module Cucumber
               :flavor_id => Cucumber::Chef::Config.aws[:aws_instance_type],
               :key_name => Cucumber::Chef::Config.aws[:aws_ssh_key_id],
               :availability_zone => Cucumber::Chef::Config.aws[:availability_zone],
-              :tags => { "purpose" => "cucumber-chef", "cucumber-chef-mode" => Cucumber::Chef::Config[:mode] },
+              :tags => { "purpose" => "cucumber-chef", "cucumber-chef-mode" => Cucumber::Chef::Config.mode },
               :identity_file => Cucumber::Chef::Config.aws[:identity_file]
             }
 
@@ -73,20 +72,14 @@ module Cucumber
               ZTK::Benchmark.bench("Waiting for EC2 instance", @stdout) do
                 @server.wait_for { ready? }
               end
-              tag_server
-              ZTK::Benchmark.bench("Waiting for 20 seconds", @stdout) do
-                sleep(20)
+              ZTK::Benchmark.bench("Tagging EC2 instance", @stdout) do
+                tag_server
+              end
+              ZTK::Benchmark.bench("Waiting for SSHD", @stdout) do
+                ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
               end
             end
           end
-
-          if @server
-            ZTK::Benchmark.bench("Waiting for SSHD", @stdout) do
-              ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
-            end
-          end
-
-          @server = filter_servers(@connection.servers, VALID_STATES)
 
           self
 
@@ -101,10 +94,10 @@ module Cucumber
 ################################################################################
 
         def destroy
-          if ((l = labs).count > 0)
-            l.each do |server|
-              server.destroy
-            end
+          if exists?
+            @server.destroy
+          else
+            raise AWSError, "We could not find a test lab!"
           end
 
         rescue Exception => e
@@ -119,10 +112,9 @@ module Cucumber
 
         def up
           if (exists? && dead?)
-            server = labs_shutdown.first
-            if server.start
-              server.wait_for { ready? }
-              ZTK::TCPSocketCheck.new(:host => server.public_ip_address, :port => 22, :wait => 120).wait
+            if @server.start
+              @server.wait_for { ready? }
+              ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
             else
               raise AWSError, "Failed to boot the test lab!"
             end
@@ -142,8 +134,7 @@ module Cucumber
 
         def halt
           if (exists? && alive?)
-            server = labs_shutdown.first
-            if !server.stop
+            if !@server.stop
               raise AWSError, "Failed to halt the test lab!"
             end
           else
@@ -159,15 +150,15 @@ module Cucumber
 ################################################################################
 
         def alive?
-          RUNNING_STATES.include?(self.state)
+          (RUNNING_STATES.include?(self.state) rescue false)
         end
 
         def dead?
-          SHUTDOWN_STATES.include?(self.state)
+          (SHUTDOWN_STATES.include?(self.state) rescue true)
         end
 
         def exists?
-          puts @server.inspect
+          !!@server
         end
 
 ################################################################################
@@ -216,8 +207,8 @@ module Cucumber
 
         def tag_server
           {
-            "cucumber-chef-mode" => Cucumber::Chef::Config[:mode],
-            "cucumber-chef-user" => Cucumber::Chef::Config[:user],
+            "cucumber-chef-mode" => Cucumber::Chef::Config.mode,
+            "cucumber-chef-user" => Cucumber::Chef::Config.user,
             "purpose" => "cucumber-chef"
           }.each do |k, v|
             tag = @connection.tags.new

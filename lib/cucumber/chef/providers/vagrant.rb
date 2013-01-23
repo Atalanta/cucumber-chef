@@ -68,7 +68,11 @@ module Cucumber
 ################################################################################
 
         def destroy
-          @env.cli("destroy", "--force")
+          if exists?
+            @env.cli("destroy", "--force")
+          else
+            raise VagrantError, "We could not find a test lab!"
+          end
 
         rescue Exception => e
           Cucumber::Chef.logger.fatal { e.message }
@@ -81,8 +85,12 @@ module Cucumber
 ################################################################################
 
         def up
-          @env.cli("up")
-          ZTK::TCPSocketCheck.new(:host => self.ip, :port => 22, :wait => 120).wait
+          if (exists? && dead?)
+            @env.cli("up")
+            ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
+          else
+            raise VagrantError, "We could not find a powered off test lab."
+          end
 
         rescue Exception => e
           Cucumber::Chef.logger.fatal { e.message }
@@ -95,7 +103,11 @@ module Cucumber
 ################################################################################
 
         def halt
-          @env.cli("halt")
+          if (exists? && alive?)
+            @env.cli("halt")
+          else
+            raise AWSError, "We could not find a running test lab."
+          end
 
         rescue Exception => e
           Cucumber::Chef.logger.fatal { e.message }
@@ -106,11 +118,11 @@ module Cucumber
 ################################################################################
 
         def alive?
-          RUNNING_STATES.include?(self.state)
+          (RUNNING_STATES.include?(self.state) rescue false)
         end
 
         def dead?
-          SHUTDOWN_STATES.include?(self.state)
+          (SHUTDOWN_STATES.include?(self.state) rescue true)
         end
 
         def exists?
