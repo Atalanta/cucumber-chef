@@ -38,11 +38,27 @@ module Cucumber
 
 ################################################################################
 
+      def bootstrap_ssh
+        dead? and raise TestLabError, "The test lab must be running in order to start a bootstrap SSH session!"
+
+        if (!defined?(@ssh) || @ssh.nil?)
+          @ssh ||= ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
+
+          @ssh.config.host_name = self.ip
+          @ssh.config.port = self.port
+          @ssh.config.user = Cucumber::Chef.bootstrap_user
+          @ssh.config.keys = Cucumber::Chef.bootstrap_identity
+        end
+        @ssh
+      end
+
+################################################################################
+
       def ssh
         dead? and raise TestLabError, "The test lab must be running in order to start an SSH session!"
 
         if (!defined?(@ssh) || @ssh.nil?)
-          @ssh ||= ZTK::SSH.new
+          @ssh ||= ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
 
           @ssh.config.host_name = self.ip
           @ssh.config.port = self.port
@@ -60,7 +76,7 @@ module Cucumber
         container = container.to_sym
         @proxy_ssh ||= Hash.new
         if (!defined?(@proxy_ssh[container]) || @proxy_ssh[container].nil?)
-          @proxy_ssh[container] ||= ZTK::SSH.new
+          @proxy_ssh[container] ||= ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
 
           @proxy_ssh[container].config.proxy_host_name = self.ip
           @proxy_ssh[container].config.proxy_port = self.port
