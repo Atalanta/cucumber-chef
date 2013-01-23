@@ -44,6 +44,7 @@ module Cucumber::Chef::Helpers::Container
         when "fedora" then
           command_run_local("yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server")
         end
+        command_run_local("chroot #{cache_rootfs} /bin/bash -c 'locale-gen en_US'")
         command_run_local("chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh -O - | bash'")
         if distro.downcase == "fedora"
           command_run_local("chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm'")
@@ -59,7 +60,7 @@ module Cucumber::Chef::Helpers::Container
       command_run_local("rm -f #{File.join(container_root(name), "etc", "motd")}")
       command_run_local("cp /etc/motd #{File.join(container_root(name), "etc", "motd")}")
       command_run_local("echo '    You are now logged in to the #{name} container!\n' >> #{File.join(container_root(name), "etc", "motd")}")
-      command_run_local("echo \"127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}\" | tee -a #{File.join(container_root(name), "etc", "hosts")}")
+      command_run_local("echo '127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}' | tee -a #{File.join(container_root(name), "etc", "hosts")}")
       command_run_local("echo '#{name}.test-lab' | tee #{File.join(container_root(name), "etc", "hostname")}")
     end
     container_start(name)
