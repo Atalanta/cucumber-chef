@@ -158,19 +158,19 @@ module Cucumber
 ################################################################################
 
         def id
-          labs_running.first.id
+          labs.first.id
         end
 
         def state
-          labs_running.first.state.to_sym
+          labs.first.state.to_sym
         end
 
         def username
-          labs_running.first.username
+          labs.first.username
         end
 
         def ip
-          labs_running.first.public_ip_address
+          labs.first.public_ip_address
         end
 
         def port
