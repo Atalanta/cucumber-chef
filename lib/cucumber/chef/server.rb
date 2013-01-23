@@ -50,20 +50,17 @@ module Cucumber
         @test_lab.ssh.upload(local_file, remote_file)
 
         @server_thread = Thread.new do
-          @test_lab.ssh.exec("sudo pkill -9 -f cc-server")
+          self.down
 
           destroy = (ENV['DESTROY'] == '1' ? "DESTROY='1'" : nil)
           verbose = (ENV['VERBOSE'] == '1' ? "VERBOSE='1'" : nil)
           log_level = ((!ENV['LOG_LEVEL'].nil? && !ENV['LOG_LEVEL'].empty?) ? "LOG_LEVEL=#{ENV['LOG_LEVEL'].inspect}" : nil)
           command = ["sudo", destroy, verbose, log_level, "cc-server", Cucumber::Chef.external_ip].compact.join(" ")
-          @test_lab.ssh.exec(command, :silence => false)
 
-          Kernel.at_exit do
-            @test_lab.ssh.close
-          end
+          @test_lab.ssh.exec(command, :silence => false)
         end
 
-        sleep(3)
+        sleep(10)
         ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 8787, :data => "\n\n").wait
 
         File.exists?(Cucumber::Chef.artifacts_dir) && FileUtils.rm_rf(Cucumber::Chef.artifacts_dir)
