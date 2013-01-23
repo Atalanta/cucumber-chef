@@ -195,6 +195,14 @@ module Cucumber
         lab_identity
       end
 
+      def lab_hostname_short
+        Cucumber::Chef::Config.test_lab[:hostname]
+      end
+
+      def lab_hostname_full
+        "#{lab_hostname_s}.#{Cucumber::Chef::Config.test_lab[:tld]}"
+      end
+
 ################################################################################
 # Container SSH Helpers
 ################################################################################

@@ -75,7 +75,7 @@ module Cucumber
             "Chef-Server API" => self.chef_server_api,
             "Chef-Server WebUI" => self.chef_server_webui,
             "Chef-Server Default User" => "admin",
-            "Chef-Server Default Password" => Cucumber::Chef::Provisioner::PASSWORD
+            "Chef-Server Default Password" => Cucumber::Chef::Config.chef[:admin_password]
           }
           max_key_length = details.collect{ |k,v| k.to_s.length }.max
           details.each do |key,value|

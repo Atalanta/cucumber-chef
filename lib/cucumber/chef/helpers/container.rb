@@ -59,7 +59,8 @@ module Cucumber::Chef::Helpers::Container
       command_run_local("rm -f #{container_root(name)}/etc/motd")
       command_run_local("cp /etc/motd #{container_root(name)}/etc/motd")
       command_run_local("echo '    You are now logged in to the #{name} container!\n' >> #{container_root(name)}/etc/motd")
-      command_run_local("sed -i 's/localhost #{name}/#{name}.test-lab #{name} localhost/' #{container_root(name)}/etc/hosts")
+      # command_run_local("sed -i 's/localhost #{name}/#{name}.test-lab #{name} localhost/' #{container_root(name)}/etc/hosts")
+      command_run_local("echo \"127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}\" | tee -a /etc/hosts")
       command_run_local("echo '#{name}.test-lab' | tee #{container_root(name)}/etc/hostname")
     end
     container_start(name)
