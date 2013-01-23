@@ -66,8 +66,7 @@ module Cucumber
         sleep(3)
         ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 8787, :data => "\n\n").wait
 
-        artifacts = File.join(Cucumber::Chef.home_dir, "artifacts")
-        File.exists?(artifacts) && FileUtils.rm_rf(artifacts)
+        File.exists?(Cucumber::Chef.artifacts_dir) && FileUtils.rm_rf(Cucumber::Chef.artifacts_dir)
 
         @server_thread
       end

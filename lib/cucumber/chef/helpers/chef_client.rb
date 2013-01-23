@@ -131,7 +131,7 @@ module Cucumber::Chef::Helpers::ChefClient
       if (result.output =~ /0/)
         log("retrieving artifact $#{remote_path}$ from container $#{name}$")
 
-        local_path = File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "artifacts", feature_dir, "#{feature_name}.txt")
+        local_path = File.join(Cucumber::Chef.artifacts_dir, feature_dir, "#{feature_name}.txt")
         tmp_path = File.join("/tmp", label)
 
         FileUtils.mkdir_p(File.dirname(local_path))
