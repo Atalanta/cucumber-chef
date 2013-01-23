@@ -112,6 +112,9 @@ module Cucumber
         def dead?
           SHUTDOWN_STATES.include?(self.state)
         end
+
+        def exists?
+          (@env.vms.count > 0)
         end
 
 ################################################################################
@@ -134,24 +137,6 @@ module Cucumber
 
         def port
           @vm.config.vm.forwarded_ports.select{ |fwd_port| (fwd_port[:name] == "ssh") }.first[:hostport].to_i
-        end
-
-################################################################################
-
-        def lab_exists?
-          (@env.vms.count > 0)
-        end
-
-        def labs
-          [@env.primary_vm]
-        end
-
-        def labs_running
-          [@env.primary_vm]
-        end
-
-        def labs_shutdown
-          Array.new # @env.vms
         end
 
 ################################################################################

@@ -29,7 +29,7 @@ module Cucumber
     class Provider
       attr_accessor :stdout, :stderr, :stdin, :logger
 
-      PROXY_METHODS = %w(create destroy up halt status lab_exists? labs labs_running labs_shutdown id state username ip port chef_server_api chef_server_webui alive? dead?)
+      PROXY_METHODS = %w(create destroy up halt status labs labs_running labs_shutdown id state username ip port chef_server_api chef_server_webui alive? dead? exists?)
 
 ################################################################################
 
@@ -56,7 +56,7 @@ module Cucumber
       end
 
       def status
-        if lab_exists?
+        if exists?
           details = {
             "Provider" => @provider.class,
             "ID" => self.id,

@@ -55,7 +55,7 @@ module Cucumber
 ################################################################################
 
         def create
-          if (lab_exists? && alive?)
+          if (exists? && alive?)
             @stdout.puts("A test lab already exists using the AWS credentials you have supplied; attempting to reprovision it.")
             @server = labs_running.first
           else
@@ -68,6 +68,7 @@ module Cucumber
               :tags => { "purpose" => "cucumber-chef", "cucumber-chef-mode" => Cucumber::Chef::Config[:mode] },
               :identity_file => Cucumber::Chef::Config.aws[:identity_file]
             }
+
             if (@server = @connection.servers.create(server_definition))
               ZTK::Benchmark.bench("Waiting for EC2 instance", @stdout) do
                 @server.wait_for { ready? }
@@ -118,7 +119,7 @@ module Cucumber
 ################################################################################
 
         def up
-          if (lab_exists? && dead?)
+          if (exists? && dead?)
             server = labs_shutdown.first
             if server.start
               server.wait_for { ready? }
@@ -141,7 +142,7 @@ module Cucumber
 ################################################################################
 
         def halt
-          if (lab_exists? && alive?)
+          if (exists? && alive?)
             server = labs_shutdown.first
             if !server.stop
               raise AWSError, "Failed to halt the test lab!"
@@ -166,6 +167,10 @@ module Cucumber
           SHUTDOWN_STATES.include?(self.state)
         end
 
+        def exists?
+          puts @server.inspect
+        end
+
 ################################################################################
 
         def id
@@ -186,30 +191,6 @@ module Cucumber
 
         def port
           22
-        end
-
-################################################################################
-
-        def lab_exists?
-          (labs.size > 0)
-        end
-
-################################################################################
-
-        def labs
-          filter_servers(@servers, VALID_STATES)
-        end
-
-################################################################################
-
-        def labs_running
-          filter_servers(@servers, RUNNING_STATES)
-        end
-
-################################################################################
-
-        def labs_shutdown
-          filter_servers(@servers, SHUTDOWN_STATES)
         end
 
 
