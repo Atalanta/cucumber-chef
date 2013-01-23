@@ -46,8 +46,8 @@ describe Cucumber::Chef::Config do
       Cucumber::Chef::Config[:mode].should == :user
     end
 
-    it "Cucumber::Chef::Config.provider defaults to :aws" do
-      Cucumber::Chef::Config.provider.should == :aws
+    it "Cucumber::Chef::Config.provider defaults to :vagrant" do
+      Cucumber::Chef::Config.provider.should == :vagrant
     end
 
     context "Cucumber::Chef::Config[:aws] default values" do
