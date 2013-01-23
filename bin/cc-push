@@ -32,7 +32,7 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 
   else
     local_file = File.join(Cucumber::Chef.root_dir, gem_name)
     remote_file = File.join("/", "home", $test_lab.ssh.config.user, gem_name)
-    $logger.info { "#{local_file} -> #{$test_lab.ssh.config.user}@#{$test_lab.public_ip}:#{remote_file}" }
+    $logger.info { "#{local_file} -> #{$test_lab.ssh.config.user}@#{$test_lab.ip}:#{remote_file}" }
 
     $test_lab.ssh.upload(local_file, remote_file)
     FileUtils.rm_f(File.join(Cucumber::Chef.root_dir, "*.gem"))

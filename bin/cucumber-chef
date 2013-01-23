@@ -145,7 +145,7 @@ class CucumberChef < Thor
           puts("Be sure to log into the chef-server webui and change the default credentials.")
           puts
           puts("  Chef-Server WebUI:")
-          puts("    http://#{test_lab.public_ip}:4040/")
+          puts("    http://#{test_lab.ip}:4040/")
           puts("  Username:")
           puts("    admin")
           puts("  Password:")
@@ -214,7 +214,7 @@ class CucumberChef < Thor
           test_lab.ssh.exec("nohup sudo pkill -9 -f cc-server")
           test_lab.ssh.exec("nohup sudo BACKGROUND=yes cc-server #{Cucumber::Chef.external_ip}")
           Cucumber::Chef.spinner do
-            ZTK::TCPSocketCheck.new(:host => test_lab.public_ip, :port => 8787, :data => "\n\n").wait
+            ZTK::TCPSocketCheck.new(:host => test_lab.ip, :port => 8787, :data => "\n\n").wait
           end
           test_lab.drb.servers = Hash.new(nil)
           test_lab.drb.server_destroy(container)

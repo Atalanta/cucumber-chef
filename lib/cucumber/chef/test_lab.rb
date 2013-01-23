@@ -42,7 +42,7 @@ module Cucumber
         if (!defined?(@ssh) || @ssh.nil?)
           @ssh ||= ZTK::SSH.new
 
-          @ssh.config.host_name = self.public_ip
+          @ssh.config.host_name = self.ip
           @ssh.config.port = self.port
           @ssh.config.user = Cucumber::Chef.lab_user
           @ssh.config.keys = Cucumber::Chef.lab_identity
@@ -58,7 +58,7 @@ module Cucumber
         if (!defined?(@proxy_ssh[container]) || @proxy_ssh[container].nil?)
           @proxy_ssh[container] ||= ZTK::SSH.new
 
-          @proxy_ssh[container].config.proxy_host_name = self.public_ip
+          @proxy_ssh[container].config.proxy_host_name = self.ip
           @proxy_ssh[container].config.proxy_port = self.port
           @proxy_ssh[container].config.proxy_user = Cucumber::Chef.lab_user
           @proxy_ssh[container].config.proxy_keys = Cucumber::Chef.lab_identity
@@ -74,7 +74,7 @@ module Cucumber
 
       def drb
         if (!defined?(@drb) || @drb.nil?)
-          @drb ||= DRbObject.new_with_uri("druby://#{self.public_ip}:8787")
+          @drb ||= DRbObject.new_with_uri("druby://#{self.ip}:8787")
           @drb and DRb.start_service
           @drb.servers = Hash.new(nil)
         end

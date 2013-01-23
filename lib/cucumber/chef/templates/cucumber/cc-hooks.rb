@@ -44,7 +44,7 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 
     end
   end
 
-  ZTK::TCPSocketCheck.new(:host => $test_lab.public_ip, :port => 8787, :data => "\n\n").wait
+  ZTK::TCPSocketCheck.new(:host => $test_lab.ip, :port => 8787, :data => "\n\n").wait
 
   FileUtils.rm_rf(File.join(Cucumber::Chef.locate(:directory, ".cucumber-chef"), "artifacts"))
 else

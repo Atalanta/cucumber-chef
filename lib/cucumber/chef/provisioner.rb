@@ -38,7 +38,7 @@ module Cucumber
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
         @ssh = ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
-        @ssh.config.host_name = @test_lab.public_ip
+        @ssh.config.host_name = @test_lab.ip
         @ssh.config.port = @test_lab.port
         @ssh.config.user = Cucumber::Chef.lab_user
         @ssh.config.keys = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
@@ -93,7 +93,7 @@ module Cucumber
           }
 
           bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
-          bootstrap.config[:host] = @test_lab.public_ip
+          bootstrap.config[:host] = @test_lab.ip
           bootstrap.config[:port] = @test_lab.port
           bootstrap.config[:ssh_user] = Cucumber::Chef.lab_user
           bootstrap.config[:use_sudo] = true
@@ -153,7 +153,7 @@ module Cucumber
           template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb")
 
           context = {
-            :chef_server => @test_lab.public_ip,
+            :chef_server => @test_lab.ip,
             :librarian_chef => Cucumber::Chef::Config[:librarian_chef],
             :user => Cucumber::Chef::Config[:user]
           }
@@ -263,13 +263,13 @@ module Cucumber
       def wait_for_chef_server
         @stdout.print("Waiting for Chef-Server...")
         Cucumber::Chef.spinner do
-          ZTK::TCPSocketCheck.new(:host => @test_lab.public_ip, :port => 4000, :data => "GET", :wait => 120).wait
+          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4000, :data => "GET", :wait => 120).wait
         end
         @stdout.puts("done.\n")
 
         @stdout.print("Waiting for Chef-WebUI...")
         Cucumber::Chef.spinner do
-          ZTK::TCPSocketCheck.new(:host => @test_lab.public_ip, :port => 4040, :data => "GET", :wait => 120).wait
+          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4040, :data => "GET", :wait => 120).wait
         end
         @stdout.puts("done.\n")
       end
@@ -287,7 +287,7 @@ module Cucumber
 
         @stdout.print("Waiting for SSHD...")
         Cucumber::Chef.spinner do
-          ZTK::TCPSocketCheck.new(:host => @test_lab.public_ip, :port => 22, :wait => 120).wait
+          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 22, :wait => 120).wait
         end
         @stdout.puts("done.\n")
 

@@ -14,7 +14,7 @@ if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
 
   knife_rb = Cucumber::Chef.knife_rb
   if File.exists?(knife_rb)
-    command = [knife, ARGV, "--server-url http://#{test_lab.public_ip}:4000", "--config #{knife_rb}", "2>&1"].flatten.compact.join(" ")
+    command = [knife, ARGV, "--server-url http://#{test_lab.ip}:4000", "--config #{knife_rb}", "2>&1"].flatten.compact.join(" ")
     puts(command)
     puts(%x(#{command}))
     exit($?.to_i)
