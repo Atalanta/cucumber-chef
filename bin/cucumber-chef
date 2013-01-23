@@ -245,14 +245,9 @@ class CucumberChef < Thor
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.dead?
-      print("Booting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ")
-      bm = ::Benchmark.realtime do
-        Cucumber::Chef.spinner do
-          test_lab.up
-        end
+      ZTK::Benchmark.bench("Booting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ") do
+        test_lab.up
       end
-      puts("completed in %0.4f seconds.\n" % bm)
-      test_lab.status
     else
       raise Cucumber::Chef::Error, "We could not find a powered off test lab."
     end
@@ -267,19 +262,14 @@ class CucumberChef < Thor
 # HALT
 ################################################################################
 
-  desc "halt", "Shuthalt the cucumber-chef test lab"
+  desc "halt", "Power off the cucumber-chef test lab"
   def halt
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
-      print("Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ")
-      bm = ::Benchmark.realtime do
-        Cucumber::Chef.spinner do
-          test_lab.halt
-        end
+      ZTK::Benchmark.bench("Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ") do
+        test_lab.halt
       end
-      puts("completed in %0.4f seconds.\n" % bm)
-      test_lab.status
     else
       raise Cucumber::Chef::Error, "We could not find a running test lab."
     end
