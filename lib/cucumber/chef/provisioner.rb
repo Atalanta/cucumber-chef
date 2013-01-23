@@ -25,7 +25,7 @@ module Cucumber
     class ProvisionerError < Error; end
 
     class Provisioner
-      attr_accessor :stdout, :stderr, :stdin
+      attr_accessor :test_lab, :stdout, :stderr, :stdin
 
       HOSTNAME = "cucumber-chef.test-lab"
       PASSWORD = "p@ssw0rd1"
@@ -33,28 +33,20 @@ module Cucumber
 ################################################################################
 
       def initialize(test_lab, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
-        @test_lab = test_lab
         @stdout, @stderr, @stdin = stdout, stderr, stdin
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @ssh = ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin)
-        @ssh.config.host_name = @test_lab.ip
-        @ssh.config.port = @test_lab.port
-        @ssh.config.user = Cucumber::Chef.lab_user
-        @ssh.config.keys = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:identity_file]
-
-        # @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
+        @test_lab = test_lab
 
         @cookbooks_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "cookbooks")
         @roles_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "roles")
+        @bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-test-lab.erb")
       end
 
 ################################################################################
 
       def build
-        template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-test-lab.erb")
-
-        bootstrap(template_file)
+        bootstrap
         wait_for_chef_server
 
         download_chef_credentials
@@ -77,35 +69,43 @@ module Cucumber
     private
 ################################################################################
 
-      def bootstrap(template_file)
-        raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config[:user]
+      def bootstrap
+        raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
         @stdout.print("Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance...")
         Cucumber::Chef.spinner do
-          attributes = {
+          chef_client_attributes = {
             "run_list" => "role[test_lab]",
             "cucumber_chef" => {
               "version" => Cucumber::Chef::VERSION,
-              "prerelease" => Cucumber::Chef::Config[:prerelease]
+              "prerelease" => Cucumber::Chef::Config.prerelease
             },
             "lab_user" => Cucumber::Chef.lab_user,
             "lxc_user" => Cucumber::Chef.lxc_user
           }
 
-          bootstrap = Cucumber::Chef::Bootstrap.new(@stdout, @stderr, @stdin)
-          bootstrap.config[:host] = @test_lab.ip
-          bootstrap.config[:port] = @test_lab.port
-          bootstrap.config[:ssh_user] = Cucumber::Chef.lab_user
-          bootstrap.config[:use_sudo] = true
-          bootstrap.config[:identity_file] = Cucumber::Chef.bootstrap_identity
-          bootstrap.config[:template_file] = template_file
-          bootstrap.config[:context][:hostname] = HOSTNAME
-          bootstrap.config[:context][:chef_server] = HOSTNAME
-          bootstrap.config[:context][:amqp_password] = PASSWORD
-          bootstrap.config[:context][:admin_password] = PASSWORD
-          bootstrap.config[:context][:user] = Cucumber::Chef::Config[:user]
-          bootstrap.config[:context][:attributes] = attributes
-          bootstrap.run
+          context = {
+            :chef_client_attributes => chef_client_attributes,
+            :amqp_password => Cucumber::Chef::Config.chef[:amqp_password],
+            :admin_password => Cucumber::Chef::Config.chef[:admin_password],
+            :user => Cucumber::Chef::Config.user,
+            :hostname_short => Cucumber::Chef.lab_hostname_short,
+            :hostname_full => Cucumber::Chef.lab_hostname_full
+          }
+
+          local_bootstrap_file = Tempfile.new("bootstrap")
+          local_bootstrap_filename = local_bootstrap_file.path
+          local_bootstrap_file.write(::ZTK::Template.render(@bootstrap_template, context))
+          local_bootstrap_file.close
+
+          remote_bootstrap_filename = File.join(Cucumber::Chef.lab_user_home_dir, "cucumber-chef-bootstrap.sh")
+
+          @test_lab.bootstrap_ssh.upload(local_bootstrap_filename, remote_bootstrap_filename)
+
+          local_bootstrap_file.unlink
+
+          command = "sudo /bin/bash #{remote_bootstrap_filename}"
+          @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
         @stdout.print("done.\n")
       end
@@ -120,7 +120,7 @@ module Cucumber
 
           files = [ "#{Cucumber::Chef::Config[:user]}.pem", "validation.pem" ]
           files.each do |file|
-            @ssh.download(File.join(remote_path, file), File.join(local_path, file))
+            @test_lab.bootstrap_ssh.download(File.join(remote_path, file), File.join(local_path, file))
           end
         end
         @stdout.print("done.\n")
@@ -134,11 +134,11 @@ module Cucumber
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
-          files = { "id_rsa" => "id_rsa-#{@ssh.config.user}" }
+          files = { "id_rsa" => "id_rsa-#{@test_lab.bootstrap_ssh.config.user}" }
           files.each do |remote_file, local_file|
             local = File.join(local_path, local_file)
             File.exists?(local) and File.delete(local)
-            @ssh.download(File.join(remote_path, remote_file), local)
+            @test_lab.bootstrap_ssh.download(File.join(remote_path, remote_file), local)
             File.chmod(0600, local)
           end
         end
@@ -154,8 +154,8 @@ module Cucumber
 
           context = {
             :chef_server => @test_lab.ip,
-            :librarian_chef => Cucumber::Chef::Config[:librarian_chef],
-            :user => Cucumber::Chef::Config[:user]
+            :librarian_chef => Cucumber::Chef::Config.librarian_chef,
+            :user => Cucumber::Chef::Config.user
           }
 
           File.open(Cucumber::Chef.knife_rb, 'w') do |f|
@@ -253,7 +253,7 @@ module Cucumber
         Cucumber::Chef.spinner do
           command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
           command = "sudo #{command}"
-          @ssh.exec(command, :silence => true)
+          @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
         @stdout.print("done.\n")
       end
@@ -280,7 +280,7 @@ module Cucumber
         @stdout.print("Rebooting test lab; please wait...")
         Cucumber::Chef.spinner do
           command = "sudo reboot"
-          @ssh.exec(command, :silence => true)
+          @test_lab.bootstrap_ssh.exec(command, :silence => true)
           sleep(10)
         end
         @stdout.print("done.\n")

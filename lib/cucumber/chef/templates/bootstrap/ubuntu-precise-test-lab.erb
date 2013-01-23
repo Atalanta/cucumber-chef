@@ -1,12 +1,19 @@
-bash -c '
+#!/bin/env bash
+#
+# Cucumber-Chef Bootstrap Script
+#
+# Generated <%= Time.now.utc %>
+#
+set -x
+
 CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
 [ -f ${CUCUMBER_CHEF_BOOTSTRAP_DONE} ] && echo "Already bootstrapped!" && exit
 
 export DEBIAN_FRONTEND=noninteractive
 
-echo "127.0.0.1 <%= @hostname %>" | tee -a /etc/hosts
-echo "<%= @hostname %>" | tee /etc/hostname
-hostname <%= @hostname %>
+echo "127.0.0.1 <%= @hostname_full %> <%= @hostname_short %>" | tee -a /etc/hosts
+echo "<%= @hostname_full %>" | tee /etc/hostname
+hostname <%= @hostname_full %>
 
 echo "deb http://apt.opscode.com/ `lsb_release -cs`-0.10 main" | tee /etc/apt/sources.list.d/opscode.list
 mkdir -p /etc/apt/trusted.gpg.d
@@ -19,7 +26,7 @@ chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}/.gnupg
 apt-get -q -y upgrade
 
 cat <<EOF | debconf-set-selections
-chef chef/chef_server_url string http://<%= @chef_server %>:4000
+chef chef/chef_server_url string http://<%= @hostname_short %>:4000
 chef-solr chef-solr/amqp_password password <%= @amqp_password %>
 chef-server-webui chef-server-webui/admin_password password <%= @admin_password %>
 EOF
@@ -93,8 +100,7 @@ if [ ! -f /etc/chef/client.pem ]; then
 fi
 
 cat <<EOF > /etc/chef/first-boot.json
-<%= @attributes.to_json %>
+<%= @chef_client_attributes.to_json %>
 EOF
 
 touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}
-'
