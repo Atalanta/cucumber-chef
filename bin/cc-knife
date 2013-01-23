@@ -10,7 +10,7 @@ puts(message)
 Cucumber::Chef.logger.info { message }
 
 Cucumber::Chef::Config.load
-if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
 
   knife_rb = Cucumber::Chef.knife_rb
   if File.exists?(knife_rb)

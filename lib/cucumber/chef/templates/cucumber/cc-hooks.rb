@@ -22,7 +22,7 @@ tag = Cucumber::Chef.tag("cucumber-chef")
 puts("  * #{tag}")
 Cucumber::Chef.boot(tag)
 
-if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
+if (($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.alive?)
   $cc_server = Cucumber::Chef::Server.new($test_lab)
   $cc_server.up
 else

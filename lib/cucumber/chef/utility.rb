@@ -249,8 +249,7 @@ module Cucumber
 ################################################################################
 
       def load_chef_config
-        test_lab = (Cucumber::Chef::TestLab.new rescue nil)
-        if (test_lab && ((test_lab.labs_running.count rescue 0) > 0))
+        if (test_lab = (Cucumber::Chef::TestLab.new rescue nil)) && test_lab.alive?
           if File.exists?(Cucumber::Chef.knife_rb)
             logger.info { "load_chef_config(#{Cucumber::Chef.knife_rb})" }
             ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
