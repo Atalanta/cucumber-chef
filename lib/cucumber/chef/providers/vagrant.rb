@@ -27,6 +27,11 @@ module Cucumber
       class Vagrant
         attr_accessor :env, :vm, :stdout, :stderr, :stdin, :logger
 
+        INVALID_STATES = %w(terminated pending).map(&:to_sym)
+        RUNNING_STATES =  %w(running).map(&:to_sym)
+        SHUTDOWN_STATES = %w(shutdown stopping stopped shutting-down).map(&:to_sym)
+        VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
+
 ################################################################################
 
         def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
@@ -101,6 +106,16 @@ module Cucumber
           Cucumber::Chef.logger.fatal { e.message }
           Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
           raise VagrantError, e.message
+        end
+
+################################################################################
+
+        def alive?
+          (self.state == :running)
+        end
+
+        def dead?
+          (self.state != :running)
         end
 
 ################################################################################

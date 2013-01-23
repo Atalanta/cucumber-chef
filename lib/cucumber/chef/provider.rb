@@ -55,14 +55,6 @@ module Cucumber
         "http://#{ip}:4000/"
       end
 
-      def alive?
-        (self.state == :running)
-      end
-
-      def dead?
-        (self.state != :running)
-      end
-
       def status
         if lab_exists?
           details = {
