@@ -58,6 +58,7 @@ module Cucumber
       def status
         if lab_exists?
           details = {
+            "Provider" => @provider.class,
             "ID" => self.id,
             "State" => self.state,
             "Username" => self.username,
