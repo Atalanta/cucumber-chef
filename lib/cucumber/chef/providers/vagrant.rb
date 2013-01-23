@@ -33,8 +33,8 @@ module Cucumber
           @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
           @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-          # @env = ::Vagrant::Environment.new
-          @env = ::Vagrant::Environment.new(:ui_class => ::Vagrant::UI::Colored)
+          @env = ::Vagrant::Environment.new
+          # @env = ::Vagrant::Environment.new(:ui_class => ::Vagrant::UI::Colored)
           @vm = @env.primary_vm
         end
 
@@ -82,6 +82,7 @@ module Cucumber
 
         def up
           @env.cli("up")
+          ZTK::TCPSocketCheck.new(:host => self.ip, :port => 22, :wait => 120).wait
 
         rescue Exception => e
           Cucumber::Chef.logger.fatal { e.message }
@@ -90,10 +91,10 @@ module Cucumber
         end
 
 ################################################################################
-# DOWN
+# HALT
 ################################################################################
 
-        def down
+        def halt
           @env.cli("halt")
 
         rescue Exception => e

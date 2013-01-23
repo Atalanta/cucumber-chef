@@ -121,27 +121,13 @@ module Cucumber
         def up
           if (lab_exists? && (@server = labs_shutdown.first))
             if @server.start
-
-              @stdout.print("Waiting for instance...")
-              Cucumber::Chef.spinner do
-                @server.wait_for { ready? }
-              end
-              @stdout.puts("done.\n")
-
-              @stdout.print("Waiting for SSHD...")
-              Cucumber::Chef.spinner do
-                ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
-              end
-              @stdout.puts("done.\n")
-
-              @stdout.puts("Successfully started up cucumber-chef test lab!")
-
-              info
+              @server.wait_for { ready? }
+              ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
             else
-              @stdout.puts("Failed to start up cucumber-chef test lab!")
+              raise AWSError, "Failed to boot the test lab!"
             end
           else
-            @stdout.puts("There are no available cucumber-chef test labs to start up!")
+            raise AWSError, "We could not find a powered off test lab."
           end
 
         rescue Exception => e
@@ -151,18 +137,16 @@ module Cucumber
         end
 
 ################################################################################
-# DOWN
+# HALT
 ################################################################################
 
-        def down
+        def halt
           if (lab_exists? && (@server = labs_running.first))
-            if @server.stop
-              @stdout.puts("Successfully shutdown cucumber-chef test lab!")
-            else
-              @stdout.puts("Failed to shutdown cucumber-chef test lab!")
+            if !@server.stop
+              raise AWSError, "Failed to halt the test lab!"
             end
           else
-            @stdout.puts("There are no available cucumber-chef test labs top shutdown!")
+            raise AWSError, "We could not find a running test lab."
           end
 
         rescue Exception => e

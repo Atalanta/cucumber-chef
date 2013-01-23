@@ -132,7 +132,6 @@ class CucumberChef < Thor
   def setup
     boot
 
-    puts
     if (test_lab = Cucumber::Chef::TestLab.new)
       if (provider = test_lab.create)
         if (provisioner = Cucumber::Chef::Provisioner.new(test_lab))
@@ -140,16 +139,11 @@ class CucumberChef < Thor
           provisioner.build
 
           puts
-          puts("Your cucumber-chef test lab has now been provisioned!")
+          puts("If you are using AWS, be sure to log into the chef-server webui and change the default admin password at least.")
           puts
-          puts("Be sure to log into the chef-server webui and change the default credentials.")
+          puts("Your test lab has now been provisioned!  Enjoy!")
           puts
-          puts("  Chef-Server WebUI:")
-          puts("    http://#{test_lab.ip}:4040/")
-          puts("  Username:")
-          puts("    admin")
-          puts("  Password:")
-          puts("    #{Cucumber::Chef::Provisioner::PASSWORD}")
+          test_lab.status
 
         else
           puts(set_color("Could not create the provisioner!", :red, true))
@@ -176,22 +170,28 @@ class CucumberChef < Thor
   def destroy(*args)
     boot
 
-    puts
-    if (test_lab = Cucumber::Chef::TestLab.new)
+    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
       if args.count == 0
+        test_lab.status
+
         if yes?(set_color("Are you sure you want to destroy the test lab?", :red, true))
-          count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
           puts
-          puts(set_color("You have 5 seconds to abort!", :green, true))
+          puts(set_color("You have 5 seconds to abort!", :red, true))
           puts
-          print(set_color("Self-destructing in", :green, true))
           5.downto(1) do |x|
-            print(set_color("...#{x}", count_down_colors[x], true))
+            print("#{x}...")
             sleep(1)
           end
-          puts(set_color("...BOOM!", :red, true))
+          puts("BOOM!")
           puts
-          test_lab.destroy
+
+          print("Destroy #{Cucumber::Chef::Config[:provider].upcase} instance '#{test_lab.id}' ")
+          bm = ::Benchmark.realtime do
+            Cucumber::Chef.spinner do
+              test_lab.destroy
+            end
+          end
+          puts("completed in %0.4f seconds.\n" % bm)
         else
           puts
           puts(set_color("Whew! That was close!", :green, true))
@@ -199,23 +199,27 @@ class CucumberChef < Thor
       else
         container = args[0]
         if yes?(set_color("Are you sure you want to destroy the containter '#{container}'?", :red, true))
-          count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
           puts
-          puts(set_color("You have 5 seconds to abort!", :green, true))
+          puts(set_color("You have 5 seconds to abort!", :red, true))
           puts
-          print(set_color("Self-destructing in", :green, true))
           5.downto(1) do |x|
-            print(set_color("...#{x}", count_down_colors[x], true))
+            print("#{x}...")
             sleep(1)
           end
-          puts(set_color("...BOOM!", :red, true))
+          puts("BOOM!")
           puts
 
           cc_server = Cucumber::Chef::Server.new(test_lab)
           cc_server.up
 
           test_lab.drb.servers = Hash.new(nil)
-          test_lab.drb.server_destroy(container)
+          print("Destroy container '#{container}' ")
+          bm = ::Benchmark.realtime do
+            Cucumber::Chef.spinner do
+              test_lab.drb.server_destroy(container)
+            end
+          end
+          puts("completed in %0.4f seconds.\n" % bm)
         else
           puts
           puts(set_color("Whew! That was close!", :green, true))
@@ -223,7 +227,7 @@ class CucumberChef < Thor
       end
 
     else
-      puts(set_color("Could not find a cucumber-chef test lab to destroy!", :red, true))
+      raise Cucumber::Chef::Error, "We could not find a running test lab."
     end
     puts
 
@@ -240,11 +244,17 @@ class CucumberChef < Thor
   def up
     boot
 
-    puts
-    if (test_lab = Cucumber::Chef::TestLab.new)
-      test_lab.up
+    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.dead?
+      print("Booting #{Cucumber::Chef::Config[:provider].upcase} instance '#{test_lab.id}' ")
+      bm = ::Benchmark.realtime do
+        Cucumber::Chef.spinner do
+          test_lab.up
+        end
+      end
+      puts("completed in %0.4f seconds.\n" % bm)
+      test_lab.status
     else
-      puts(set_color("Could not find a cucumber-chef test lab to startup!", :red, true))
+      raise Cucumber::Chef::Error, "We could not find a powered off test lab."
     end
     puts
 
@@ -254,18 +264,24 @@ class CucumberChef < Thor
   end
 
 ################################################################################
-# DOWN
+# HALT
 ################################################################################
 
-  desc "down", "Shutdown the cucumber-chef test lab"
-  def down
+  desc "halt", "Shuthalt the cucumber-chef test lab"
+  def halt
     boot
 
-    puts
-    if (test_lab = Cucumber::Chef::TestLab.new)
-      test_lab.down
+    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
+      print("Halting #{Cucumber::Chef::Config[:provider].upcase} instance '#{test_lab.id}' ")
+      bm = ::Benchmark.realtime do
+        Cucumber::Chef.spinner do
+          test_lab.halt
+        end
+      end
+      puts("completed in %0.4f seconds.\n" % bm)
+      test_lab.status
     else
-      puts(set_color("Could not find a cucumber-chef test lab to shutdown!", :red, true))
+      raise Cucumber::Chef::Error, "We could not find a running test lab."
     end
     puts
 
@@ -283,7 +299,6 @@ class CucumberChef < Thor
   def status
     boot
 
-    puts
     if (test_lab = Cucumber::Chef::TestLab.new)
       test_lab.status
     end
@@ -488,7 +503,8 @@ class CucumberChef < Thor
   depreciated_tasks = {
     "teardown" => "You should execute the 'destroy' task instead.",
     "info" => "You should execute the 'status' task instead.",
-    "test" => "You should execute 'cucumber' or 'rspec' directly."
+    "test" => "You should execute 'cucumber' or 'rspec' directly.",
+    "down" => "You should execute the 'halt' task instead."
   }
 
   depreciated_tasks.each do |old_task, message|

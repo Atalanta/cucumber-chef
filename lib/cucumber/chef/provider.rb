@@ -29,7 +29,7 @@ module Cucumber
     class Provider
       attr_accessor :stdout, :stderr, :stdin, :logger
 
-      PROXY_METHODS = %w(create destroy up down status lab_exists? labs labs_running labs_shutdown id state username ip port chef_server_api chef_server_webui alive? dead?)
+      PROXY_METHODS = %w(create destroy up halt status lab_exists? labs labs_running labs_shutdown id state username ip port chef_server_api chef_server_webui alive? dead?)
 
 ################################################################################
 
@@ -73,7 +73,9 @@ module Cucumber
             "IP Address" => self.ip,
             "Port" => self.port,
             "Chef-Server API" => self.chef_server_api,
-            "Chef-Server WebUI" => self.chef_server_webui
+            "Chef-Server WebUI" => self.chef_server_webui,
+            "Chef-Server Default User" => "admin",
+            "Chef-Server Default Password" => Cucumber::Chef::Provisioner::PASSWORD
           }
           max_key_length = details.collect{ |k,v| k.to_s.length }.max
           details.each do |key,value|

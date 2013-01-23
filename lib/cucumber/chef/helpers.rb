@@ -26,8 +26,6 @@ module Cucumber
     # definitions.
     module Helpers
 
-      require 'benchmark'
-
       require 'cucumber/chef/helpers/chef_client'
       require 'cucumber/chef/helpers/chef_server'
       require 'cucumber/chef/helpers/command'

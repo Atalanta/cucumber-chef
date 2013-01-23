@@ -23,6 +23,7 @@ require 'drb/drb'
 require 'readline'
 require 'socket'
 require 'stringio'
+require 'benchmark'
 
 ################################################################################
 
