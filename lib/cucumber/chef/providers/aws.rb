@@ -245,13 +245,6 @@ module Cucumber
           results
         end
 
-################################################################################
-
-        def public_ip
-          !lab_exists? and raise "Can not supply the public IP of the test lab if none are running!"
-          labs_running.first.public_ip_address
-        end
-
 
 ################################################################################
     private

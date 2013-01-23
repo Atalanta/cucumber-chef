@@ -110,10 +110,6 @@ module Cucumber
           Array.new # @env.vms
         end
 
-        def public_ip
-          @env.primary_vm.config.ssh.host
-        end
-
 ################################################################################
 
       end
