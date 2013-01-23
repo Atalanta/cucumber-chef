@@ -47,7 +47,6 @@ module Cucumber
 
     class Error < StandardError; end
 
-    autoload :Bootstrap, 'cucumber/chef/bootstrap'
     autoload :Config, 'cucumber/chef/config'
     autoload :Provider, 'cucumber/chef/provider'
     autoload :Provisioner, 'cucumber/chef/provisioner'
