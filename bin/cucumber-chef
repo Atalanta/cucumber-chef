@@ -314,18 +314,23 @@ class CucumberChef < Thor
 ################################################################################
 
   desc "ssh [container]", "SSH to cucumber-chef test lab or [container] if specified."
-  method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
+  method_option :bootstrap, :type => :boolean, :desc => "Use the bootstrap settings.", :default => false
   def ssh(*args)
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
-      if args.size == 0
-        puts([set_color("Attempting SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
+      if @options.bootstrap?
+        puts([set_color("Attempting bootstrap SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
+        test_lab.bootstrap_ssh.console
+      elsif args.size == 0
+        puts([set_color("Attempting SSH connection to the '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
         test_lab.ssh.console
-      else
+      elsif args.size > 0
         container = args[0]
-        puts([set_color("Attempting SSH connection to cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
+        puts([set_color("Attempting proxy SSH connection to container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
         test_lab.proxy_ssh(container).console
+      else
+        raise Cucumber::Chef::Error, "You did not specify a valid combination of options."
       end
     else
       raise Cucumber::Chef::Error, "We could not find a running test lab."
