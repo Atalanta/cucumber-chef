@@ -24,8 +24,7 @@ module Cucumber::Chef::Helpers::Command
 ################################################################################
 
   def command_run_remote(name, command, expected_exit_code=0)
-    home_dir = ((Cucumber::Chef.lab_user == "root") ? "/root" : "/home/#{Cucumber::Chef.lab_user}")
-    command = %Q(ssh -i #{File.join(home_dir, ".ssh", "id_rsa")} #{name} #{command} 2>&1)
+    command = %Q(ssh -i #{File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa")} #{name} #{command} 2>&1)
     logger.info { "command_run_remote(#{command})" }
     output = %x(#{command})
     if !expected_exit_code.nil? && ($? != expected_exit_code)

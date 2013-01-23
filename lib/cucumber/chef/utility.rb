@@ -184,6 +184,11 @@ module Cucumber
         Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
       end
 
+      def lab_user_home_dir
+        user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
+        ((user == "root") ? "/root" : "/home/#{user}")
+      end
+
       def lab_identity
         lab_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "id_rsa-#{lab_user}")
         File.exists?(lab_identity) && File.chmod(0400, lab_identity)
@@ -196,6 +201,11 @@ module Cucumber
 
       def lxc_user
         Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
+      end
+
+      def lxc_user_home_dir
+        user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
+        ((user == "root") ? "/root" : "/home/#{user}")
       end
 
       def lxc_identity

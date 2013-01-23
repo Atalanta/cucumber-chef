@@ -116,7 +116,7 @@ module Cucumber
         @stdout.print("Downloading chef-server credentials...")
         Cucumber::Chef.spinner do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s)
-          remote_path = File.join("/", "home", @ssh.config.user, ".chef")
+          remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
 
           files = [ "#{Cucumber::Chef::Config[:user]}.pem", "validation.pem" ]
           files.each do |file|
@@ -132,7 +132,7 @@ module Cucumber
         @stdout.print("Downloading container SSH credentials...")
         Cucumber::Chef.spinner do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s)
-          remote_path = File.join("/", "home", @ssh.config.user, ".ssh")
+          remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
           files = { "id_rsa" => "id_rsa-#{@ssh.config.user}" }
           files.each do |remote_file, local_file|

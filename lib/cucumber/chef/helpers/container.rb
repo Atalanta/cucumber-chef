@@ -52,12 +52,9 @@ module Cucumber::Chef::Helpers::Container
         command_run_local(container_create_command(name, distro, release, arch))
       end
 
-      lab_home_dir = ((Cucumber::Chef.lab_user == "root") ? "/root" : "/home/#{Cucumber::Chef.lab_user}")
-      lxc_home_dir = ((Cucumber::Chef.lxc_user == "root") ? "/root" : "/home/#{Cucumber::Chef.lxc_user}")
-
-      command_run_local("mkdir -p #{File.join(container_root(name), lxc_home_dir, ".ssh")}")
-      command_run_local("chmod 0755 #{File.join(container_root(name), lxc_home_dir, ".ssh")}")
-      command_run_local("cat #{File.join(lab_home_dir, ".ssh", "id_rsa.pub")} | tee -a #{File.join(container_root(name), lxc_home_dir, ".ssh", "authorized_keys")}")
+      command_run_local("mkdir -p #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}")
+      command_run_local("chmod 0755 #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}")
+      command_run_local("cat #{File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa.pub")} | tee -a #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh", "authorized_keys")}")
 
       command_run_local("rm -f #{container_root(name)}/etc/motd")
       command_run_local("cp /etc/motd #{container_root(name)}/etc/motd")

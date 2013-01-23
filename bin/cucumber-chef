@@ -415,8 +415,10 @@ class CucumberChef < Thor
       "chef_repo" => Cucumber::Chef.chef_repo,
       "bootstrap_identity" => Cucumber::Chef.bootstrap_identity,
       "lab_user" => Cucumber::Chef.lab_user,
+      "lab_user_home_dir" => Cucumber::Chef.lab_user_home_dir,
       "lab_identity" => Cucumber::Chef.lab_identity,
       "lxc_user" => Cucumber::Chef.lxc_user,
+      "lxc_user_home_dir" => Cucumber::Chef.lxc_user_home_dir,
       "lxc_identity" => Cucumber::Chef.lxc_identity
     }
 
