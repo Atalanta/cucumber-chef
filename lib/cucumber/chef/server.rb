@@ -90,13 +90,13 @@ module Cucumber
           @test_lab.drb.servers.each do |name, value|
             @test_lab.drb.server_destroy(name)
           end
-          File.exists?(Cucumber::Chef.servers_bin) && File.delete(Cucumber::Chef.servers_bin)
+          File.exists?(Cucumber::Chef.containers_bin) && File.delete(Cucumber::Chef.containers_bin)
         else
           Cucumber::Chef.logger.info("'containers' are being persisted")
         end
 
-        if File.exists?(Cucumber::Chef.servers_bin)
-          @test_lab.drb.servers = (Marshal.load(IO.read(Cucumber::Chef.servers_bin)) rescue Hash.new(nil))
+        if File.exists?(Cucumber::Chef.containers_bin)
+          @test_lab.drb.servers = (Marshal.load(IO.read(Cucumber::Chef.containers_bin)) rescue Hash.new(nil))
         end
 
         @test_lab.drb.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
@@ -106,7 +106,7 @@ module Cucumber
 ################################################################################
 
       def after(scenario)
-        File.open(Cucumber::Chef.servers_bin, 'w') do |f|
+        File.open(Cucumber::Chef.containers_bin, 'w') do |f|
           f.puts(Marshal.dump(@test_lab.drb.servers))
         end
 

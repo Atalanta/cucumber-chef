@@ -429,7 +429,7 @@ class CucumberChef < Thor
       "home_dir" => Cucumber::Chef.home_dir,
       "log_file" => Cucumber::Chef.log_file,
       "config_rb" => Cucumber::Chef.config_rb,
-      "servers_bin" => Cucumber::Chef.servers_bin,
+      "containers_bin" => Cucumber::Chef.containers_bin,
       "knife_rb" => Cucumber::Chef.knife_rb,
       "chef_repo" => Cucumber::Chef.chef_repo,
       "bootstrap_identity" => Cucumber::Chef.bootstrap_identity,

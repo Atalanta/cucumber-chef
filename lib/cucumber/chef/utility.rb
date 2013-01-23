@@ -136,10 +136,10 @@ module Cucumber
 
 ################################################################################
 
-      def servers_bin
-        servers_bin = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "servers.bin")
-        FileUtils.mkdir_p(File.dirname(servers_bin))
-        servers_bin
+      def containers_bin
+        containers_bin = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "containers.bin")
+        FileUtils.mkdir_p(File.dirname(containers_bin))
+        containers_bin
       end
 
 ################################################################################
@@ -264,7 +264,7 @@ module Cucumber
             "log_file" => log_file.inspect,
             # "config_rb" => config_rb,
             # "knife_rb" => knife_rb,
-            "servers_bin" => servers_bin.inspect,
+            "containers_bin" => containers_bin.inspect,
             "ruby_version" => RUBY_VERSION.inspect,
             "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
             "ruby_platform" => RUBY_PLATFORM.inspect
