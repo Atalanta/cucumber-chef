@@ -27,9 +27,9 @@ module Cucumber
       class Vagrant
         attr_accessor :env, :vm, :stdout, :stderr, :stdin, :logger
 
-        INVALID_STATES = %w(not_created).map(&:to_sym)
+        INVALID_STATES = %w(not_created aborted).map(&:to_sym)
         RUNNING_STATES =  %w(running).map(&:to_sym)
-        SHUTDOWN_STATES = %w(shutdown stopping stopped shutting-down).map(&:to_sym)
+        SHUTDOWN_STATES = %w(paused saved poweroff).map(&:to_sym)
         VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
 
 ################################################################################
