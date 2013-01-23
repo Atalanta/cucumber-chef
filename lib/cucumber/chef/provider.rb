@@ -29,7 +29,7 @@ module Cucumber
     class Provider
       attr_accessor :stdout, :stderr, :stdin, :logger
 
-      PROXY_METHODS = %w(create destroy start stop info lab_exists? labs labs_running labs_shutdown public_ip private_ip ssh_port)
+      PROXY_METHODS = %w(create destroy start stop info status lab_exists? labs labs_running labs_shutdown id state username ip port chef_server_webui public_ip)
 
 ################################################################################
 
@@ -43,6 +43,45 @@ module Cucumber
         when :vagrant then
           Cucumber::Chef::Provider::Vagrant.new(@stdout, @stderr, @stdin, @logger)
         end
+      end
+
+################################################################################
+
+      def chef_server_webui
+        "http://#{ip}:4040/"
+      end
+
+      def chef_server_api
+        "http://#{ip}:4000/"
+      end
+
+      def status
+        if lab_exists?
+          details = {
+            "ID" => self.id,
+            "State" => self.state,
+            "Username" => self.username,
+            "IP Address" => self.ip,
+            "Port" => self.port,
+            "Chef-Server API" => self.chef_server_api,
+            "Chef-Server WebUI" => self.chef_server_webui
+          }
+          max_key_length = details.collect{ |k,v| k.to_s.length }.max
+          details.each do |key,value|
+            @stdout.puts("%#{max_key_length}s: %s" % [key,value.inspect])
+          end
+        else
+          @stdout.puts("There are no cucumber-chef test labs to display information for!")
+        end
+
+      rescue Exception => e
+        Cucumber::Chef.logger.fatal { e.message }
+        Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+        raise ProviderError, e.message
+      end
+
+      def info
+        status
       end
 
 ################################################################################

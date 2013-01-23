@@ -43,7 +43,7 @@ module Cucumber
           @ssh ||= ZTK::SSH.new
 
           @ssh.config.host_name = self.public_ip
-          @ssh.config.port = self.ssh_port
+          @ssh.config.port = self.port
           @ssh.config.user = Cucumber::Chef.lab_user
           @ssh.config.keys = Cucumber::Chef.lab_identity
         end
@@ -59,7 +59,7 @@ module Cucumber
           @proxy_ssh[container] ||= ZTK::SSH.new
 
           @proxy_ssh[container].config.proxy_host_name = self.public_ip
-          @proxy_ssh[container].config.proxy_port = self.ssh_port
+          @proxy_ssh[container].config.proxy_port = self.port
           @proxy_ssh[container].config.proxy_user = Cucumber::Chef.lab_user
           @proxy_ssh[container].config.proxy_keys = Cucumber::Chef.lab_identity
 

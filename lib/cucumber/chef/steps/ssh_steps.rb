@@ -33,7 +33,7 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
     @connection = ZTK::SSH.new
 
     @connection.config.proxy_host_name = $test_lab.public_ip
-    @connection.config.proxy_port = $test_lab.ssh_port
+    @connection.config.proxy_port = $test_lab.port
     @connection.config.proxy_user = Cucumber::Chef.lab_user
     @connection.config.proxy_keys = Cucumber::Chef.lab_identity
 

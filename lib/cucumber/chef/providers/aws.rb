@@ -171,46 +171,24 @@ module Cucumber
 
 ################################################################################
 
-        def info
-          if lab_exists?
-            labs.each do |lab|
-              @stdout.puts("Instance ID: #{lab.id}")
-              @stdout.puts("State: #{lab.state}")
-              @stdout.puts("Username: #{lab.username}") if lab.username
-              if (lab.public_ip_address || lab.private_ip_address)
-                @stdout.puts
-                @stdout.puts("IP Address:")
-                @stdout.puts("  Public...: #{lab.public_ip_address}") if lab.public_ip_address
-                @stdout.puts("  Private..: #{lab.private_ip_address}") if lab.private_ip_address
-              end
-              if (lab.dns_name || lab.private_dns_name)
-                @stdout.puts
-                @stdout.puts("DNS:")
-                @stdout.puts("  Public...: #{lab.dns_name}") if lab.dns_name
-                @stdout.puts("  Private..: #{lab.private_dns_name}") if lab.private_dns_name
-              end
-              if (lab.tags.count > 0)
-                @stdout.puts
-                @stdout.puts("Tags:")
-                lab.tags.to_hash.each do |k,v|
-                  @stdout.puts("  #{k}: #{v}")
-                end
-              end
-              if lab.public_ip_address
-                @stdout.puts
-                @stdout.puts("Chef-Server WebUI:")
-                @stdout.puts("  http://#{lab.public_ip_address}:4040/")
-              end
-              @stdout.puts
-            end
-          else
-            @stdout.puts("There are no cucumber-chef test labs to display information for!")
-          end
+        def id
+          labs_running.first.id
+        end
 
-        rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
-          raise AWSError, e.message
+        def state
+          labs_running.first.state
+        end
+
+        def username
+          labs_running.first.username
+        end
+
+        def ip
+          labs_running.first.public_ip_address
+        end
+
+        def port
+          22
         end
 
 ################################################################################
@@ -222,7 +200,8 @@ module Cucumber
 ################################################################################
 
         def labs
-          results = @connection.servers.select do |server|
+          @servers ||= @connection.servers
+          results = @servers.select do |server|
             Cucumber::Chef.logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
             ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
               server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
@@ -237,7 +216,8 @@ module Cucumber
 ################################################################################
 
         def labs_running
-          results = @connection.servers.select do |server|
+          @servers ||= @connection.servers
+          results = @servers.select do |server|
             Cucumber::Chef.logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
             ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
               server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
@@ -252,7 +232,8 @@ module Cucumber
 ################################################################################
 
         def labs_shutdown
-          results = @connection.servers.select do |server|
+          @servers ||= @connection.servers
+          results = @servers.select do |server|
             Cucumber::Chef.logger.debug("candidate") { "ID=#{server.id}, state='#{server.state}'" }
             ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config[:mode].to_s &&
               server.tags['cucumber-chef-user'] == Cucumber::Chef::Config[:user].to_s &&
@@ -268,26 +249,7 @@ module Cucumber
 
         def public_ip
           !lab_exists? and raise "Can not supply the public IP of the test lab if none are running!"
-          self.labs_running.first.public_ip_address
-        end
-
-################################################################################
-
-        def private_ip
-          !lab_exists? and raise "Can not supply the private IP of the test lab if none are running!"
-          self.labs_running.first.public_ip_address
-        end
-
-################################################################################
-
-        def ip
-          self.labs_running.first.public_ip_address
-        end
-
-################################################################################
-
-        def ssh_port
-          22
+          labs_running.first.public_ip_address
         end
 
 
