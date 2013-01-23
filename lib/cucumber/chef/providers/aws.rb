@@ -68,14 +68,10 @@ module Cucumber
             }
 
             if (@server = @connection.servers.create(server_definition))
-              ZTK::Benchmark.bench("Waiting for #{Cucumber::Chef::Config.provider.upcase} instance", @stdout) do
+              ZTK::Benchmark.bench("Creating #{Cucumber::Chef::Config.provider.upcase} instance", @stdout) do
                 @server.wait_for { ready? }
-              end
-              ZTK::Benchmark.bench("Tagging #{Cucumber::Chef::Config.provider.upcase} instance", @stdout) do
                 tag_server
-              end
-              ZTK::Benchmark.bench("Waiting for SSHD", @stdout) do
-                ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
+                ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
               end
             end
           end
