@@ -168,18 +168,18 @@ class CucumberChef < Thor
   end
 
 ################################################################################
-# TEARDOWN
+# DESTROY
 ################################################################################
 
-  desc "teardown [container]", "Teardown the cucumber-chef test lab in Amazon EC2 or a test lab [container] if specified."
+  desc "destroy [container]", "Destroy the cucumber-chef test lab in Amazon EC2 or a test lab [container] if specified."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
-  def teardown(*args)
+  def destroy(*args)
     boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new)
       if args.count == 0
-        if yes?(set_color("Are you sure you want to teardown your cucumber-chef test lab?", :red, true))
+        if yes?(set_color("Are you sure you want to destroy the test lab?", :red, true))
           count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
           puts
           puts(set_color("You have 5 seconds to abort!", :green, true))
@@ -198,7 +198,7 @@ class CucumberChef < Thor
         end
       else
         container = args[0]
-        if yes?(set_color("Are you sure you want to teardown the test lab containter '#{container}'?", :red, true))
+        if yes?(set_color("Are you sure you want to destroy the containter '#{container}'?", :red, true))
           count_down_colors = { 5 => :green, 4 => :yellow, 3 => :yellow, 2 => :red, 1 => :red }
           puts
           puts(set_color("You have 5 seconds to abort!", :green, true))
@@ -211,11 +211,9 @@ class CucumberChef < Thor
           puts(set_color("...BOOM!", :red, true))
           puts
 
-          test_lab.ssh.exec("nohup sudo pkill -9 -f cc-server")
-          test_lab.ssh.exec("nohup sudo BACKGROUND=yes cc-server #{Cucumber::Chef.external_ip}")
-          Cucumber::Chef.spinner do
-            ZTK::TCPSocketCheck.new(:host => test_lab.ip, :port => 8787, :data => "\n\n").wait
-          end
+          cc_server = Cucumber::Chef::Server.new(test_lab)
+          cc_server.up
+
           test_lab.drb.servers = Hash.new(nil)
           test_lab.drb.server_destroy(container)
         else
@@ -225,7 +223,7 @@ class CucumberChef < Thor
       end
 
     else
-      puts(set_color("Could not find a cucumber-chef test lab to teardown!", :red, true))
+      puts(set_color("Could not find a cucumber-chef test lab to destroy!", :red, true))
     end
     puts
 
@@ -318,6 +316,29 @@ class CucumberChef < Thor
 
     else
       puts(set_color("No cucumber-chef test labs available to ssh to!", :red, true))
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+# PS
+################################################################################
+
+  desc "ps [ps-options]", "Snapshot of the current cucumber-chef test lab container processes."
+  def ps(*args)
+    boot
+
+    puts
+    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+      puts(set_color("Getting container processes from cucumber-chef test lab...", :blue, true))
+      puts
+      puts(set_color("============================================================================", :bold))
+      test_lab.ssh.exec("lxc-ps --lxc -- #{args.join(" ")}")
+      print("\n")
     end
     puts
 
@@ -439,29 +460,6 @@ class CucumberChef < Thor
   end
 
 ################################################################################
-# PS
-################################################################################
-
-  desc "ps [ps-options]", "Snapshot of the current cucumber-chef test lab container processes."
-  def ps(*args)
-    boot
-
-    puts
-    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
-      puts(set_color("Getting container processes from cucumber-chef test lab...", :blue, true))
-      puts
-      puts(set_color("============================================================================", :bold))
-      test_lab.ssh.exec("lxc-ps --lxc -- #{args.join(" ")}")
-      print("\n")
-    end
-    puts
-
-  rescue Cucumber::Chef::Error => e
-    $logger.fatal { e.backtrace.join("\n") }
-    fatal(e)
-  end
-
-################################################################################
 # CREATE
 ################################################################################
 
@@ -485,34 +483,22 @@ class CucumberChef < Thor
   end
 
 ################################################################################
-# DEPRECIATED: INFO
+# DEPRECIATED TASKS
 ################################################################################
 
-  desc "info", "DEPRECIATED! - You should execute the 'status' task instead."
-  def info
-    puts
-    puts(set_color("The 'info' task is DEPRECIATED!  You should execute the 'status' task instead.", :red, true))
-    puts
-    status
+  depreciated_tasks = {
+    "teardown" => "You should execute the 'destroy' task instead.",
+    "info" => "You should execute the 'status' task instead.",
+    "test" => "You should execute 'cucumber' or 'rspec' directly."
+  }
 
-  rescue Cucumber::Chef::Error => e
-    $logger.fatal { e.backtrace.join("\n") }
-    fatal(e)
-  end
-
-################################################################################
-# DEPRECIATED: TEST
-################################################################################
-
-  desc "test", "DEPRECIATED! - You should execute 'cucumber' or 'rspec' directly."
-  def test
-    puts
-    puts(set_color("The test task is DEPRECIATED!  You should execute 'cucumber' or 'rspec' directly.", :red, true))
-    puts
-
-  rescue Cucumber::Chef::Error => e
-    $logger.fatal { e.backtrace.join("\n") }
-    fatal(e)
+  depreciated_tasks.each do |old_task, message|
+    desc old_task, "*DEPRECIATED* - #{message}"
+    define_method(old_task) do
+      puts
+      puts(set_color("The '#{old_task}' task is *DEPRECIATED* - #{message}", :red, true))
+      puts
+    end
   end
 
 ################################################################################
