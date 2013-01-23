@@ -25,7 +25,7 @@ module Cucumber
       class AWSError < Error; end
 
       class AWS
-        attr_accessor :stdout, :stderr, :stdin, :logger
+        attr_accessor :connection, :server, :stdout, :stderr, :stdin, :logger
 
         INVALID_STATES = %w(terminated pending).map(&:to_sym)
         RUNNING_STATES =  %w(running starting-up).map(&:to_sym)
