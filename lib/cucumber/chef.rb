@@ -50,6 +50,7 @@ module Cucumber
     autoload :Config, 'cucumber/chef/config'
     autoload :Provider, 'cucumber/chef/provider'
     autoload :Provisioner, 'cucumber/chef/provisioner'
+    autoload :Server, 'cucumber/chef/server'
     autoload :TestLab, 'cucumber/chef/test_lab'
 
     require 'cucumber/chef/utility'
