@@ -273,6 +273,28 @@ class CucumberChef < Thor
   end
 
 ################################################################################
+# RELOAD
+################################################################################
+
+  desc "reload", "Reload the cucumber-chef test lab"
+  def reload
+    boot
+
+    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
+      ZTK::Benchmark.bench("Reloading #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
+        test_lab.reload
+      end
+    else
+      raise Cucumber::Chef::Error, "We could not find a running test lab."
+    end
+    puts
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
 # STATUS
 ################################################################################
 

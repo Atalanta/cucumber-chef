@@ -29,7 +29,7 @@ module Cucumber
     class Provider
       attr_accessor :stdout, :stderr, :stdin, :logger
 
-      PROXY_METHODS = %w(create destroy up halt status id state username ip port chef_server_api chef_server_webui alive? dead? exists?)
+      PROXY_METHODS = %w(create destroy up halt reload status id state username ip port chef_server_api chef_server_webui alive? dead? exists?)
 
 ################################################################################
 

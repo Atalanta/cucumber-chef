@@ -143,6 +143,25 @@ module Cucumber
         end
 
 ################################################################################
+# RELOAD
+################################################################################
+
+        def reload
+          if (exists? && alive?)
+            if !@server.restart
+              raise AWSError, "Failed to reload the test lab!"
+            end
+          else
+            raise AWSError, "We could not find a running test lab."
+          end
+
+        rescue Exception => e
+          Cucumber::Chef.logger.fatal { e.message }
+          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          raise AWSError, e.message
+        end
+
+################################################################################
 
         def exists?
           !!@server

@@ -114,6 +114,23 @@ module Cucumber
         end
 
 ################################################################################
+# RELOAD
+################################################################################
+
+        def reload
+          if (exists? && alive?)
+            @env.cli("reload")
+          else
+            raise AWSError, "We could not find a running test lab."
+          end
+
+        rescue Exception => e
+          Cucumber::Chef.logger.fatal { e.message }
+          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          raise VagrantError, e.message
+        end
+
+################################################################################
 
         def exists?
           (@env.vms.count > 0)
