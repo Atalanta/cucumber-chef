@@ -303,8 +303,7 @@ class CucumberChef < Thor
   def ssh(*args)
     boot
 
-    puts
-    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
       if args.size == 0
         puts([set_color("Attempting SSH connection to cucumber-chef '", :blue, true), set_color("test lab", :cyan, true), set_color("'...", :blue, true)].join)
         test_lab.ssh.console
@@ -313,9 +312,8 @@ class CucumberChef < Thor
         puts([set_color("Attempting SSH connection to cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
         test_lab.proxy_ssh(container).console
       end
-
     else
-      puts(set_color("No cucumber-chef test labs available to ssh to!", :red, true))
+      raise Cucumber::Chef::Error, "We could not find a running test lab."
     end
     puts
 
@@ -332,13 +330,14 @@ class CucumberChef < Thor
   def ps(*args)
     boot
 
-    puts
-    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
       puts(set_color("Getting container processes from cucumber-chef test lab...", :blue, true))
       puts
       puts(set_color("============================================================================", :bold))
       test_lab.ssh.exec("lxc-ps --lxc -- #{args.join(" ")}")
       print("\n")
+    else
+      raise Cucumber::Chef::Error, "We could not find a running test lab."
     end
     puts
 
@@ -393,8 +392,7 @@ class CucumberChef < Thor
   def diagnose(container)
     boot
 
-    puts
-    if (test_lab = Cucumber::Chef::TestLab.new) && (test_lab.labs_running.count > 0)
+    if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
       puts([set_color("Attempting to collect diagnostic information on cucumber-chef container '", :blue, true), set_color(container, :cyan, true), set_color("'...", :blue, true)].join)
       if @options.strace?
         puts
@@ -409,6 +407,8 @@ class CucumberChef < Thor
         puts(set_color("============================================================================", :bold))
         test_lab.proxy_ssh(container).exec("[[ -e /var/log/chef/client.log ]] && tail -n #{@options.lines} /var/log/chef/client.log")
       end
+    else
+      raise Cucumber::Chef::Error, "We could not find a running test lab."
     end
     puts
 
@@ -442,16 +442,15 @@ class CucumberChef < Thor
       "lxc_user_home_dir" => Cucumber::Chef.lxc_user_home_dir,
       "lxc_identity" => Cucumber::Chef.lxc_identity
     }
-
-    puts
-
-    say(Cucumber::Chef::Config.configuration.to_yaml, :bold)
-
     max_key_length = details.collect{ |k,v| k.to_s.length }.max
+
+    puts("-" * 80)
+    say(Cucumber::Chef::Config.configuration.to_yaml, :bold)
+    puts("-" * 80)
     details.each do |key,value|
       puts("%#{max_key_length}s = %s" % [key.downcase, value.inspect])
     end
-
+    puts("-" * 80)
     puts
 
   rescue Cucumber::Chef::Error => e

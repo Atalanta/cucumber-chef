@@ -109,7 +109,7 @@ module Cucumber
         end
 
         def state
-          @vm.state
+          @vm.state.to_sym
         end
 
         def username

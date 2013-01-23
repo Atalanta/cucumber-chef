@@ -39,6 +39,8 @@ module Cucumber
 ################################################################################
 
       def ssh
+        dead? and raise TestLabError, "The test lab must be running in order to start an SSH session!"
+
         if (!defined?(@ssh) || @ssh.nil?)
           @ssh ||= ZTK::SSH.new
 
@@ -53,6 +55,8 @@ module Cucumber
 ################################################################################
 
       def proxy_ssh(container)
+        dead? and raise TestLabError, "The test lab must be running in order to start a proxy SSH session!"
+
         container = container.to_sym
         @proxy_ssh ||= Hash.new
         if (!defined?(@proxy_ssh[container]) || @proxy_ssh[container].nil?)
@@ -73,6 +77,8 @@ module Cucumber
 ################################################################################
 
       def drb
+        dead? and raise TestLabError, "The test lab must be running in order to start a Drb session!"
+
         if (!defined?(@drb) || @drb.nil?)
           @drb ||= DRbObject.new_with_uri("druby://#{self.ip}:8787")
           @drb and DRb.start_service

@@ -178,7 +178,7 @@ module Cucumber
         end
 
         def state
-          labs_running.first.state
+          labs_running.first.state.to_sym
         end
 
         def username

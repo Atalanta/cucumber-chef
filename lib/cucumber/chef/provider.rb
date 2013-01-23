@@ -29,7 +29,7 @@ module Cucumber
     class Provider
       attr_accessor :stdout, :stderr, :stdin, :logger
 
-      PROXY_METHODS = %w(create destroy up down status lab_exists? labs labs_running labs_shutdown id state username ip port chef_server_webui)
+      PROXY_METHODS = %w(create destroy up down status lab_exists? labs labs_running labs_shutdown id state username ip port chef_server_api chef_server_webui alive? dead?)
 
 ################################################################################
 
@@ -53,6 +53,14 @@ module Cucumber
 
       def chef_server_api
         "http://#{ip}:4000/"
+      end
+
+      def alive?
+        (self.state == :running)
+      end
+
+      def dead?
+        (self.state != :running)
       end
 
       def status
