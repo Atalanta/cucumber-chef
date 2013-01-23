@@ -40,7 +40,7 @@ module Cucumber
       def up
         user = Cucumber::Chef.lab_user
         home_dir = Cucumber::Chef.lab_user_home_dir
-        provider = Cucumber::Chef::Config[:provider].to_s
+        provider = Cucumber::Chef::Config.provider.to_s
         @test_lab.ssh.exec("sudo mkdir -p #{File.join(home_dir, ".cucumber-chef", provider)}")
         @test_lab.ssh.exec("sudo cp -f #{File.join(home_dir, ".chef", "knife.rb")} #{File.join(home_dir, ".cucumber-chef", provider, "knife.rb")}")
         @test_lab.ssh.exec("sudo chown -R #{user}:#{user} #{File.join(home_dir, ".cucumber-chef")}")

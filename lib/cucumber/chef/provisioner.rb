@@ -41,7 +41,7 @@ module Cucumber
         @ssh.config.host_name = @test_lab.ip
         @ssh.config.port = @test_lab.port
         @ssh.config.user = Cucumber::Chef.lab_user
-        @ssh.config.keys = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
+        @ssh.config.keys = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:identity_file]
 
         # @command = Cucumber::Chef::Command.new(@stdout, @stderr, @stdin)
 
@@ -80,7 +80,7 @@ module Cucumber
       def bootstrap(template_file)
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config[:user]
 
-        @stdout.print("Bootstrapping #{Cucumber::Chef::Config[:provider].upcase} instance...")
+        @stdout.print("Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance...")
         Cucumber::Chef.spinner do
           attributes = {
             "run_list" => "role[test_lab]",
@@ -115,7 +115,7 @@ module Cucumber
       def download_chef_credentials
         @stdout.print("Downloading chef-server credentials...")
         Cucumber::Chef.spinner do
-          local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s)
+          local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
 
           files = [ "#{Cucumber::Chef::Config[:user]}.pem", "validation.pem" ]
@@ -131,7 +131,7 @@ module Cucumber
       def download_proxy_ssh_credentials
         @stdout.print("Downloading container SSH credentials...")
         Cucumber::Chef.spinner do
-          local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s)
+          local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
           files = { "id_rsa" => "id_rsa-#{@ssh.config.user}" }

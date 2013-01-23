@@ -46,8 +46,8 @@ describe Cucumber::Chef::Config do
       Cucumber::Chef::Config[:mode].should == :user
     end
 
-    it "Cucumber::Chef::Config[:provider] defaults to :aws" do
-      Cucumber::Chef::Config[:provider].should == :aws
+    it "Cucumber::Chef::Config.provider defaults to :aws" do
+      Cucumber::Chef::Config.provider.should == :aws
     end
 
     context "Cucumber::Chef::Config[:aws] default values" do
@@ -112,10 +112,10 @@ describe Cucumber::Chef::Config do
   describe "when configuration is valid" do
 
     it "should allow changing providers" do
-      Cucumber::Chef::Config[:provider] = :aws
+      Cucumber::Chef::Config.provider = :aws
       expect{ Cucumber::Chef::Config.verify_keys }.to_not raise_error(Cucumber::Chef::ConfigError)
 
-      Cucumber::Chef::Config[:provider] = :vagrant
+      Cucumber::Chef::Config.provider = :vagrant
       expect{ Cucumber::Chef::Config.verify_keys }.to_not raise_error(Cucumber::Chef::ConfigError)
     end
 
@@ -131,7 +131,7 @@ describe Cucumber::Chef::Config do
     context "when provider is aws" do
       it "should verify the configuration" do
         user = ENV['OPSCODE_USER'] || ENV['USER']
-        Cucumber::Chef::Config[:provider] = :aws
+        Cucumber::Chef::Config.provider = :aws
         Cucumber::Chef::Config[:aws][:aws_access_key_id] = ENV['AWS_ACCESS_KEY_ID']
         Cucumber::Chef::Config[:aws][:aws_secret_access_key] = ENV['AWS_SECRET_ACCESS_KEY']
         Cucumber::Chef::Config[:aws][:aws_ssh_key_id] = ENV['AWS_SSH_KEY_ID'] || user
@@ -149,7 +149,7 @@ describe Cucumber::Chef::Config do
   describe "when configuration is invalid" do
 
     it "should complain about missing configuration keys" do
-      Cucumber::Chef::Config[:provider] = nil
+      Cucumber::Chef::Config.provider = nil
       expect{ Cucumber::Chef::Config.verify_keys }.to raise_error(Cucumber::Chef::ConfigError)
 
       Cucumber::Chef::Config[:mode] = nil
@@ -157,7 +157,7 @@ describe Cucumber::Chef::Config do
     end
 
     it "should complain about invalid configuration key values" do
-      Cucumber::Chef::Config[:provider] = :awss
+      Cucumber::Chef::Config.provider = :awss
       expect{ Cucumber::Chef::Config.verify_keys }.to raise_error(Cucumber::Chef::ConfigError)
 
       Cucumber::Chef::Config[:mode] = :userr
@@ -167,7 +167,7 @@ describe Cucumber::Chef::Config do
     describe "when provider is aws" do
 
       it "should complain about missing provider configuration keys" do
-        Cucumber::Chef::Config[:provider] = :aws
+        Cucumber::Chef::Config.provider = :aws
         expect{ Cucumber::Chef::Config.verify_provider_keys }.to raise_error(Cucumber::Chef::ConfigError)
       end
 

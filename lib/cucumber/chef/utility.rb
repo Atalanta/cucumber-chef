@@ -149,7 +149,7 @@ module Cucumber
 ################################################################################
 
       def knife_rb
-        knife_rb = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "knife.rb")
+        knife_rb = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "knife.rb")
         FileUtils.mkdir_p(File.dirname(knife_rb))
         knife_rb
       end
@@ -157,7 +157,7 @@ module Cucumber
 ################################################################################
 
       def servers_bin
-        servers_bin = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "servers.bin")
+        servers_bin = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "servers.bin")
         FileUtils.mkdir_p(File.dirname(servers_bin))
         servers_bin
       end
@@ -167,11 +167,11 @@ module Cucumber
 ################################################################################
 
       def bootstrap_user
-        Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lab_user]
       end
 
       def bootstrap_identity
-        bootstrap_identity = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:identity_file]
+        bootstrap_identity = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:identity_file]
         File.exists?(bootstrap_identity) && File.chmod(0400, bootstrap_identity)
         bootstrap_identity
       end
@@ -181,16 +181,16 @@ module Cucumber
 ################################################################################
 
       def lab_user
-        Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lab_user]
       end
 
       def lab_user_home_dir
-        user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lab_user]
+        user = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lab_user]
         ((user == "root") ? "/root" : "/home/#{user}")
       end
 
       def lab_identity
-        lab_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "id_rsa-#{lab_user}")
+        lab_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lab_user}")
         File.exists?(lab_identity) && File.chmod(0400, lab_identity)
         lab_identity
       end
@@ -200,16 +200,16 @@ module Cucumber
 ################################################################################
 
       def lxc_user
-        Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lxc_user]
       end
 
       def lxc_user_home_dir
-        user = Cucumber::Chef::Config[Cucumber::Chef::Config[:provider]][:lxc_user]
+        user = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lxc_user]
         ((user == "root") ? "/root" : "/home/#{user}")
       end
 
       def lxc_identity
-        lxc_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config[:provider].to_s, "id_rsa-#{lab_user}")
+        lxc_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lab_user}")
         File.exists?(lxc_identity) && File.chmod(0400, lxc_identity)
         lxc_identity
       end

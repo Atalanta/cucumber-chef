@@ -185,7 +185,7 @@ class CucumberChef < Thor
           puts("BOOM!")
           puts
 
-          print("Destroy #{Cucumber::Chef::Config[:provider].upcase} instance '#{test_lab.id}' ")
+          print("Destroy #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ")
           bm = ::Benchmark.realtime do
             Cucumber::Chef.spinner do
               test_lab.destroy
@@ -245,7 +245,7 @@ class CucumberChef < Thor
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.dead?
-      print("Booting #{Cucumber::Chef::Config[:provider].upcase} instance '#{test_lab.id}' ")
+      print("Booting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ")
       bm = ::Benchmark.realtime do
         Cucumber::Chef.spinner do
           test_lab.up
@@ -272,7 +272,7 @@ class CucumberChef < Thor
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
-      print("Halting #{Cucumber::Chef::Config[:provider].upcase} instance '#{test_lab.id}' ")
+      print("Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ")
       bm = ::Benchmark.realtime do
         Cucumber::Chef.spinner do
           test_lab.halt

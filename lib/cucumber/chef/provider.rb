@@ -37,7 +37,7 @@ module Cucumber
         @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
         @stdout.sync = true if @stdout.respond_to?(:sync=)
 
-        @provider = case Cucumber::Chef::Config[:provider]
+        @provider = case Cucumber::Chef::Config.provider
         when :aws then
           Cucumber::Chef::Provider::AWS.new(@stdout, @stderr, @stdin, @logger)
         when :vagrant then
