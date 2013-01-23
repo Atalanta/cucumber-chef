@@ -46,8 +46,8 @@ module Cucumber
           )
           ensure_security_group
 
-          @servers ||= @connection.servers
-          @server = labs.first
+          @server = filter_servers(@connection.servers, VALID_STATES)
+          @server.nil? and raise AWSError, "We could not locate an instance in a valid state!"
         end
 
 ################################################################################
@@ -86,8 +86,7 @@ module Cucumber
             end
           end
 
-          @servers = @connection.servers
-          @server = labs.first
+          @server = filter_servers(@connection.servers, VALID_STATES)
 
           self
 
@@ -210,7 +209,7 @@ module Cucumber
           results.each do |server|
             Cucumber::Chef.logger.debug("results") { "id=#{server.id.inspect}, state=#{server.state.inspect}" }
           end
-          results
+          results.first
         end
 
 ################################################################################
