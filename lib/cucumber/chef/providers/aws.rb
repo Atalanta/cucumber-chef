@@ -148,16 +148,16 @@ module Cucumber
 
 ################################################################################
 
+        def exists?
+          !!@server
+        end
+
         def alive?
-          (RUNNING_STATES.include?(self.state) rescue false)
+          (exists? && RUNNING_STATES.include?(self.state))
         end
 
         def dead?
-          (SHUTDOWN_STATES.include?(self.state) rescue true)
-        end
-
-        def exists?
-          !!@server
+          (exists? && SHUTDOWN_STATES.include?(self.state))
         end
 
 ################################################################################
