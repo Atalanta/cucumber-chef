@@ -124,6 +124,8 @@ class CucumberChef < Thor
   end
 
 ################################################################################
+# SETUP
+################################################################################
 
   desc "setup", "Setup cucumber-chef test lab in Amazon EC2"
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
@@ -165,6 +167,8 @@ class CucumberChef < Thor
     fatal(e.message)
   end
 
+################################################################################
+# TEARDOWN
 ################################################################################
 
   desc "teardown [container]", "Teardown the cucumber-chef test lab in Amazon EC2 or a test lab [container] if specified."
@@ -231,11 +235,13 @@ class CucumberChef < Thor
   end
 
 ################################################################################
+# TEST
+################################################################################
 
-  desc "test", "depreciated"
+  desc "test", "DEPRECIATED!"
   def test
     puts
-    puts(set_color("The test task is depreciated!  You should execute cucumber directly.", :red, true))
+    puts(set_color("The test task is DEPRECIATED!  You should execute cucumber directly.", :red, true))
     puts
 
   rescue Cucumber::Chef::Error => e
@@ -243,6 +249,8 @@ class CucumberChef < Thor
     fatal(e)
   end
 
+################################################################################
+# UP
 ################################################################################
 
   desc "up", "Startup the cucumber-chef test lab"
@@ -263,6 +271,8 @@ class CucumberChef < Thor
   end
 
 ################################################################################
+# DOWN
+################################################################################
 
   desc "down", "Shutdown the cucumber-chef test lab"
   def down
@@ -281,6 +291,8 @@ class CucumberChef < Thor
     fatal(e)
   end
 
+################################################################################
+# SSH
 ################################################################################
 
   desc "ssh [container]", "SSH to cucumber-chef test lab or [container] if specified."
@@ -309,6 +321,8 @@ class CucumberChef < Thor
     fatal(e)
   end
 
+################################################################################
+# LOG
 ################################################################################
 
   desc "log", "Streams the cucumber-chef local and test lab logs to the terminal."
@@ -343,6 +357,8 @@ class CucumberChef < Thor
   end
 
 ################################################################################
+# DIAGNOSE
+################################################################################
 
   desc "diagnose <container>", "Provide diagnostics from the chef-client on the specified container."
   method_option :strace, :type => :boolean, :desc => "output the chef-client 'chef-stacktrace.out'", :aliases => "-s", :default => true
@@ -375,6 +391,8 @@ class CucumberChef < Thor
     fatal(e)
   end
 
+################################################################################
+# DISPLAYCONFIG
 ################################################################################
 
   desc "displayconfig", "Display the current cucumber-chef config."
@@ -412,6 +430,8 @@ class CucumberChef < Thor
   end
 
 ################################################################################
+# PS
+################################################################################
 
   desc "ps [ps-options]", "Snapshot of the current cucumber-chef test lab container processes."
   def ps(*args)
@@ -433,15 +453,17 @@ class CucumberChef < Thor
   end
 
 ################################################################################
+# STATUS
+################################################################################
 
-  desc "info", "Display information about the current test lab."
+  desc "status", "Displays the current status of the test lab."
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
-  def info
+  def status
     boot
 
     puts
     if (test_lab = Cucumber::Chef::TestLab.new)
-      test_lab.info
+      test_lab.status
     end
     puts
 
@@ -450,6 +472,20 @@ class CucumberChef < Thor
     fatal(e.message)
   end
 
+  desc "info", "DEPRECIATED!"
+  def info
+    puts
+    puts(set_color("The 'info' task is DEPRECIATED!  You should execute the 'status' task instead.", :red, true))
+    puts
+    status
+
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
+  end
+
+################################################################################
+# CREATE
 ################################################################################
 
   desc "create <project>" , "Create a project template for testing an infrastructure."
