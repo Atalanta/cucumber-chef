@@ -354,13 +354,9 @@ class CucumberChef < Thor
   def log
     boot
 
-    if ($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.alive?
+    if ($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.exists? && $test_lab.alive?
       $tail_thread_remote = Thread.new do
         $test_lab.ssh.exec("tail -n 0 -f /home/#{$test_lab.ssh.config.user}/.cucumber-chef/cucumber-chef.log")
-
-        Kernel.at_exit do
-          $test_lab.ssh.close
-        end
       end
 
       log_file = File.open(Cucumber::Chef.log_file, "r")
@@ -374,11 +370,13 @@ class CucumberChef < Thor
       end
 
       $tail_thread_remote.join
+    else
+      raise Cucumber::Chef::Error, "We could not find a running test lab."
     end
 
-    Kernel.at_exit do
-      $tail_thread_remote.kill
-    end
+  rescue Cucumber::Chef::Error => e
+    $logger.fatal { e.backtrace.join("\n") }
+    fatal(e)
   end
 
 ################################################################################
