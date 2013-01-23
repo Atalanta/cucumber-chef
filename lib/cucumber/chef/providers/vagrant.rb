@@ -117,16 +117,16 @@ module Cucumber
 
 ################################################################################
 
+        def exists?
+          (@env.vms.count > 0)
+        end
+
         def alive?
           (RUNNING_STATES.include?(self.state) rescue false)
         end
 
         def dead?
           (SHUTDOWN_STATES.include?(self.state) rescue true)
-        end
-
-        def exists?
-          (@env.vms.count > 0)
         end
 
 ################################################################################
