@@ -44,13 +44,13 @@ module Cucumber
 
         def create
           @stdout.print("Waiting for instance...")
-          Cucumber::Chef.spinner do
+          ::ZTK::Spinner.spin do
             @env.cli("up")
           end
           @stdout.puts("done.\n")
 
           @stdout.print("Waiting for SSHD...")
-          Cucumber::Chef.spinner do
+          ::ZTK::Spinner.spin do
             ZTK::TCPSocketCheck.new(:host => self.ip, :port => 22, :wait => 120).wait
           end
           @stdout.puts("done.\n")

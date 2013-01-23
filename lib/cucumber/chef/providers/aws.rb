@@ -66,7 +66,7 @@ module Cucumber
             }
             if (@server = @connection.servers.create(server_definition))
               @stdout.print("Waiting for instance...")
-              Cucumber::Chef.spinner do
+              ::ZTK::Spinner.spin do
                 @server.wait_for { ready? }
               end
               @stdout.puts("done.\n")
@@ -74,7 +74,7 @@ module Cucumber
               tag_server
 
               @stdout.print("Waiting for 20 seconds...")
-              Cucumber::Chef.spinner do
+              ::ZTK::Spinner.spin do
                 sleep(20)
               end
               @stdout.print("done.\n")
@@ -83,7 +83,7 @@ module Cucumber
 
           if @server
             @stdout.print("Waiting for SSHD...")
-            Cucumber::Chef.spinner do
+            ::ZTK::Spinner.spin do
               ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
             end
             @stdout.puts("done.\n")

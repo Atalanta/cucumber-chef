@@ -187,7 +187,7 @@ class CucumberChef < Thor
 
           print("Destroy #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ")
           bm = ::Benchmark.realtime do
-            Cucumber::Chef.spinner do
+            ZTK::Spinner.spin do
               test_lab.destroy
             end
           end
@@ -215,7 +215,7 @@ class CucumberChef < Thor
           test_lab.drb.servers = Hash.new(nil)
           print("Destroy container '#{container}' ")
           bm = ::Benchmark.realtime do
-            Cucumber::Chef.spinner do
+            ::ZTK::Spinner.spin do
               test_lab.drb.server_destroy(container)
             end
           end
