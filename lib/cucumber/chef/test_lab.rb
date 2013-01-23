@@ -107,8 +107,10 @@ module Cucumber
 
       def method_missing(method_name, *method_args)
         if Cucumber::Chef::Provider::PROXY_METHODS.include?(method_name.to_s)
-          Cucumber::Chef.logger.debug { "test_lab: #{method_name} #{method_args.inspect}" }
-          @provider.send(method_name.to_sym, *method_args)
+          result = @provider.send(method_name.to_sym, *method_args)
+          splat = [method_name, *method_args].flatten.compact
+          Cucumber::Chef.logger.debug { "test_lab: #{splat.inspect} -> #{result.inspect}" }
+          result
         else
           super(method_name, *method_args)
         end
