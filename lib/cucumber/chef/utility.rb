@@ -112,6 +112,14 @@ module Cucumber
 
 ################################################################################
 
+      def artifacts_dir
+        artifacts_dir = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "artifacts")
+        FileUtils.mkdir_p(File.dirname(artifacts_dir))
+        artifacts_dir
+      end
+
+################################################################################
+
       def log_file
         log_file = File.join(Cucumber::Chef.home_dir, "cucumber-chef.log")
         FileUtils.mkdir_p(File.dirname(log_file))
