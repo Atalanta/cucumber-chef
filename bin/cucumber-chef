@@ -185,13 +185,9 @@ class CucumberChef < Thor
           puts("BOOM!")
           puts
 
-          print("Destroy #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}' ")
-          bm = ::Benchmark.realtime do
-            ZTK::Spinner.spin do
-              test_lab.destroy
-            end
+          ZTK::Benchmark.bench("Destroy #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
+            test_lab.drb.server_destroy(container)
           end
-          puts("completed in %0.4f seconds.\n" % bm)
         else
           puts
           puts(set_color("Whew! That was close!", :green, true))
@@ -213,13 +209,9 @@ class CucumberChef < Thor
           cc_server.up
 
           test_lab.drb.servers = Hash.new(nil)
-          print("Destroy container '#{container}' ")
-          bm = ::Benchmark.realtime do
-            ::ZTK::Spinner.spin do
-              test_lab.drb.server_destroy(container)
-            end
+          ZTK::Benchmark.bench("Destroy container '#{container}'") do
+            test_lab.drb.server_destroy(container)
           end
-          puts("completed in %0.4f seconds.\n" % bm)
         else
           puts
           puts(set_color("Whew! That was close!", :green, true))

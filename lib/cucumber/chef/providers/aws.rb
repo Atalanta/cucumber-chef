@@ -69,28 +69,20 @@ module Cucumber
               :identity_file => Cucumber::Chef::Config.aws[:identity_file]
             }
             if (@server = @connection.servers.create(server_definition))
-              @stdout.print("Waiting for instance...")
-              ::ZTK::Spinner.spin do
+              ZTK::Benchmark.bench("Waiting for EC2 instance", @stdout) do
                 @server.wait_for { ready? }
               end
-              @stdout.puts("done.\n")
-
               tag_server
-
-              @stdout.print("Waiting for 20 seconds...")
-              ::ZTK::Spinner.spin do
+              ZTK::Benchmark.bench("Waiting for 20 seconds", @stdout) do
                 sleep(20)
               end
-              @stdout.print("done.\n")
             end
           end
 
           if @server
-            @stdout.print("Waiting for SSHD...")
-            ::ZTK::Spinner.spin do
+            ZTK::Benchmark.bench("Waiting for SSHD", @stdout) do
               ZTK::TCPSocketCheck.new(:host => @server.public_ip_address, :port => 22, :wait => 120).wait
             end
-            @stdout.puts("done.\n")
           end
 
           @servers = @connection.servers
