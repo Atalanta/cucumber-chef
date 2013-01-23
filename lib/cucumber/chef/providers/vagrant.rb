@@ -39,10 +39,10 @@ module Cucumber
         end
 
 ################################################################################
+# CREATE
+################################################################################
 
         def create
-          @stdout.puts("Provisioning cucumber-chef test lab platform.")
-
           @stdout.print("Waiting for instance...")
           Cucumber::Chef.spinner do
             @env.cli("up")
@@ -56,18 +56,50 @@ module Cucumber
           @stdout.puts("done.\n")
 
           self
+
+        rescue Exception => e
+          Cucumber::Chef.logger.fatal { e.message }
+          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          raise VagrantError, e.message
         end
+
+################################################################################
+# DESTROY
+################################################################################
 
         def destroy
           @env.cli("destroy", "--force")
+
+        rescue Exception => e
+          Cucumber::Chef.logger.fatal { e.message }
+          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          raise VagrantError, e.message
         end
+
+################################################################################
+# UP
+################################################################################
 
         def up
           @env.cli("up")
+
+        rescue Exception => e
+          Cucumber::Chef.logger.fatal { e.message }
+          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          raise VagrantError, e.message
         end
+
+################################################################################
+# DOWN
+################################################################################
 
         def down
           @env.cli("halt")
+
+        rescue Exception => e
+          Cucumber::Chef.logger.fatal { e.message }
+          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          raise VagrantError, e.message
         end
 
 ################################################################################

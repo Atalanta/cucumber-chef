@@ -48,6 +48,8 @@ module Cucumber
         end
 
 ################################################################################
+# CREATE
+################################################################################
 
         def create
           if (lab_exists? && (@server = labs_running.first))
@@ -63,8 +65,6 @@ module Cucumber
               :identity_file => Cucumber::Chef::Config[:aws][:identity_file]
             }
             if (@server = @connection.servers.create(server_definition))
-              @stdout.puts("Provisioning cucumber-chef test lab platform.")
-
               @stdout.print("Waiting for instance...")
               Cucumber::Chef.spinner do
                 @server.wait_for { ready? }
@@ -98,16 +98,14 @@ module Cucumber
         end
 
 ################################################################################
+# DESTROY
+################################################################################
 
         def destroy
           if ((l = labs).count > 0)
-            @stdout.puts("Destroying Servers:")
             l.each do |server|
-              @stdout.puts("  * #{server.public_ip_address}")
               server.destroy
             end
-          else
-            @stdout.puts("There are no cucumber-chef test labs to destroy!")
           end
 
         rescue Exception => e
@@ -116,6 +114,8 @@ module Cucumber
           raise AWSError, e.message
         end
 
+################################################################################
+# UP
 ################################################################################
 
         def up
@@ -150,6 +150,8 @@ module Cucumber
           raise AWSError, e.message
         end
 
+################################################################################
+# DOWN
 ################################################################################
 
         def down
