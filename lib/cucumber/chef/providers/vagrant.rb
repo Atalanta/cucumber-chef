@@ -51,7 +51,7 @@ module Cucumber
 
           @stdout.print("Waiting for SSHD...")
           Cucumber::Chef.spinner do
-            ZTK::TCPSocketCheck.new(:host => self.public_ip, :port => 22, :wait => 120).wait
+            ZTK::TCPSocketCheck.new(:host => self.ip, :port => 22, :wait => 120).wait
           end
           @stdout.puts("done.\n")
 
