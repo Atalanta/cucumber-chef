@@ -374,7 +374,7 @@ class CucumberChef < Thor
   def log
     boot
 
-    if ($test_lab = Cucumber::Chef::TestLab.new) && ($test_lab.labs_running.count > 0)
+    if ($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.alive?
       $tail_thread_remote = Thread.new do
         $test_lab.ssh.exec("tail -n 0 -f /home/#{$test_lab.ssh.config.user}/.cucumber-chef/cucumber-chef.log")
 
