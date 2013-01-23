@@ -29,7 +29,7 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   session = table.hashes.first
   lambda {
 
-    @connection and !@connection.ssh.closed? and @connection.ssh.close
+    @connection and @connection.ssh.shutdown!
     @connection = ZTK::SSH.new
 
     @connection.config.proxy_host_name = $test_lab.ip
