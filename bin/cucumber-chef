@@ -185,7 +185,7 @@ class CucumberChef < Thor
           puts("BOOM!")
           puts
 
-          ZTK::Benchmark.bench("Destroy #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
+          ZTK::Benchmark.bench(:message => "Destroy #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'", :mark => "completed in %0.4f seconds.") do
             test_lab.destroy
           end
         else
@@ -204,13 +204,13 @@ class CucumberChef < Thor
           puts("BOOM!")
           puts
 
-          ZTK::Benchmark.bench("Start cc-server") do
+          ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
             cc_server = Cucumber::Chef::Server.new(test_lab)
             cc_server.up(:silence => true)
           end
 
           args.each do |container|
-            ZTK::Benchmark.bench("Destroy container '#{container}'") do
+            ZTK::Benchmark.bench(:message => "Destroy container '#{container}'", :mark => "completed in %0.4f seconds.") do
               test_lab.drb.load_containers
               test_lab.drb.server_destroy(container)
               test_lab.drb.containers.delete(container)
@@ -243,7 +243,7 @@ class CucumberChef < Thor
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.dead?
-      ZTK::Benchmark.bench("Booting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
+      ZTK::Benchmark.bench(:message => "Booting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'", :mark => "completed in %0.4f seconds.") do
         test_lab.up
       end
     else
@@ -265,7 +265,7 @@ class CucumberChef < Thor
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
-      ZTK::Benchmark.bench("Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
+      ZTK::Benchmark.bench(:message => "Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'", :mark => "completed in %0.4f seconds.") do
         test_lab.halt
       end
     else
@@ -287,7 +287,7 @@ class CucumberChef < Thor
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
-      ZTK::Benchmark.bench("Reloading #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'") do
+      ZTK::Benchmark.bench(:message => "Reloading #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'", :mark => "completed in %0.4f seconds.") do
         test_lab.reload
       end
     else

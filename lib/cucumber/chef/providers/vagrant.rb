@@ -48,7 +48,7 @@ module Cucumber
 ################################################################################
 
         def create
-          ZTK::Benchmark.bench("Creating #{Cucumber::Chef::Config.provider.upcase} instance", :stdout => @stdout) do
+          ZTK::Benchmark.bench(:message => "Creating #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
             @env.cli("up")
             ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
           end
