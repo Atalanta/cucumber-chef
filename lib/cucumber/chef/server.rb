@@ -52,10 +52,10 @@ module Cucumber
         @server_thread = Thread.new do
           self.down
 
-          destroy = (ENV['DESTROY'] == '1' ? "DESTROY='1'" : nil)
+          purge = (ENV['PURGE'] == '1' ? "PURGE='1'" : nil)
           verbose = (ENV['VERBOSE'] == '1' ? "VERBOSE='1'" : nil)
           log_level = ((!ENV['LOG_LEVEL'].nil? && !ENV['LOG_LEVEL'].empty?) ? "LOG_LEVEL=#{ENV['LOG_LEVEL'].inspect}" : nil)
-          command = ["sudo", destroy, verbose, log_level, "cc-server", Cucumber::Chef.external_ip].compact.join(" ")
+          command = ["sudo", purge, verbose, log_level, "cc-server", Cucumber::Chef.external_ip].compact.join(" ")
 
           @test_lab.ssh.exec(command, options)
         end
@@ -80,16 +80,6 @@ module Cucumber
         # store the current scenario here; espcially since I don't know a better way to get at this information
         # we use various aspects of the scenario to name our artifacts
         $scenario = scenario
-
-        # cleanup previous lxc containers if asked
-        if ENV['DESTROY']
-          Cucumber::Chef.logger.info("'containers' are being destroyed")
-          @test_lab.drb.containers.each do |name, value|
-            @test_lab.drb.server_destroy(name)
-          end
-        else
-          Cucumber::Chef.logger.info("'containers' are being persisted")
-        end
 
         @test_lab.drb.load_containers
         @test_lab.drb.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
