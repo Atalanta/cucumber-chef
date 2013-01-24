@@ -29,6 +29,12 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
+  def server_delete(name)
+    @containers.delete(name)
+  end
+
+################################################################################
+
   def server_set_attributes(name, attributes={})
     @containers[name].merge!(attributes)
   end

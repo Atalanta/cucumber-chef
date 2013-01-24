@@ -213,7 +213,7 @@ class CucumberChef < Thor
             ZTK::Benchmark.bench(:message => "Destroy container '#{container}'", :mark => "completed in %0.4f seconds.") do
               test_lab.drb.load_containers
               test_lab.drb.server_destroy(container)
-              test_lab.drb.containers.delete(container)
+              test_lab.drb.server_delete(container)
               test_lab.drb.save_containers
             end
           end
