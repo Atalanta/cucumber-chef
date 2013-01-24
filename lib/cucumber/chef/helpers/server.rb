@@ -42,20 +42,20 @@ module Cucumber::Chef::Helpers::Server
 ################################################################################
 
   def server_create(name)
-    attributes = (@containers[name] || {})
-    if (@containers[name] && @containers[name][:persist])
-      logger.info { "Using existing attributes for container {#{name.inspect} => #{server_tag(name)}}." }
-    else
-      # if this is a new or non-persistent container destroy it
-      server_destroy(name)
-      attributes = { :ip => generate_ip,
-                     :mac => generate_mac,
-                     :persist => true,
-                     :distro => "ubuntu",
-                     :release => "lucid",
-                     :arch => detect_arch(attributes[:distro] || "ubuntu") }.merge(attributes)
-    end
-    @containers[name] = attributes
+    server_init(name)
+
+    # if this is a new or non-persistent container destroy it
+    server_destroy(name) if !@containers[name][:persist]
+
+    attributes = @containers[name]
+    @containers[name] = {
+      :ip => generate_ip,
+      :mac => generate_mac,
+      :persist => true,
+      :distro => "ubuntu",
+      :release => "lucid",
+      :arch => detect_arch(attributes[:distro] || "ubuntu")
+    }.merge(attributes)
 
     if server_running?(name)
       logger.info { "Container '#{name}' is already running." }
