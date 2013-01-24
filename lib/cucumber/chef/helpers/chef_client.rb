@@ -55,7 +55,7 @@ module Cucumber::Chef::Helpers::ChefClient
     chef_config_client(name)
 
     logger.info { "Removing artifacts #{Cucumber::Chef::Config[:artifacts].values.collect{|z| "'#{z}'" }.join(' ')}." }
-    (command_run_remote(name, "/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}") rescue nil)
+    (command_run_chroot(name, "/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}") rescue nil)
 
     logger.info { "Running chef client on container '#{name}'." }
 
