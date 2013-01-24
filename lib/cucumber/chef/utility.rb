@@ -261,31 +261,43 @@ module Cucumber
           $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
           Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
-          headers = {
-            "program" => $0.to_s.inspect,
+          dependencies = {
             "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
-            "uname" => %x(uname -a).chomp.strip.inspect,
-            "chef_repo" => chef_repo.inspect,
             "chef_version" => ::Chef::VERSION.inspect,
             "vagrant_version" => ::Vagrant::VERSION.inspect,
             "fog_version" => ::Fog::VERSION.inspect,
-            "log_file" => log_file.inspect,
-            # "config_rb" => config_rb,
-            # "knife_rb" => knife_rb,
-            "containers_bin" => containers_bin.inspect,
             "ruby_version" => RUBY_VERSION.inspect,
             "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
-            "ruby_platform" => RUBY_PLATFORM.inspect
+            "ruby_platform" => RUBY_PLATFORM.inspect,
+            "ztk_version" => ::ZTK::VERSION.inspect,
+            "cucumber_version" => ::Cucumber::VERSION.inspect
           }
           if RUBY_VERSION >= "1.9"
-            headers.merge!("ruby_engine" => RUBY_ENGINE.inspect)
+            dependencies.merge!("ruby_engine" => RUBY_ENGINE.inspect)
           end
-          max_key_length = headers.keys.collect{ |key| key.to_s.length }.max
+
+          details = {
+            "program" => $0.to_s.inspect,
+            "uname" => %x(uname -a).chomp.strip.inspect,
+            "chef_repo" => chef_repo.inspect,
+            "log_file" => log_file.inspect,
+            "config_rb" => config_rb.inspect,
+            "knife_rb" => knife_rb.inspect,
+            "containers_bin" => containers_bin.inspect
+          }
+
+          max_key_length = [dependencies.keys.collect{ |key| key.to_s.length }.max, details.keys.collect{ |key| key.to_s.length }.max].max + 2
 
           $logger.info { ("=" * 80) }
-          headers.sort.each do |key, value|
-            $logger.info { "%#{max_key_length}s: %s" % [ key.upcase, value.to_s ] }
+          details.sort.each do |key, value|
+            $logger.info { " %s%s: %s" % [ key.upcase, '.' * (max_key_length - key.length), value.to_s ] }
           end
+          $logger.info { ("-" * (max_key_length * 2)) }
+          dependencies.sort.each do |key, value|
+            $logger.info { " %s%s: %s" % [ key.upcase, '.' * (max_key_length - key.length), value.to_s ] }
+          end
+          $logger.info { ("-" * (max_key_length * 2)) }
+
         end
 
         $logger
