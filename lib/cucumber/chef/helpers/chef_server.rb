@@ -100,7 +100,7 @@ module Cucumber::Chef::Helpers::ChefServer
     items.each do |item|
       next if File.directory?(item)
 
-      item_name = %w( json rb ).collect{ |ext| (item =~ /#{ext}/ ? File.basename(item, ".#{ext}") : nil) }.compact.first
+      item_name = %w(json rb).collect{ |ext| (item =~ /#{ext}/ ? File.basename(item, ".#{ext}") : nil) }.compact.first
       item_path = File.basename(item)
       databag_item_path = File.expand_path(File.join(databag_path, item_path))
 
