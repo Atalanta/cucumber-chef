@@ -37,7 +37,7 @@ module Cucumber
 
 ################################################################################
 
-      def up
+      def up(options={})
         user = Cucumber::Chef.lab_user
         home_dir = Cucumber::Chef.lab_user_home_dir
         provider = Cucumber::Chef::Config.provider.to_s
@@ -57,7 +57,7 @@ module Cucumber
           log_level = ((!ENV['LOG_LEVEL'].nil? && !ENV['LOG_LEVEL'].empty?) ? "LOG_LEVEL=#{ENV['LOG_LEVEL'].inspect}" : nil)
           command = ["sudo", destroy, verbose, log_level, "cc-server", Cucumber::Chef.external_ip].compact.join(" ")
 
-          @test_lab.ssh.exec(command, :silence => false)
+          @test_lab.ssh.exec(command, options)
         end
 
         sleep(10)
