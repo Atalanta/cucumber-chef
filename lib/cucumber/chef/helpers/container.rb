@@ -166,7 +166,7 @@ module Cucumber::Chef::Helpers::Container
   def container_create_command(name, distro, release, arch)
     case distro.downcase
     when "ubuntu" then
-      "lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release} --arch #{arch}"
+      "DEBIAN_FRONTEND=noninteractive lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release} --arch #{arch}"
     when "fedora" then
       "lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release}"
     end
