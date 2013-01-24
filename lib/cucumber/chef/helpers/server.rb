@@ -40,6 +40,8 @@ module Cucumber::Chef::Helpers::Server
     if (@containers[name] && @containers[name][:persist])
       logger.info { "Using existing attributes for container {#{name.inspect} => #{server_tag(name)}}." }
     else
+      # if this is a new or non-persistent container destroy it
+      server_destroy(name)
       attributes = { :ip => generate_ip,
                      :mac => generate_mac,
                      :persist => true,
@@ -73,8 +75,7 @@ module Cucumber::Chef::Helpers::Server
 
   def server_destroy(name)
     container_destroy(name)
-    @containers.delete(name)
-    save_containers
+    test_lab_config_dhcpd
   end
 
 ################################################################################
