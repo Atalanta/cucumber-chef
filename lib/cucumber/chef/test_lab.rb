@@ -98,7 +98,6 @@ module Cucumber
         if (!defined?(@drb) || @drb.nil?)
           @drb ||= DRbObject.new_with_uri("druby://#{self.ip}:8787")
           @drb and DRb.start_service
-          @drb.servers = Hash.new(nil)
         end
         @drb
       end

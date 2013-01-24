@@ -42,9 +42,9 @@ module Cucumber::Chef::Helpers::ChefClient
 
   # call this before chef_run_client
   def chef_set_client_attributes(name, attributes={})
-    @servers[name] ||= Hash.new
-    @servers[name][:chef_client] = (@servers[name][:chef_client] || {}).merge(attributes) { |k,o,n| (k = (o + n).uniq) }
-    log("setting chef client attributes to $#{@servers[name][:chef_client].inspect}$ for container $#{name}$")
+    @containers[name] ||= Hash.new
+    @containers[name][:chef_client] = (@containers[name][:chef_client] || {}).merge(attributes) { |k,o,n| (k = (o + n).uniq) }
+    log("setting chef client attributes to $#{@containers[name][:chef_client].inspect}$ for container $#{name}$")
 
     true
   end
@@ -90,7 +90,7 @@ module Cucumber::Chef::Helpers::ChefClient
     attributes_json = File.join("/", container_root(name), "etc", "chef", "attributes.json")
     FileUtils.mkdir_p(File.dirname(attributes_json))
     File.open(attributes_json, 'w') do |f|
-      f.puts((@servers[name][:chef_client] || {}).to_json)
+      f.puts((@containers[name][:chef_client] || {}).to_json)
     end
 
     # make sure our log location is there

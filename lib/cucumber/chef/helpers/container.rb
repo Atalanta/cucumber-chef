@@ -23,6 +23,31 @@ module Cucumber::Chef::Helpers::Container
 
 ################################################################################
 
+  def load_containers
+    if File.exists?(Cucumber::Chef.containers_bin)
+      @containers = ((Marshal.load(IO.read(Cucumber::Chef.containers_bin)) rescue Hash.new) || Hash.new)
+      @containers.each do |key, value|
+        $logger.info { "LOAD CONTAINER: #{key.inspect} => #{value.inspect}" }
+      end
+    else
+      $logger.info { "INITIALIZED: '#{Cucumber::Chef.containers_bin}'." }
+    end
+  end
+
+################################################################################
+
+  def save_containers
+    @containers.each do |key, value|
+      $logger.debug { "SAVE CONTAINER: #{key.inspect} => #{value.inspect}" }
+    end
+
+    File.open(Cucumber::Chef.containers_bin, 'w') do |f|
+      f.puts(Marshal.dump(@containers))
+    end
+  end
+
+################################################################################
+
   def container_create(name, distro, release, arch)
     unless container_exists?(name)
       cache_rootfs = container_cache_root(name, distro, release, arch)
@@ -110,7 +135,7 @@ module Cucumber::Chef::Helpers::Container
       f.puts("lxc.network.flags = up")
       f.puts("lxc.network.link = br0")
       f.puts("lxc.network.name = eth0")
-      f.puts("lxc.network.hwaddr = #{@servers[name][:mac]}")
+      f.puts("lxc.network.hwaddr = #{@containers[name][:mac]}")
       f.puts("lxc.network.ipv4 = 0.0.0.0")
     end
   end

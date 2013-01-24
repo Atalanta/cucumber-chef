@@ -20,31 +20,31 @@
 ################################################################################
 
 Given /^I have a server called "([^\"]*)"$/ do |name|
-  @servers = (@servers || Hash.new(nil)).merge(name => Hash.new(nil))
+  $test_lab.drb.server_init(name)
 end
 
 And /^"([^\"]*)" is running "([^\"]*)" "([^\"]*)"$/ do |name, distro, release|
-  @servers[name].merge!( :distro => distro, :release => release )
+  $test_lab.drb.server_set_attributes(name, :distro => distro, :release => release)
 end
 
 And /^"([^\"]*)" has "([^\"]*)" architecture$/ do |name, arch|
-  @servers[name].merge!( :arch => arch )
+  $test_lab.drb.server_set_attributes(name, :arch => arch)
 end
 
 And /^"([^\"]*)" should( not)? be persist[ae]nt$/ do |name, boolean|
-  @servers[name].merge!( :persist => (!boolean ? true : false) )
+  $test_lab.drb.server_set_attributes(name, :persist => (!boolean ? true : false))
 end
 
 And /^"([^\"]*)" has an IP address of "([^\"]*)"$/ do |name, ip|
-  @servers[name].merge!( :ip => ip )
+  $test_lab.drb.server_set_attributes(name, :ip => ip)
 end
 
 And /^"([^\"]*)" has a MAC address of "([^\"]*)"$/ do |name, mac|
-  @servers[name].merge!( :mac => ip )
+  $test_lab.drb.server_set_attributes(name, :mac => mac)
 end
 
 And /^"([^\"]*)" has been provisioned$/ do |name|
-  $test_lab.drb.server_create(name, @servers[name])
+  $test_lab.drb.server_create(name)
 end
 
 And /^the "([^\"]*)" role has been added to the "([^\"]*)" run list$/ do |role, name|

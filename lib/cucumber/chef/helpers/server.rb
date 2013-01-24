@@ -23,14 +23,23 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
-  def server_create(name, attributes={})
-    if ((attributes[:persist] && @servers[name]) || (@servers[name] && @servers[name][:persist]))
-      attributes = @servers[name]
+  def server_init(name)
+    @containers[name] ||= Hash.new
+  end
+
+################################################################################
+
+  def server_set_attributes(name, attributes={})
+    @containers[name].merge!(attributes)
+  end
+
+################################################################################
+
+  def server_create(name)
+    attributes = (@containers[name] || {})
+    if (@containers[name] && @containers[name][:persist])
       log("using existing attributes for container $#{name} #{server_tag(name)}$")
     else
-      if (container_exists?(name) && (ENV['DESTROY'] == "1"))
-        server_destroy(name)
-      end
       attributes = { :ip => generate_ip,
                      :mac => generate_mac,
                      :persist => true,
@@ -38,30 +47,34 @@ module Cucumber::Chef::Helpers::Server
                      :release => "lucid",
                      :arch => detect_arch(attributes[:distro] || "ubuntu") }.merge(attributes)
     end
-    @servers = (@servers || Hash.new(nil)).merge(name => attributes)
-    $current_server = @servers[name][:ip]
-    if !server_running?(name)
+    @containers[name] = attributes
+
+    if server_running?(name)
+      log("container $#{name}$ is already running")
+    else
       log("please wait, creating container $#{name} #{server_tag(name)}$")
       bm = ::Benchmark.realtime do
         test_lab_config_dhcpd
         container_config_network(name)
-        container_create(name, @servers[name][:distro], @servers[name][:release], @servers[name][:arch])
+        container_create(name, @containers[name][:distro], @containers[name][:release], @containers[name][:arch])
       end
       log("container $#{name}$ creation took %0.4f seconds" % bm)
 
       bm = ::Benchmark.realtime do
-        ZTK::TCPSocketCheck.new(:host => @servers[name][:ip], :port => 22).wait
+        ZTK::TCPSocketCheck.new(:host => @containers[name][:ip], :port => 22).wait
       end
       log("container $#{name}$ SSHD responded after %0.4f seconds" % bm)
-    else
-      log("container $#{name}$ is already running")
     end
+
+    save_containers
   end
 
 ################################################################################
 
   def server_destroy(name)
     container_destroy(name)
+    @containers.delete(name)
+    save_containers
   end
 
 ################################################################################
@@ -72,14 +85,14 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
-  def servers
-    containers
-  end
+  # def servers
+  #   containers
+  # end
 
 ################################################################################
 
   def server_tag(name)
-    @servers[name].inspect.to_s
+    @containers[name].inspect.to_s
   end
 
 ################################################################################

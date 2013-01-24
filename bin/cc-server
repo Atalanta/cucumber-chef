@@ -18,31 +18,38 @@ require 'drb/acl'
 require 'cucumber-chef'
 require 'cucumber/chef/helpers'
 
+tag = Cucumber::Chef.tag("cc-server")
+puts("  * #{tag}")
+Cucumber::Chef.boot(tag)
+$logger = Cucumber::Chef.logger
+Dir.chdir(File.join("/home", Cucumber::Chef.lab_user))
+if ENV['DESTROY']
+  File.exists?(Cucumber::Chef.containers_bin) && File.delete(Cucumber::Chef.containers_bin)
+end
+
 class FrontObject
-  attr_accessor :servers
+  attr_accessor :containers
 
   include Cucumber::Chef
   include Cucumber::Chef::Helpers
 
-  def initialize
-    tag = Cucumber::Chef.tag("cc-server")
-    puts("  * #{tag}")
-    Cucumber::Chef.boot(tag)
-    $logger = Cucumber::Chef.logger
-    Dir.chdir(File.join("/home", Cucumber::Chef.lab_user))
-  end
+################################################################################
 
   def shutdown
     DRb.stop_service
   end
 
+################################################################################
+
   def logger
     $logger
   end
 
+################################################################################
+
 end
 
-list = %w( deny all )
+list = %w(deny all)
 ARGV[0] and (list += [ 'allow', ARGV[0] ])
 acl = ACL.new(list)
 

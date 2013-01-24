@@ -27,7 +27,7 @@ module Cucumber::Chef::Helpers::TestLab
     dhcpd_config = File.join("/etc/dhcp/test-lab.conf")
     File.open(dhcpd_config, 'w') do |f|
       f.puts(Cucumber::Chef.generate_do_not_edit_warning("DHCPD Configuration"))
-      @servers.each do |key, value|
+      @containers.each do |key, value|
         f.puts
         f.puts("host #{key} {")
         f.puts("  hardware ethernet #{value[:mac]};")
