@@ -24,46 +24,24 @@ module Cucumber::Chef::Helpers::Command
 ################################################################################
 
   def command_run_remote(name, command, expected_exit_code=0)
-    command = %Q(ssh -i #{File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa")} #{name} #{command} 2>&1)
-    logger.info { "command_run_remote(#{command})" }
-    output = %x(#{command})
-    if !expected_exit_code.nil? && ($? != expected_exit_code)
-      message = "command_run_remote(#{command}) failed (code=#{$?},output='#{output.chomp}')"
-      logger.fatal { message }
-      logger.fatal { "output(#{output.chomp})" }
-      raise message
-    end
-    output
+    identity_file = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa")
+
+    command = %Q(ssh -i #{identity_file} #{name} #{command})
+    ::ZTK::Command.new.exec(command, :silence => true, :exit_code => expected_exit_code).output
   end
 
 ################################################################################
 
   def command_run_chroot(name, command, expected_exit_code=0)
-    command = %Q(chroot #{container_root(name)} /bin/bash -c '#{command.gsub("'", '"')}' 2>&1)
-    logger.info { "command_run_chroot(#{command})" }
-    output = %x(#{command})
-    if !expected_exit_code.nil? && ($? != expected_exit_code)
-      message = "command_run_chroot(#{command}) failed (#{$?})"
-      logger.fatal { message }
-      logger.fatal { "output(#{output.chomp})" }
-      raise message
-    end
-    output
+    command = %Q(chroot #{container_root(name)} /bin/bash -c '#{command.gsub("'", '"')}')
+    ::ZTK::Command.new.exec(command, :silence => true, :exit_code => expected_exit_code).output
   end
 
 ################################################################################
 
   def command_run_local(command, expected_exit_code=0)
-    command = %Q(/bin/bash -c '#{command.gsub("'", '"')}' 2>&1)
-    logger.info { "command_run_local(#{command})" }
-    output = %x(#{command})
-    if !expected_exit_code.nil? && ($? != expected_exit_code)
-      message = "command_run_local(#{command}) failed (#{$?})"
-      logger.fatal { message }
-      logger.fatal { "output(#{output.chomp})" }
-      raise message
-    end
-    output
+    command = %Q(/bin/bash -c '#{command.gsub("'", '"')}')
+    ::ZTK::Command.new.exec(command, :silence => true, :exit_code => expected_exit_code).output
   end
 
 ################################################################################
