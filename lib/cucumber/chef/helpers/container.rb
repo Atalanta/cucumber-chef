@@ -24,16 +24,12 @@ module Cucumber::Chef::Helpers::Container
 ################################################################################
 
   def load_containers
-    if File.exists?(Cucumber::Chef.containers_bin)
-      logger.debug { "Loading containers." }
-      @containers = ((Marshal.load(IO.read(Cucumber::Chef.containers_bin)) rescue Hash.new) || Hash.new)
+    logger.debug { "Marshaling '#{Cucumber::Chef.containers_bin}'." }
+    @containers = ((Marshal.load(IO.read(Cucumber::Chef.containers_bin)) rescue Hash.new) || Hash.new)
 
-      logger.info { "-" * 8 }
-      @containers.each do |key, value|
-        logger.info { "LOAD CONTAINER: #{key.inspect} => #{value.inspect}" }
-      end
-    else
-      $logger.warn { "INITIALIZED: '#{Cucumber::Chef.containers_bin}'." }
+    logger.info { "-" * 8 }
+    @containers.each do |key, value|
+      logger.info { "LOAD CONTAINER: #{key.inspect} => #{value.inspect}" }
     end
   end
 
