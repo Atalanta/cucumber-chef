@@ -82,6 +82,7 @@ module Cucumber
         $scenario = scenario
 
         @test_lab.drb.load_containers
+
         @test_lab.drb.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
                                              :validation_client_name => "chef-validator")
       end
@@ -91,7 +92,7 @@ module Cucumber
       def after(scenario)
         @test_lab.drb.save_containers
 
-        # cleanup non-persistent lxc containers between tests
+        # cleanup non-persistent lxc containers after tests
         @test_lab.drb.containers.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
           @test_lab.drb.server_destroy(name)
         end
