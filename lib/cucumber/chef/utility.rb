@@ -269,8 +269,8 @@ module Cucumber
             "ruby_version" => RUBY_VERSION.inspect,
             "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
             "ruby_platform" => RUBY_PLATFORM.inspect,
-            "ztk_version" => ::ZTK::VERSION.inspect,
-            "cucumber_version" => ::Cucumber::VERSION.inspect
+            "ztk_version" => ::ZTK::VERSION.inspect
+            # "cucumber_version" => ::Cucumber::VERSION.inspect
           }
           if RUBY_VERSION >= "1.9"
             dependencies.merge!("ruby_engine" => RUBY_ENGINE.inspect)
