@@ -58,6 +58,8 @@ module Cucumber::Chef::Helpers::Container
 
       command_run_local(container_create_command(name, distro, release, arch))
 
+      commands = Array.new
+
       # install omnibus into the distro/release file cache if it's not already there
       omnibus_chef_client = File.join("/", "opt", "chef", "bin", "chef-client")
       omnibus_cache = File.join(cache_rootfs, omnibus_chef_client)
@@ -65,28 +67,32 @@ module Cucumber::Chef::Helpers::Container
       if !File.exists?(omnibus_cache)
         case distro.downcase
         when "ubuntu" then
-          command_run_local("chroot #{cache_rootfs} /bin/bash -c 'apt-get -y --force-yes install wget'")
+          commands << "chroot #{cache_rootfs} /bin/bash -c 'apt-get -y --force-yes install wget'"
         when "fedora" then
-          command_run_local("yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server")
+          commands << "yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server"
         end
-        command_run_local("chroot #{cache_rootfs} /bin/bash -c 'locale-gen en_US'")
-        command_run_local("chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh -O - | bash'")
+        commands << "chroot #{cache_rootfs} /bin/bash -c 'locale-gen en_US'"
+        commands << "chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh -O - | bash'"
         if distro.downcase == "fedora"
-          command_run_local("chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm'")
+          commands << "chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm'"
         end
-        command_run_local("lxc-destroy -n #{name}")
-        command_run_local(container_create_command(name, distro, release, arch))
+        commands << "lxc-destroy -n #{name}"
+        commands << container_create_command(name, distro, release, arch)
       end
 
-      command_run_local("mkdir -vp #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}")
-      command_run_local("chmod 0700 #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}")
-      command_run_local("cat #{File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa.pub")} | tee -a #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh", "authorized_keys")}")
+      commands << <<-EOH
+mkdir -vp #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}
+chmod 0700 #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")}
+cat #{File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa.pub")} | tee -a #{File.join(container_root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh", "authorized_keys")}
 
-      command_run_local("rm -vf #{File.join(container_root(name), "etc", "motd")}")
-      command_run_local("cp -v /etc/motd #{File.join(container_root(name), "etc", "motd")}")
-      command_run_local("echo '    You are now logged in to the #{name} container!\n' >> #{File.join(container_root(name), "etc", "motd")}")
-      command_run_local("echo '127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}' | tee -a #{File.join(container_root(name), "etc", "hosts")}")
-      command_run_local("echo '#{name}.test-lab' | tee #{File.join(container_root(name), "etc", "hostname")}")
+rm -vf #{File.join(container_root(name), "etc", "motd")}
+cp -v /etc/motd #{File.join(container_root(name), "etc", "motd")}
+echo '    You are now logged in to the "#{name}" container!\n' | tee -a #{File.join(container_root(name), "etc", "motd")}
+echo '127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}' | tee -a #{File.join(container_root(name), "etc", "hosts")}
+echo '#{name}.test-lab' | tee #{File.join(container_root(name), "etc", "hostname")}
+EOH
+
+      command_run_local(commands.join("\n"))
     end
     container_start(name)
   end
