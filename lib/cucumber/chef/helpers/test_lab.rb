@@ -28,6 +28,8 @@ module Cucumber::Chef::Helpers::TestLab
     File.open(dhcpd_config, 'w') do |f|
       f.puts(Cucumber::Chef.generate_do_not_edit_warning("DHCPD Configuration"))
       @containers.each do |key, value|
+        next if [:mac, :ip].any?{ |z| value[z].nil? }
+
         f.puts
         f.puts("host #{key} {")
         f.puts("  hardware ethernet #{value[:mac]};")
