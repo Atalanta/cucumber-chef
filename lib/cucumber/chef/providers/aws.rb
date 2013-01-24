@@ -68,7 +68,7 @@ module Cucumber
             }
 
             if (@server = @connection.servers.create(server_definition))
-              ZTK::Benchmark.bench("Creating #{Cucumber::Chef::Config.provider.upcase} instance", @stdout) do
+              ZTK::Benchmark.bench("Creating #{Cucumber::Chef::Config.provider.upcase} instance", :stdout => @stdout) do
                 @server.wait_for { ready? }
                 tag_server
                 ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait

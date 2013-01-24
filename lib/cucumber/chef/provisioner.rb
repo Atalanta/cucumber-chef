@@ -72,7 +72,7 @@ module Cucumber
       def bootstrap
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
-        ZTK::Benchmark.bench("Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", @stdout) do
+        ZTK::Benchmark.bench("Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :stdout => @stdout) do
           chef_client_attributes = {
             "run_list" => "role[test_lab]",
             "cucumber_chef" => {
@@ -111,7 +111,7 @@ module Cucumber
 ################################################################################
 
       def download_chef_credentials
-        ZTK::Benchmark.bench("Downloading chef-server credentials", @stdout) do
+        ZTK::Benchmark.bench("Downloading chef-server credentials", :stdout => @stdout) do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
 
@@ -125,7 +125,7 @@ module Cucumber
 ################################################################################
 
       def download_proxy_ssh_credentials
-        ZTK::Benchmark.bench("Downloading proxy SSH credentials", @stdout) do
+        ZTK::Benchmark.bench("Downloading proxy SSH credentials", :stdout => @stdout) do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
@@ -142,7 +142,7 @@ module Cucumber
 ################################################################################
 
       def render_knife_rb
-        ZTK::Benchmark.bench("Building 'cc-knife' configuration", @stdout) do
+        ZTK::Benchmark.bench("Building 'cc-knife' configuration", :stdout => @stdout) do
           template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb")
 
           context = {
@@ -161,7 +161,7 @@ module Cucumber
 
       def upload_cookbook
         Cucumber::Chef.logger.debug { "Uploading cucumber-chef cookbooks..." }
-        ZTK::Benchmark.bench("Uploading 'cucumber-chef' cookbooks", @stdout) do
+        ZTK::Benchmark.bench("Uploading 'cucumber-chef' cookbooks", :stdout => @stdout) do
           Cucumber::Chef.load_chef_config
           cookbook_repo = ::Chef::CookbookLoader.new(@cookbooks_path)
           cookbook_repo.each do |name, cookbook|
@@ -177,7 +177,7 @@ module Cucumber
 
       def upload_role
         Cucumber::Chef.logger.debug { "Uploading cucumber-chef test lab role..." }
-        ZTK::Benchmark.bench("Uploading 'cucumber-chef' roles", @stdout) do
+        ZTK::Benchmark.bench("Uploading 'cucumber-chef' roles", :stdout => @stdout) do
           Cucumber::Chef.load_chef_config
           ::Chef::Config[:role_path] = @roles_path
           [ "test_lab" ].each do |name|
@@ -192,7 +192,7 @@ module Cucumber
 
       def tag_node
         Cucumber::Chef.logger.debug { "Tagging cucumber-chef test lab node..." }
-        ZTK::Benchmark.bench("Tagging 'cucumber-chef' node", @stdout) do
+        ZTK::Benchmark.bench("Tagging 'cucumber-chef' node", :stdout => @stdout) do
           Cucumber::Chef.load_chef_config
           node = ::Chef::Node.load(HOSTNAME)
           [ Cucumber::Chef::Config[:mode].to_s, Cucumber::Chef::Config[:user].to_s ].each do |tag|
@@ -207,7 +207,7 @@ module Cucumber
 
       def add_node_role
         Cucumber::Chef.logger.debug { "Setting up cucumber-chef test lab run list..." }
-        ZTK::Benchmark.bench("Setting 'cucumber-chef' run list", @stdout) do
+        ZTK::Benchmark.bench("Setting 'cucumber-chef' run list", :stdout => @stdout) do
           Cucumber::Chef.load_chef_config
           node = ::Chef::Node.load(HOSTNAME)
           [ "role[test_lab]" ].each do |entry|
@@ -221,7 +221,7 @@ module Cucumber
 ################################################################################
 
       def chef_first_run
-        ZTK::Benchmark.bench("Performing chef-client run", @stdout) do
+        ZTK::Benchmark.bench("Performing chef-client run", :stdout => @stdout) do
           command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
           command = "sudo #{command}"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
@@ -231,11 +231,11 @@ module Cucumber
 ################################################################################
 
       def wait_for_chef_server
-        ZTK::Benchmark.bench("Waiting for the chef-server", @stdout) do
+        ZTK::Benchmark.bench("Waiting for the chef-server", :stdout => @stdout) do
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4000, :data => "GET", :wait => 120).wait
         end
 
-        ZTK::Benchmark.bench("Waiting for the chef-server-webui", @stdout) do
+        ZTK::Benchmark.bench("Waiting for the chef-server-webui", :stdout => @stdout) do
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4040, :data => "GET", :wait => 120).wait
         end
       end
@@ -243,7 +243,7 @@ module Cucumber
 ################################################################################
 
       def reboot_test_lab
-        ZTK::Benchmark.bench("Rebooting the test lab", @stdout) do
+        ZTK::Benchmark.bench("Rebooting the test lab", :stdout => @stdout) do
           command = "sudo reboot"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => @test_lab.port, :wait => 120).wait
