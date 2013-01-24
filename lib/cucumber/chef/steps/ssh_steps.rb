@@ -61,7 +61,6 @@ end
 
 And /^I run "([^\"]*)"$/ do |command|
   @output = @connection.exec(command, :silence => true).output
-  Cucumber::Chef.logger.info { @output.chomp }
 end
 
 Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
