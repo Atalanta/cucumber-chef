@@ -51,7 +51,7 @@ module Cucumber::Chef::Helpers::ChefClient
 
 ################################################################################
 
-  def chef_run_client(name,*args)
+  def chef_run_client(name, *args)
     chef_config_client(name)
 
     logger.info { "Removing artifacts #{Cucumber::Chef::Config[:artifacts].values.collect{|z| "'#{z}'" }.join(' ')}." }
