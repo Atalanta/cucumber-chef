@@ -145,7 +145,7 @@ module Cucumber
 ################################################################################
 
       def containers_bin
-        containers_bin = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "containers.bin")
+        containers_bin = File.join(Cucumber::Chef.home_dir, "containers.bin")
         FileUtils.mkdir_p(File.dirname(containers_bin))
         containers_bin
       end
