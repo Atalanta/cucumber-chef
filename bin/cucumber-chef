@@ -213,7 +213,7 @@ class CucumberChef < Thor
             ZTK::Benchmark.bench("Destroy container '#{container}'") do
               test_lab.drb.load_containers
               test_lab.drb.server_destroy(container)
-              test_lab.drb.containers.delete(name)
+              test_lab.drb.containers.delete(container)
               test_lab.drb.save_containers
             end
           end
