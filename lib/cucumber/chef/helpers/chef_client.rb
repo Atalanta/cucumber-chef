@@ -59,9 +59,14 @@ module Cucumber::Chef::Helpers::ChefClient
 
     logger.info { "Running chef client on container '#{name}'." }
 
+    arguments = {
+      "--json-attributes" => File.join("/etc", "chef", "attributes.json").to_s,
+      "--log_level" => (ENV['LOG_LEVEL'] || "INFO").downcase
+    }.reject{ |k,v| v.nil? }.sort
+
     output = nil
     bm = ::Benchmark.realtime do
-      output = command_run_remote(name, ["/usr/bin/chef-client --json-attributes /etc/chef/attributes.json --node-name #{name}", args].flatten.join(" "))
+      output = command_run_chroot(name, ["/usr/bin/chef-client", arguments, args].flatten.join(" "))
     end
     logger.info { "Chef client run on container '#{name}' took %0.4f seconds." % bm }
 
