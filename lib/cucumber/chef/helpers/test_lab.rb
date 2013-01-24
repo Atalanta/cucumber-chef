@@ -35,6 +35,8 @@ module Cucumber::Chef::Helpers::TestLab
         f.puts("  ddns-hostname \"#{key}\";")
         f.puts("}")
       end
+      f.flush
+      f.close
     end
 
     command_run_local("service isc-dhcp-server restart")
