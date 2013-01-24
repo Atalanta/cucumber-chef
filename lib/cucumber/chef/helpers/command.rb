@@ -26,14 +26,14 @@ module Cucumber::Chef::Helpers::Command
   def command_run_remote(name, command, expected_exit_code=0)
     identity_file = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa")
 
-    command = %Q(ssh -i #{identity_file} #{name} #{command})
-    ::ZTK::Command.new.exec(command, :silence => true, :exit_code => expected_exit_code).output
+    command = %W(/usr/bin/ssh #{ENV['LOG_LEVEL'] == 'DEBUG' ? "-v" : nil} -i #{identity_file} #{name} #{command})
+    ::ZTK::Command.new.exec(command.compact.join(" "), :silence => true, :exit_code => expected_exit_code).output
   end
 
 ################################################################################
 
   def command_run_chroot(name, command, expected_exit_code=0)
-    command = %Q(chroot #{container_root(name)} /bin/bash -c '#{command.gsub("'", '"')}')
+    command = %Q(/usr/sbin/chroot #{container_root(name)} /bin/bash -c '#{command.gsub("'", '"')}')
     ::ZTK::Command.new.exec(command, :silence => true, :exit_code => expected_exit_code).output
   end
 
