@@ -23,29 +23,8 @@ module Cucumber::Chef::Helpers::Utility
 
 ################################################################################
 
-  def log(message)
-    Cucumber::Chef.logger.info { message.gsub("$", "'") }
-    return if !(ENV['VERBOSE'] == "1")
-
-    pattern = [ "\033[0m\033[36m", "\033[1m" ]
-
-    result = [ " \033[0m\033[34m[\033[1mCC\033[0m\033[34m] \033[36m" ]
-    result << pattern.first
-
-    sanity = message.split('').count{ |z| (z == "$") }
-    raise "You have a log message with an odd number of highlight markup characters! '#{message}' -> (sanity=#{sanity.inspect}) " if (sanity.modulo(2) != 0)
-
-    chunks = message.split("$")
-    chunks.each_with_index do |chunk, index|
-      result << pattern[index.modulo(pattern.length)]
-      result << chunk
-    end
-    result << "\033[0m"
-
-    STDOUT.puts(result.join)
-    STDOUT.flush if STDOUT.respond_to?(:flush)
-
-    true
+  def logger
+    Cucumber::Chef.logger
   end
 
 ################################################################################

@@ -52,8 +52,8 @@ module Cucumber::Chef::Helpers::Container
     unless container_exists?(name)
       cache_rootfs = container_cache_root(name, distro, release, arch)
       if !File.exists?(cache_rootfs)
-        log("$#{name}$ has triggered building the lxc file cache for $#{distro}$")
-        log("this one time process per distro can take up to 10 minutes or longer depending on the test lab")
+        logger.warn { "'#{name}' has triggered building the lxc file cache for '#{distro}'." }
+        logger.warn { "This one time process per distro can take up to 10 minutes or longer depending on the test lab." }
       end
 
       command_run_local(container_create_command(name, distro, release, arch))
@@ -97,7 +97,7 @@ module Cucumber::Chef::Helpers::Container
       chef_server_client_destroy(name)
       container_stop(name)
       command_run_local("lxc-destroy -n #{name}")
-      log("destroyed container $#{name}$")
+      logger.info { "Destroyed container '#{name}'." }
     end
   end
 

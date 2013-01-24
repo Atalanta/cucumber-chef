@@ -33,7 +33,7 @@ module Cucumber::Chef::Helpers::ChefClient
       :ssl_verify_mode => :verify_none,
       :environment => nil # use default; i.e. set no value
     }).merge(config)
-    log("setting chef client config $#{@chef_client_config.inspect}$")
+    logger.info { "Setting chef client config '#{@chef_client_config.inspect}'." }
 
     true
   end
@@ -44,7 +44,7 @@ module Cucumber::Chef::Helpers::ChefClient
   def chef_set_client_attributes(name, attributes={})
     @containers[name] ||= Hash.new
     @containers[name][:chef_client] = (@containers[name][:chef_client] || {}).merge(attributes) { |k,o,n| (k = (o + n).uniq) }
-    log("setting chef client attributes to $#{@containers[name][:chef_client].inspect}$ for container $#{name}$")
+    logger.info { "Setting chef client attributes to '#{@containers[name][:chef_client].inspect}' for container '#{name}'." }
 
     true
   end
@@ -53,16 +53,17 @@ module Cucumber::Chef::Helpers::ChefClient
 
   def chef_run_client(name,*args)
     chef_config_client(name)
-    log("removing artifacts #{Cucumber::Chef::Config[:artifacts].values.collect{|z| "$#{z}$" }.join(' ')}")
+
+    logger.info { "Removing artifacts #{Cucumber::Chef::Config[:artifacts].values.collect{|z| "'#{z}'" }.join(' ')}." }
     (command_run_remote(name, "/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}") rescue nil)
 
-    log("running chef client on container $#{name}$")
+    logger.info { "Running chef client on container '#{name}'." }
 
     output = nil
     bm = ::Benchmark.realtime do
       output = command_run_remote(name, ["/usr/bin/chef-client --json-attributes /etc/chef/attributes.json --node-name #{name}", args].flatten.join(" "))
     end
-    log("chef client run on container $#{name}$ took %0.4f seconds" % bm)
+    logger.info { "Chef client run on container '#{name}' took %0.4f seconds." % bm }
 
     output
   end
@@ -120,7 +121,7 @@ module Cucumber::Chef::Helpers::ChefClient
     Cucumber::Chef::Config[:artifacts].each do |label, remote_path|
       result = ssh.exec("/bin/bash -c '[[ -f #{remote_path} ]] ; echo $?'", :silence => true)
       if (result.output =~ /0/)
-        log("retrieving artifact $#{remote_path}$ from container $#{name}$")
+        logger.info { "Retrieving artifact '#{remote_path}' from container '#{name}'." }
 
         local_path = File.join(Cucumber::Chef.artifacts_dir, feature_dir, "#{feature_name}.txt")
         tmp_path = File.join("/tmp", label)

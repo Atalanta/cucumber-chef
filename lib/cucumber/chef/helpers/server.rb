@@ -38,7 +38,7 @@ module Cucumber::Chef::Helpers::Server
   def server_create(name)
     attributes = (@containers[name] || {})
     if (@containers[name] && @containers[name][:persist])
-      log("using existing attributes for container $#{name} #{server_tag(name)}$")
+      logger.info { "Using existing attributes for container {#{name.inspect} => #{server_tag(name)}}." }
     else
       attributes = { :ip => generate_ip,
                      :mac => generate_mac,
@@ -50,20 +50,20 @@ module Cucumber::Chef::Helpers::Server
     @containers[name] = attributes
 
     if server_running?(name)
-      log("container $#{name}$ is already running")
+      logger.info { "Container '#{name}' is already running." }
     else
-      log("please wait, creating container $#{name} #{server_tag(name)}$")
+      logger.info { "Please wait, creating container {#{name.inspect} => #{server_tag(name)}}." }
       bm = ::Benchmark.realtime do
         test_lab_config_dhcpd
         container_config_network(name)
         container_create(name, @containers[name][:distro], @containers[name][:release], @containers[name][:arch])
       end
-      log("container $#{name}$ creation took %0.4f seconds" % bm)
+      logger.info { "Container '#{name}' creation took %0.4f seconds." % bm }
 
       bm = ::Benchmark.realtime do
         ZTK::TCPSocketCheck.new(:host => @containers[name][:ip], :port => 22).wait
       end
-      log("container $#{name}$ SSHD responded after %0.4f seconds" % bm)
+      logger.info { "Container '#{name}' SSHD responded after %0.4f seconds." % bm }
     end
 
     save_containers

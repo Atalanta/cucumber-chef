@@ -25,14 +25,14 @@ module Cucumber::Chef::Helpers::ChefServer
 
   def chef_server_node_destroy(name)
     (::Chef::Node.load(name).destroy rescue nil)
-    log("destroyed chef node $#{name}$")
+    logger.info { "Destroyed chef node '#{name}'." }
   end
 
 ################################################################################
 
   def chef_server_client_destroy(name)
     (::Chef::ApiClient.load(name).destroy rescue nil)
-    log("destroyed chef client $#{name}$")
+    logger.info { "Destroyed chef client '#{name}'." }
   end
 
 ################################################################################
@@ -45,7 +45,7 @@ module Cucumber::Chef::Helpers::ChefServer
     cookbook_repo.each do |name, cbook|
       next if name != cookbook
       ::Chef::CookbookUploader.new(cbook, cookbook_path, :force => true).upload_cookbooks
-      log("uploaded chef cookbook $#{cookbook}$ from $#{cookbook_path}$")
+      logger.info { "Uploaded chef cookbook '#{cookbook}' from '#{cookbook_path}'." }
     end
   end
 
@@ -59,7 +59,7 @@ module Cucumber::Chef::Helpers::ChefServer
     ::Chef::Config[:role_path] = expanded_role_path
     role = ::Chef::Role.from_disk(role)
     role.save
-    log("updated chef role $#{role}$ from $#{role_path}$")
+    logger.info { "Updated chef role '#{role}' from '#{role_path}'." }
   end
 
 ################################################################################
@@ -113,10 +113,10 @@ module Cucumber::Chef::Helpers::ChefServer
       loop do
         chef_data = ::Chef::DataBagItem.load(databag, item_name).raw_data
         break if chef_data == raw_data
-        log("waiting on chef data bag to update")
+        logger.info { "Waiting on chef data bag to update; sleeping 1 second." }
         sleep(1)
       end
-      log("updated chef data bag item $#{databag}/#{item_path}$ from $#{databag_path}$")
+      logger.info { "Updated chef data bag item '#{databag}/#{item_path}' from '#{databag_path}'." }
     end
   end
 
