@@ -85,12 +85,6 @@ module Cucumber::Chef::Helpers::Server
 
 ################################################################################
 
-  # def servers
-  #   containers
-  # end
-
-################################################################################
-
   def server_tag(name)
     @containers[name].inspect.to_s
   end
