@@ -193,8 +193,7 @@ class CucumberChef < Thor
           puts(set_color("Whew! That was close!", :green, true))
         end
       else
-        container = args[0]
-        if yes?(set_color("Are you sure you want to destroy the containter '#{container}'?", :red, true))
+        if yes?(set_color("Are you sure you want to destroy the container#{args.count > 1 ? 's' : nil} #{args.collect{|a| "'#{a}'"}.join(', ')}?", :red, true))
           puts
           puts(set_color("You have 5 seconds to abort!", :red, true))
           puts
@@ -205,17 +204,22 @@ class CucumberChef < Thor
           puts("BOOM!")
           puts
 
-          cc_server = Cucumber::Chef::Server.new(test_lab)
-          cc_server.up
+          ZTK::Benchmark.bench("Start cc-server") do
+            cc_server = Cucumber::Chef::Server.new(test_lab)
+            cc_server.up(:silence => true)
+          end
 
-          test_lab.drb.servers = Hash.new(nil)
-          ZTK::Benchmark.bench("Destroy container '#{container}'") do
-            test_lab.drb.server_destroy(container)
+          args.each do |container|
+            ZTK::Benchmark.bench("Destroy container '#{container}'") do
+              test_lab.drb.load_containers
+              test_lab.drb.server_destroy(container)
+            end
           end
         else
           puts
           puts(set_color("Whew! That was close!", :green, true))
         end
+
       end
 
     else
