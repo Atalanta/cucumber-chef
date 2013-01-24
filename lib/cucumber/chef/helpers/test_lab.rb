@@ -36,7 +36,8 @@ module Cucumber::Chef::Helpers::TestLab
         f.puts("}")
       end
     end
-    command_run_local("/etc/init.d/isc-dhcp-server restart")
+    command_run_local("/etc/init.d/isc-dhcp-server reload")
+    command_run_local("/etc/init.d/bind9 reload")
   end
 
 ################################################################################
