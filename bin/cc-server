@@ -34,7 +34,7 @@ class FrontObject
 
   def initialize
     if ENV['PURGE']
-      Cucumber::Chef.logger.warn { "PURGING CONTAINERS!" }
+      Cucumber::Chef.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
       load_containers
       containers.each do |name, value|
         server_destroy(name)
