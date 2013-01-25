@@ -217,6 +217,13 @@ module Cucumber
       end
 
 ################################################################################
+
+      def build_command(name, *args)
+        executable = (Cucumber::Chef.locate(:file, "bin", name) rescue "/usr/bin/env #{name}")
+        [executable, args].flatten.compact.join(" ")
+      end
+
+################################################################################
 # BOOT
 ################################################################################
 
