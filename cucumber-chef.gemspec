@@ -46,9 +46,9 @@ Gem::Specification.new do |s|
   s.add_dependency("rspec", ">= 2.10.0")
 
   # Support
-  s.add_dependency("thor", ">= 0.15.2")
   s.add_dependency("mixlib-config", ">= 1.1.2")
   s.add_dependency("rake", ">= 0.9.2")
+  s.add_dependency("thor", ">= 0.15.2")
   s.add_dependency("ubuntu_ami", ">= 0.4.0")
   s.add_dependency("ztk", ">= 0.0.15")
 
