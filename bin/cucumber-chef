@@ -306,6 +306,7 @@ class CucumberChef < Thor
 
   desc "status", "Displays the current status of the test lab."
   method_option :containers, :type => :boolean, :desc => "Display container status.", :default => false
+  method_option :attributes, :type => :boolean, :desc => "Display chef-client attributes for containers.", :default => false
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def status
     boot
@@ -318,11 +319,38 @@ class CucumberChef < Thor
           end
 
           test_lab.drb.load_containers
-          test_lab.drb.containers.each do |key, value|
-            puts("=" * 80)
-            puts("CONTAINER: #{key.inspect}")
-            puts(value.to_yaml)
+
+          headers = [:name, :alive, :arch, :distro, :ip, :mac, :"chef version", :persist]
+          results = ZTK::Report.new.spreadsheet(test_lab.drb.containers, headers) do |name, detail|
+            chef_version = "N/A"
+            alive = (test_lab.drb.command_run_local(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}).exit_code == 0)
+            if alive
+              chef_version = test_lab.drb.command_run_chroot(name, %Q{/usr/bin/env chef-client -v}, :ignore_exit_status => true).output.chomp
+            end
+
+            OpenStruct.new(
+              :name => name,
+              :ip => detail[:ip],
+              :mac => detail[:mac],
+              :distro => detail[:distro],
+              :arch => detail[:arch],
+              :alive => alive,
+              :"chef version" => chef_version,
+              :persist => detail[:persist],
+              :chef_attributes => detail[:chef_client]
+            )
           end
+
+          if @options.attributes?
+            results.rows.each do |result|
+              puts
+              puts("-" * results.width)
+              puts("Chef-Client attributes for '#{result.name.to_s.downcase}':")
+              puts("-" * results.width)
+              puts(JSON.pretty_generate(result.chef_attributes))
+            end
+          end
+
           test_lab.cc_server.down
         else
           raise Cucumber::Chef::Error, "We could not find a running test lab."
