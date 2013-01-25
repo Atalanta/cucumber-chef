@@ -60,8 +60,10 @@ module Cucumber
             %w(PURGE VERBOSE LOG_LEVEL).each do |env_var|
               environment << "#{env_var}=#{ENV[env_var].inspect}" if (!ENV[env_var].nil? && !ENV[env_var].empty?)
             end
+            environment = environment.join(" ")
+            external_ip = Cucumber::Chef.external_ip
 
-            command = ["sudo", environment, "/usr/bin/env cc-server", Cucumber::Chef.external_ip].flatten.compact.join(" ")
+            command = %Q{nohup sudo #{environment} /usr/bin/env cc-server #{external_ip} &}
 
             @test_lab.ssh.exec(command, options)
           end
