@@ -48,11 +48,11 @@ module Cucumber
 ################################################################################
 
       def chef_server_webui
-        "http://#{ip}:4040/"
+        "http://#{ip}:4040"
       end
 
       def chef_server_api
-        "http://#{ip}:4000/"
+        "http://#{ip}:4000"
       end
 
       def status
