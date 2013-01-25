@@ -33,6 +33,8 @@ class FrontObject
 ################################################################################
 
   def initialize
+    logger.info { "DRB=#{DRb.config.inspect}" }
+
     if ENV['PURGE']
       Cucumber::Chef.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
       load_containers
@@ -50,13 +52,21 @@ class FrontObject
 ################################################################################
 
   def shutdown
+    logger.fatal { "Shutting down." }
     DRb.stop_service
+    Kernel.exit(0)
   end
 
 ################################################################################
 
   def logger
     $logger
+  end
+
+################################################################################
+
+  def ping
+    "pong"
   end
 
 ################################################################################
