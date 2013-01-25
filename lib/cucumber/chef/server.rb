@@ -62,8 +62,10 @@ module Cucumber
           @test_lab.ssh.exec(command, options)
         end
 
-        sleep(10)
-        ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 8787, :data => "\n\n").wait
+        ::ZTK::RescueRetry.try(:tries => 30) do
+          sleep(1)
+          @test_lab.drb.load_containers
+        end
 
         File.exists?(Cucumber::Chef.artifacts_dir) && FileUtils.rm_rf(Cucumber::Chef.artifacts_dir)
 
