@@ -81,6 +81,10 @@ Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |bool
   end
 end
 
+Then /^the exit code should be "([^\"]*)"$/ do |exit_code|
+  @exit_code.to_i.should == exit_code.to_i
+end
+
 Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   parent = File.dirname path
   child = File.basename path
