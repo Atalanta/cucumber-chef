@@ -52,10 +52,12 @@ module Cucumber
         @server_thread = Thread.new do
           self.down
 
-          purge = (ENV['PURGE'] == '1' ? "PURGE='1'" : nil)
-          verbose = (ENV['VERBOSE'] == '1' ? "VERBOSE='1'" : nil)
-          log_level = ((!ENV['LOG_LEVEL'].nil? && !ENV['LOG_LEVEL'].empty?) ? "LOG_LEVEL=#{ENV['LOG_LEVEL'].inspect}" : nil)
-          command = ["sudo", purge, verbose, log_level, "cc-server", Cucumber::Chef.external_ip].compact.join(" ")
+          environment = Array.new
+          %w(PURGE VERBOSE LOG_LEVEL).each do |env_var|
+            environment << "#{env_var}=#{ENV[env_var].inspect}" if (!ENV[env_var].nil? && !ENV[env_var].empty?)
+          end
+
+          command = ["sudo", environment, "cc-server", Cucumber::Chef.external_ip].flatten.compact.join(" ")
 
           @test_lab.ssh.exec(command, options)
         end
