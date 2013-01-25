@@ -314,8 +314,7 @@ class CucumberChef < Thor
       if @options.containers?
         if test_lab.alive?
           ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
-            cc_server = Cucumber::Chef::Server.new(test_lab)
-            cc_server.up(:silence => true)
+            test_lab.cc_server.up(:silence => true)
           end
 
           test_lab.drb.load_containers
@@ -324,6 +323,7 @@ class CucumberChef < Thor
             puts("CONTAINER: #{key.inspect}")
             puts(value.to_yaml)
           end
+          test_lab.cc_server.down
         else
           raise Cucumber::Chef::Error, "We could not find a running test lab."
         end
