@@ -13,13 +13,10 @@ if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
 
   knife_rb = Cucumber::Chef.knife_rb
   if File.exists?(knife_rb)
-    command = [knife, ARGV, "--server-url http://#{test_lab.ip}:4000", "--config #{knife_rb}", "2>&1"].flatten.compact.join(" ")
-    puts(command)
-    puts(%x(#{command}))
-    exit($?.to_i)
+    test_lab.knife_cli([ARGV], :silence => false)
   else
     puts("Could not find your Cucumber-Chef 'knife.rb'.  Did you setup your test lab?")
-    exit(255)
+    exit(2)
   end
 
 else

@@ -27,9 +27,6 @@ module Cucumber
     class Provisioner
       attr_accessor :test_lab, :stdout, :stderr, :stdin
 
-      HOSTNAME = "cucumber-chef.test-lab"
-      PASSWORD = "p@ssw0rd1"
-
 ################################################################################
 
       def initialize(test_lab, stdout=STDOUT, stderr=STDERR, stdin=STDIN)
@@ -162,14 +159,7 @@ module Cucumber
       def upload_cookbook
         Cucumber::Chef.logger.debug { "Uploading cucumber-chef cookbooks..." }
         ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' cookbooks", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
-          Cucumber::Chef.load_chef_config
-          cookbook_repo = ::Chef::CookbookLoader.new(@cookbooks_path)
-          cookbook_repo.each do |name, cookbook|
-            Cucumber::Chef.logger.debug { "::Chef::CookbookUploader(#{name}) ATTEMPT" }
-            ::Chef::CookbookUploader.new(cookbook, @cookbooks_path, :force => true).upload_cookbooks
-            Cucumber::Chef.logger.debug { "::Chef::CookbookUploader(#{name}) UPLOADED" }
-          end
-          #@command.knife([ "cookbook upload cucumber-chef", "-o", @cookbooks_path ], :silence => true)
+          @test_lab.knife_cli(%Q{cookbook upload cucumber-chef -o #{@cookbooks_path}}, :silence => true)
         end
       end
 
@@ -178,13 +168,7 @@ module Cucumber
       def upload_role
         Cucumber::Chef.logger.debug { "Uploading cucumber-chef test lab role..." }
         ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' roles", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
-          Cucumber::Chef.load_chef_config
-          ::Chef::Config[:role_path] = @roles_path
-          [ "test_lab" ].each do |name|
-            role = ::Chef::Role.from_disk(name)
-            role.save
-          end
-          #@command.knife([ "role from file", File.join(@roles_path, "test_lab.rb") ], :silence => true)
+          @test_lab.knife_cli(%Q{role from file #{File.join(@roles_path, "test_lab.rb")}}, :silence => true)
         end
       end
 
@@ -193,13 +177,7 @@ module Cucumber
       def tag_node
         Cucumber::Chef.logger.debug { "Tagging cucumber-chef test lab node..." }
         ZTK::Benchmark.bench(:message => "Tagging 'cucumber-chef' node", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
-          Cucumber::Chef.load_chef_config
-          node = ::Chef::Node.load(HOSTNAME)
-          [ Cucumber::Chef::Config[:mode].to_s, Cucumber::Chef::Config[:user].to_s ].each do |tag|
-            node.tags << tag
-            node.save
-          end
-          #@command.knife([ "tag create", HOSTNAME, Cucumber::Chef::Config[:mode] ], :silence => true)
+          @test_lab.knife_cli(%Q{tag create #{Cucumber::Chef.lab_hostname_full} #{Cucumber::Chef::Config.mode}}, :silence => true)
         end
       end
 
@@ -208,13 +186,7 @@ module Cucumber
       def add_node_role
         Cucumber::Chef.logger.debug { "Setting up cucumber-chef test lab run list..." }
         ZTK::Benchmark.bench(:message => "Setting 'cucumber-chef' run list", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
-          Cucumber::Chef.load_chef_config
-          node = ::Chef::Node.load(HOSTNAME)
-          [ "role[test_lab]" ].each do |entry|
-            node.run_list << entry
-          end
-          node.save
-          #@command.knife([ "node run_list add", HOSTNAME, "\"role[test_lab]\"" ], :silence => true)
+          @test_lab.knife_cli(%Q{node run_list add #{Cucumber::Chef.lab_hostname_full} "role[test_lab]"}, :silence => true)
         end
       end
 
