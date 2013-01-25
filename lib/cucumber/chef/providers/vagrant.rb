@@ -39,7 +39,6 @@ module Cucumber
           @stdout.sync = true if @stdout.respond_to?(:sync=)
 
           @env = ::Vagrant::Environment.new
-          # @env = ::Vagrant::Environment.new(:ui_class => ::Vagrant::UI::Colored)
           @vm = @env.primary_vm
         end
 
@@ -49,7 +48,7 @@ module Cucumber
 
         def create
           ZTK::Benchmark.bench(:message => "Creating #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
-            @env.cli("up")
+            self.vagrant_cli("up")
             ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
           end
 
@@ -67,7 +66,7 @@ module Cucumber
 
         def destroy
           if exists?
-            @env.cli("destroy", "--force")
+            self.vagrant_cli("destroy", "--force")
           else
             raise VagrantError, "We could not find a test lab!"
           end
@@ -84,7 +83,7 @@ module Cucumber
 
         def up
           if (exists? && dead?)
-            @env.cli("up")
+            self.vagrant_cli("up")
             ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
           else
             raise VagrantError, "We could not find a powered off test lab."
@@ -102,7 +101,7 @@ module Cucumber
 
         def halt
           if (exists? && alive?)
-            @env.cli("halt")
+            self.vagrant_cli("halt")
           else
             raise AWSError, "We could not find a running test lab."
           end
@@ -119,7 +118,7 @@ module Cucumber
 
         def reload
           if (exists? && alive?)
-            @env.cli("reload")
+            self.vagrant_cli("reload")
           else
             raise AWSError, "We could not find a running test lab."
           end
@@ -164,6 +163,13 @@ module Cucumber
 
         def port
           @vm.config.vm.forwarded_ports.select{ |fwd_port| (fwd_port[:name] == "ssh") }.first[:hostport].to_i
+        end
+
+################################################################################
+
+        def vagrant_cli(*args)
+          command = Cucumber::Chef.build_command("vagrant", *args)
+          ZTK::Command.new.exec(command, :silence => true)
         end
 
 ################################################################################
