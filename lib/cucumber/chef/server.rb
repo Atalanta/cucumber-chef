@@ -73,7 +73,7 @@ module Cucumber
 ################################################################################
 
       def down
-        @test_lab.ssh.exec("sudo pkill -9 -f cc-server")
+        @test_lab.ssh.exec("sudo pkill -9 cc-server ; exit 0")
       end
 
 ################################################################################
