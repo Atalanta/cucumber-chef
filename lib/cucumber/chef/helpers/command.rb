@@ -23,25 +23,38 @@ module Cucumber::Chef::Helpers::Command
 
 ################################################################################
 
-  def command_run_remote(name, command, expected_exit_code=0)
+  def command_run_remote(name, command, options={})
+    expected_exit_code = (options[:expected_exit_code] || 0)
+    options.reject!{ |k,v| k == :expected_exit_code }
+
     identity_file = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh", "id_rsa")
 
     command = %W(/usr/bin/ssh #{ENV['LOG_LEVEL'] == 'DEBUG' ? "-v" : nil} -i #{identity_file} #{name} #{command})
-    ::ZTK::Command.new(:timeout => Cucumber::Chef::Config.command_timeout).exec(command.compact.join(" "), :silence => true, :exit_code => expected_exit_code).output
+    ::ZTK::Command.new({:timeout => Cucumber::Chef::Config.command_timeout}.merge(options)).exec(command.compact.join(" "), :silence => true, :exit_code => expected_exit_code)
   end
 
 ################################################################################
 
-  def command_run_chroot(name, command, expected_exit_code=0)
+  def command_run_chroot(name, command, options={})
+    expected_exit_code = (options[:expected_exit_code] || 0)
+    options.reject!{ |k,v| k == :expected_exit_code }
+
     command = %Q(/usr/sbin/chroot #{container_root(name)} /bin/bash -c '#{command.gsub("'", '"')}')
-    ::ZTK::Command.new(:timeout => Cucumber::Chef::Config.command_timeout).exec(command, :silence => true, :exit_code => expected_exit_code).output
+    ::ZTK::Command.new({:timeout => Cucumber::Chef::Config.command_timeout}.merge(options)).exec(command, :silence => true, :exit_code => expected_exit_code)
   end
 
 ################################################################################
 
-  def command_run_local(command, expected_exit_code=0)
+  def command_run_local(command, options={})
+    $logger.info { "ONE command_run_local(#{options.inspect})" }
+
+    expected_exit_code = (options[:expected_exit_code] || 0)
+    options.reject!{ |k,v| k == :expected_exit_code }
+
+    $logger.info { "TWO command_run_local(#{options.inspect})" }
+
     command = %Q(/bin/bash -c '#{command.gsub("'", '"')}')
-    ::ZTK::Command.new(:timeout => Cucumber::Chef::Config.command_timeout).exec(command, :silence => true, :exit_code => expected_exit_code).output
+    ::ZTK::Command.new({:timeout => Cucumber::Chef::Config.command_timeout}.merge(options)).exec(command, :silence => true, :exit_code => expected_exit_code)
   end
 
 ################################################################################

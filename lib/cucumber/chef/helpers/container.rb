@@ -111,14 +111,14 @@ EOH
 ################################################################################
 
   def container_start(name)
-    status = command_run_local("lxc-info -n #{name}")
+    status = command_run_local("lxc-info -n #{name}").output
     if status.include?("STOPPED")
       command_run_local("lxc-start -d -n #{name}")
     end
   end
 
   def container_stop(name)
-    status = command_run_local("lxc-info -n #{name}")
+    status = command_run_local("lxc-info -n #{name}").output
     if status.include?("RUNNING")
       command_run_local("lxc-stop -n #{name}")
     end
@@ -127,7 +127,7 @@ EOH
 ################################################################################
 
   def container_running?(name)
-    status = command_run_local("lxc-info -n #{name}")
+    status = command_run_local("lxc-info -n #{name}").output
     status.include?("RUNNING")
   end
 
