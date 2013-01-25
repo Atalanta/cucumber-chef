@@ -95,11 +95,17 @@ module Cucumber
       def drb
         dead? and raise TestLabError, "The test lab must be running in order to start a Drb session!"
 
-        if (!defined?(@drb) || @drb.nil?)
-          @drb ||= DRbObject.new_with_uri("druby://#{self.ip}:8787")
-          @drb and DRb.start_service
-        end
+        # @drb and DRb.stop_service
+        @drb ||= DRbObject.new_with_uri("druby://#{self.ip}:8787")
+        @drb and DRb.start_service
         @drb
+      end
+
+################################################################################
+
+      def cc_server
+        @cc_server ||= Cucumber::Chef::Server.new(self, @stdout, @stderr, @stdin, @logger)
+        @cc_server
       end
 
 ################################################################################
