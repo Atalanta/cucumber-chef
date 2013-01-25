@@ -49,32 +49,50 @@ module Cucumber
         remote_file = File.join(home_dir, ".cucumber-chef", "config.rb")
         @test_lab.ssh.upload(local_file, remote_file)
 
-        @server_thread = Thread.new do
-          self.down
+        begin
+          self.ping
+        rescue
+          @background = ZTK::Background.new
+          @background.process do
+            self.down
 
-          environment = Array.new
-          %w(PURGE VERBOSE LOG_LEVEL).each do |env_var|
-            environment << "#{env_var}=#{ENV[env_var].inspect}" if (!ENV[env_var].nil? && !ENV[env_var].empty?)
+            environment = Array.new
+            %w(PURGE VERBOSE LOG_LEVEL).each do |env_var|
+              environment << "#{env_var}=#{ENV[env_var].inspect}" if (!ENV[env_var].nil? && !ENV[env_var].empty?)
+            end
+
+            command = ["sudo", environment, "/usr/bin/env cc-server", Cucumber::Chef.external_ip].flatten.compact.join(" ")
+
+            @test_lab.ssh.exec(command, options)
           end
 
-          command = ["sudo", environment, "cc-server", Cucumber::Chef.external_ip].flatten.compact.join(" ")
-
-          @test_lab.ssh.exec(command, options)
+          Kernel.at_exit do
+            self.at_exit
+          end
         end
 
-        ::ZTK::RescueRetry.try(:tries => 30) do
-          @test_lab.drb.load_containers
+        ZTK::RescueRetry.try(:tries => 30) do
+          self.ping
         end
 
         File.exists?(Cucumber::Chef.artifacts_dir) && FileUtils.rm_rf(Cucumber::Chef.artifacts_dir)
 
-        @server_thread
+        true
+      end
+
+################################################################################
+
+      def ping
+        @drb and DRb.stop_service
+        @drb = DRbObject.new_with_uri("druby://#{@test_lab.ip}:8787")
+        @drb and DRb.start_service
+        @drb.ping
       end
 
 ################################################################################
 
       def down
-        @test_lab.ssh.exec("sudo pkill -9 cc-server ; exit 0")
+        (@test_lab.drb.shutdown rescue nil)
       end
 
 ################################################################################
@@ -104,9 +122,9 @@ module Cucumber
 ################################################################################
 
       def at_exit
-        @test_lab.drb.save_containers
-        @test_lab.drb.shutdown
-        @server_thread.kill
+        @logger.fatal { "Waiting for cc-server to shutdown." }
+        self.down
+        @background.wait
       end
 
 ################################################################################
