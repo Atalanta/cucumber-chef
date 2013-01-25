@@ -57,24 +57,23 @@ module Cucumber
 
       def status
         if exists?
-          details = {
-            "Provider" => @provider.class,
-            "ID" => self.id,
-            "State" => self.state,
-            "Username" => self.username,
-            "IP Address" => self.ip,
-            "Port" => self.port,
-            "Chef-Server API" => self.chef_server_api,
-            "Chef-Server WebUI" => self.chef_server_webui,
-            "Chef-Server Default User" => "admin",
-            "Chef-Server Default Password" => Cucumber::Chef::Config.chef[:admin_password]
-          }
-          max_key_length = details.collect{ |k,v| k.to_s.length }.max
-          details.each do |key,value|
-            @stdout.puts("%#{max_key_length}s: %s" % [key,value.inspect])
-          end
 
-          details
+          headers = [:provider, :id, :state, :username, :"ip address", :port, :"chef-server api", :"chef-server webui", :"chef-server default user", :"chef-server default password"]
+          results = ZTK::Report.new.list([nil], headers) do |noop|
+
+            OpenStruct.new(
+              :provider => @provider.class,
+              :id => self.id,
+              :state => self.state,
+              :username => self.username,
+              :"ip address" => self.ip,
+              :port => self.port,
+              :"chef-server api" => self.chef_server_api,
+              :"chef-server webui" => self.chef_server_webui,
+              :"chef-server default user" => "admin",
+              :"chef-server default password" => Cucumber::Chef::Config.chef[:admin_password]
+            )
+          end
         else
           raise ProviderError, "No test labs exists!"
         end
