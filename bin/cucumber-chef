@@ -305,12 +305,32 @@ class CucumberChef < Thor
 ################################################################################
 
   desc "status", "Displays the current status of the test lab."
+  method_option :containers, :type => :boolean, :desc => "Display container status.", :default => false
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def status
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new)
-      test_lab.status
+      if @options.containers?
+        if test_lab.alive?
+          ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
+            cc_server = Cucumber::Chef::Server.new(test_lab)
+            cc_server.up(:silence => true)
+          end
+
+          test_lab.drb.load_containers
+          test_lab.drb.containers.each do |key, value|
+            puts("=" * 80)
+            puts("CONTAINER: #{key.inspect}")
+            puts(value.to_yaml)
+          end
+        else
+          raise Cucumber::Chef::Error, "We could not find a running test lab."
+        end
+
+      else
+        test_lab.status
+      end
     end
     puts
 
