@@ -323,7 +323,7 @@ class CucumberChef < Thor
           headers = [:name, :alive, :arch, :distro, :ip, :mac, :"chef version", :persist]
           results = ZTK::Report.new.spreadsheet(test_lab.drb.containers, headers) do |name, detail|
             chef_version = "N/A"
-            alive = (test_lab.drb.command_run_local(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}).exit_code == 0)
+            alive = (test_lab.drb.command_run_local(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}, :ignore_exit_status => true).exit_code == 0)
             if alive
               chef_version = test_lab.drb.command_run_chroot(name, %Q{/usr/bin/env chef-client -v}, :ignore_exit_status => true).output.chomp
             end
