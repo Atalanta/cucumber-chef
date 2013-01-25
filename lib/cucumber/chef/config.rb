@@ -162,33 +162,35 @@ module Cucumber
 
 ################################################################################
 
-      mode            :user
-      prerelease      (Cucumber::Chef.is_rc? ? true : false)
+      mode              :user
+      prerelease        (Cucumber::Chef.is_rc? ? true : false)
 
-      provider        :vagrant
-      librarian_chef  false
+      provider          :vagrant
+      librarian_chef    false
 
-      user            (ENV['OPSCODE_USER'] || ENV['USER'])
+      user              (ENV['OPSCODE_USER'] || ENV['USER'])
 
-      artifacts       ({"chef-client-log" => "/var/log/chef/client.log",
-                        "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"})
+      artifacts         ({"chef-client-log" => "/var/log/chef/client.log",
+                          "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"})
 
-      aws             ({:lab_user => "ubuntu",
-                        :lxc_user => "root",
-                        :ubuntu_release => "precise",
-                        :aws_instance_arch => "i386",
-                        :aws_instance_disk_store => "ebs",
-                        :aws_instance_type => "m1.small",
-                        :aws_security_group => "cucumber-chef"})
+      aws               ({:lab_user => "ubuntu",
+                          :lxc_user => "root",
+                          :ubuntu_release => "precise",
+                          :aws_instance_arch => "i386",
+                          :aws_instance_disk_store => "ebs",
+                          :aws_instance_type => "m1.small",
+                          :aws_security_group => "cucumber-chef"})
 
-      vagrant         ({:lab_user => "vagrant",
-                        :lxc_user => "root"})
+      vagrant           ({:lab_user => "vagrant",
+                          :lxc_user => "root"})
 
-      chef            ({:amqp_password => "p@ssw0rd1",
-                        :admin_password => "p@ssw0rd1"})
+      chef              ({:amqp_password => "p@ssw0rd1",
+                          :admin_password => "p@ssw0rd1"})
 
-      test_lab        ({:hostname => "cucumber-chef",
-                        :tld => "test-lab"})
+      test_lab          ({:hostname => "cucumber-chef",
+                          :tld => "test-lab"})
+
+      command_timeout   (60 * 30)
 
 ################################################################################
 
