@@ -46,12 +46,8 @@ module Cucumber::Chef::Helpers::Command
 ################################################################################
 
   def command_run_local(command, options={})
-    $logger.info { "ONE command_run_local(#{options.inspect})" }
-
     expected_exit_code = (options[:expected_exit_code] || 0)
     options.reject!{ |k,v| k == :expected_exit_code }
-
-    $logger.info { "TWO command_run_local(#{options.inspect})" }
 
     command = %Q(/bin/bash -c '#{command.gsub("'", '"')}')
     ::ZTK::Command.new({:timeout => Cucumber::Chef::Config.command_timeout}.merge(options)).exec(command, :silence => true, :exit_code => expected_exit_code)
