@@ -2,8 +2,7 @@
 require 'cucumber-chef'
 
 # if we have bundler binstubs use that; otherwise attempt to detect
-knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue nil)
-knife = "/usr/bin/env knife" unless knife
+knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue "/usr/bin/env knife")
 
 message = "cc-knife v#{Cucumber::Chef::VERSION}"
 puts(message)
