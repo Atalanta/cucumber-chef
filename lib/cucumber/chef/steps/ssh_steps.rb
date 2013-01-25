@@ -30,7 +30,7 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
   lambda {
 
     @connection and @connection.ssh.shutdown!
-    @connection = ZTK::SSH.new
+    @connection = ZTK::SSH.new(:timeout => 120, :ignore_exit_status => true)
 
     @connection.config.proxy_host_name = $test_lab.ip
     @connection.config.proxy_port = $test_lab.port
@@ -60,7 +60,9 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
 end
 
 And /^I run "([^\"]*)"$/ do |command|
-  @output = @connection.exec(command, :silence => true).output
+  @result = @connection.exec(command, :silence => true)
+  @output = @result.output
+  @exit_code = @result.exit_code
 end
 
 Then /^I should( not)? see "([^\"]*)" in the output$/ do |boolean, string|
