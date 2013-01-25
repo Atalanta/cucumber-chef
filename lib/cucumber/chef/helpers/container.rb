@@ -24,7 +24,7 @@ module Cucumber::Chef::Helpers::Container
 ################################################################################
 
   def load_containers
-    logger.debug { "Marshaling '#{Cucumber::Chef.containers_bin}'." }
+    logger.debug { "Reading '#{Cucumber::Chef.containers_bin}'." }
     @containers = ((Marshal.load(IO.read(Cucumber::Chef.containers_bin)) rescue Hash.new) || Hash.new)
 
     logger.info { "-" * 8 }
@@ -36,6 +36,7 @@ module Cucumber::Chef::Helpers::Container
 ################################################################################
 
   def save_containers
+    logger.debug { "Writing '#{Cucumber::Chef.containers_bin}'." }
     logger.info { "-" * 8 }
     @containers.each do |key, value|
       logger.info { "SAVE CONTAINER: #{key.inspect} => #{value.inspect}" }
