@@ -63,7 +63,6 @@ module Cucumber
         end
 
         ::ZTK::RescueRetry.try(:tries => 30) do
-          sleep(1)
           @test_lab.drb.load_containers
         end
 
