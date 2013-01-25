@@ -1,16 +1,6 @@
 #!/usr/bin/env ruby
 require 'cucumber-chef'
 
-def run_remote(command)
-  $logger.info { "cc-push(run_remote): '#{command}'" }
-  $test_lab.ssh.exec(command)
-end
-
-def run_local(command)
-  $logger.info { "cc-push(run_local): '#{command}'" }
-  %x(#{command})
-end
-
 tag = Cucumber::Chef.tag("cc-push")
 puts(tag)
 Cucumber::Chef.boot(tag)
@@ -37,7 +27,7 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.alive?
     $test_lab.ssh.upload(local_file, remote_file)
     FileUtils.rm_f(File.join(Cucumber::Chef.root_dir, "*.gem"))
 
-    run_remote(<<-EOH
+    $test_lab.ssh.exec(<<-EOH
 sudo /bin/bash -c '
 pkill -9 cc-server
 cd #{File.dirname(remote_file)}
@@ -54,6 +44,6 @@ EOH
   end
 
 else
-  puts("No run_remotening cucumber-chef test labs to connect to!")
+  puts("No running cucumber-chef test labs to connect to!")
   exit(1)
 end
