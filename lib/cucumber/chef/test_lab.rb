@@ -110,6 +110,20 @@ module Cucumber
 
 ################################################################################
 
+      def knife_cli(args, options={})
+        options = {:silence => true}.merge(options)
+
+        arguments = Array.new
+        arguments << "--user #{Cucumber::Chef::Config.user}"
+        arguments << "--server-url #{self.chef_server_api}"
+        arguments << "--config #{Cucumber::Chef.knife_rb}" if File.exists?(Cucumber::Chef.knife_rb)
+
+        command = Cucumber::Chef.build_command("knife", args, arguments)
+        ZTK::Command.new.exec(command, options)
+      end
+
+################################################################################
+
       def method_missing(method_name, *method_args)
         if Cucumber::Chef::Provider::PROXY_METHODS.include?(method_name.to_s)
           result = @provider.send(method_name.to_sym, *method_args)
