@@ -19,7 +19,7 @@
 #
 ################################################################################
 
-require 'drb/drb'
+require 'drb'
 require 'readline'
 require 'socket'
 require 'stringio'
