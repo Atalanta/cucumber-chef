@@ -19,20 +19,54 @@
 #
 ################################################################################
 
-And /^the following databags have been updated:$/ do |table|
+And /^the following databags have been (updated|uploaded):$/ do |ignore, table|
   table.hashes.each do |entry|
-    load_databag(entry['databag'], entry['databag_path'])
+    data_bag = entry['databag']
+    data_bag_path = entry['databag_path']
+
+    $test_lab.knife_cli(%Q{data bag from file #{data_bag} #{data_bag_path}}, :silence => true)
   end
 end
 
-And /^the following roles have been updated:$/ do |table|
+And /^the following roles have been (updated|uploaded):$/ do |ignore, table|
   table.hashes.each do |entry|
-    load_role(entry['role'], entry['role_path'])
+    role = entry['role']
+    role_path = entry['role_path']
+
+    if File.extname(role).empty?
+      Dir.glob(File.join(role_path, "#{role}.*")).each do |role_file|
+        $test_lab.knife_cli(%Q{role from file #{role_file}}, :silence => true)
+      end
+    else
+      $test_lab.knife_cli(%Q{role from file #{File.join(role_path, role)}}, :silence => true)
+    end
   end
 end
 
-And /^the following cookbooks have been uploaded:$/ do |table|
+And /^the following cookbooks have been (updated|uploaded):$/ do |ignore, table|
+  cookbooks = table.hashes.inject(Hash.new) do |memo, entry|
+    cookbook = entry['cookbook']
+    cookbook_path = entry['cookbook_path']
+
+    memo.merge(cookbook_path => [cookbook]) { |k,o,n| k = o << n }
+  end
+
+  cookbooks.each do |cookbook_path, cookbooks|
+    $test_lab.knife_cli(%Q{cookbook upload #{cookbooks.join(" ")} -o #{cookbook_path}}, :silence => true)
+  end
+end
+
+And /^the following (environment|environments) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   table.hashes.each do |entry|
-    load_cookbook(entry['cookbook'], entry['cookbook_path'])
+    environment = entry['environment']
+    environment_path = entry['environment_path']
+
+    if File.extname(environment).empty?
+      Dir.glob(File.join(environment_path, "#{environment}.*")).each do |environment_file|
+        $test_lab.knife_cli(%Q{environment from file #{environment_file}}, :silence => true)
+      end
+    else
+      $test_lab.knife_cli(%Q{environment from file #{File.join(environment_path, environment)}}, :silence => true)
+    end
   end
 end
