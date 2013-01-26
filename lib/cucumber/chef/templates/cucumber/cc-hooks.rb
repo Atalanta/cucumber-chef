@@ -41,6 +41,7 @@ Before do |scenario|
 end
 
 After do |scenario|
+  @connection and @connection.ssh.shutdown!
   $cc_client.after(scenario)
 end
 
