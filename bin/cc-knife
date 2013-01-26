@@ -13,7 +13,7 @@ if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
 
   knife_rb = Cucumber::Chef.knife_rb
   if File.exists?(knife_rb)
-    test_lab.knife_cli([ARGV], :silence => false)
+    test_lab.knife_cli([ARGV], :replace_current_process => true)
   else
     puts("Could not find your Cucumber-Chef 'knife.rb'.  Did you setup your test lab?")
     exit(2)
