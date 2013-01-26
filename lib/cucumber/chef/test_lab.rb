@@ -92,20 +92,19 @@ module Cucumber
 
 ################################################################################
 
-      def drb
-        dead? and raise TestLabError, "The test lab must be running in order to start a Drb session!"
+      def cc_client
+        dead? and raise TestLabError, "The test lab must be running in order to start the cc-server/client session!"
 
-        # @drb and DRb.stop_service
-        @drb ||= DRbObject.new_with_uri("druby://#{self.ip}:8787")
-        @drb and DRb.start_service
-        @drb
+        @cc_client ||= Cucumber::Chef::Client.new(self, @stdout, @stderr, @stdin, @logger)
+        @cc_client
       end
 
 ################################################################################
 
-      def cc_client
-        @cc_client ||= Cucumber::Chef::Client.new(self, @stdout, @stderr, @stdin, @logger)
-        @cc_client
+      def drb
+        dead? and raise TestLabError, "The test lab must be running in order to start a Drb session!"
+
+        self.cc_client.drb
       end
 
 ################################################################################
@@ -128,7 +127,7 @@ module Cucumber
         if Cucumber::Chef::Provider::PROXY_METHODS.include?(method_name.to_s)
           result = @provider.send(method_name.to_sym, *method_args)
           splat = [method_name, *method_args].flatten.compact
-          Cucumber::Chef.logger.debug { "test_lab: #{splat.inspect} -> #{result.inspect}" }
+          Cucumber::Chef.logger.debug { "TestLab: #{splat.inspect}=#{result.inspect}" }
           result
         else
           super(method_name, *method_args)

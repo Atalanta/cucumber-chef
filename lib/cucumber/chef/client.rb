@@ -74,7 +74,7 @@ module Cucumber
         end
 
         ZTK::RescueRetry.try(:tries => 30) do
-          self.ping
+          self.drb.ping
         end
 
         File.exists?(Cucumber::Chef.artifacts_dir) && FileUtils.rm_rf(Cucumber::Chef.artifacts_dir)
@@ -84,17 +84,17 @@ module Cucumber
 
 ################################################################################
 
-      def ping
-        @drb and DRb.stop_service
-        @drb = DRbObject.new_with_uri("druby://#{@test_lab.ip}:8787")
-        @drb and DRb.start_service
-        @drb.ping
+      def down
+        (@test_lab.drb.shutdown rescue nil)
       end
 
 ################################################################################
 
-      def down
-        (@test_lab.drb.shutdown rescue nil)
+      def drb
+        @drb and DRb.stop_service
+        @drb = DRbObject.new_with_uri("druby://#{@test_lab.ip}:8787")
+        @drb and DRb.start_service
+        @drb
       end
 
 ################################################################################

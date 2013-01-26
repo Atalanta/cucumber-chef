@@ -90,7 +90,7 @@ module Cucumber
         if Cucumber::Chef::Provider::PROXY_METHODS.include?(method_name.to_s)
           result = @provider.send(method_name.to_sym, *method_args)
           splat = [method_name, *method_args].flatten.compact
-          Cucumber::Chef.logger.debug { "provider: #{splat.inspect} -> #{result.inspect}" }
+          Cucumber::Chef.logger.debug { "Provider: #{splat.inspect}=#{result.inspect}" }
           result
         else
           super(method_name, *method_args)
