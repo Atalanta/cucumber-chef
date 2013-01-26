@@ -19,7 +19,7 @@
 #
 ################################################################################
 
-And /^the following databags have been (updated|uploaded):$/ do |ignore, table|
+And /^the following (databag|databags) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   table.hashes.each do |entry|
     data_bag = entry['databag']
     data_bag_path = entry['databag_path']
@@ -28,7 +28,7 @@ And /^the following databags have been (updated|uploaded):$/ do |ignore, table|
   end
 end
 
-And /^the following roles have been (updated|uploaded):$/ do |ignore, table|
+And /^the following (role|roles) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   table.hashes.each do |entry|
     role = entry['role']
     role_path = entry['role_path']
@@ -43,7 +43,7 @@ And /^the following roles have been (updated|uploaded):$/ do |ignore, table|
   end
 end
 
-And /^the following cookbooks have been (updated|uploaded):$/ do |ignore, table|
+And /^the following (cookbook|cookbooks) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   cookbooks = table.hashes.inject(Hash.new) do |memo, entry|
     cookbook = entry['cookbook']
     cookbook_path = entry['cookbook_path']
