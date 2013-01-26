@@ -112,13 +112,16 @@ module Cucumber
       def knife_cli(args, options={})
         options = {:silence => true}.merge(options)
 
+        extracted_options = options.select{ |k,v| [:silence, :expected_exit_code].include?(k) }
+        options.reject!{ |k,v| [:silence, :expected_exit_code].include?(k) }
+
         arguments = Array.new
         arguments << "--user #{Cucumber::Chef::Config.user}"
         arguments << "--server-url #{self.chef_server_api}"
         arguments << "--config #{Cucumber::Chef.knife_rb}" if File.exists?(Cucumber::Chef.knife_rb)
 
         command = Cucumber::Chef.build_command("knife", args, arguments)
-        ZTK::Command.new.exec(command, options)
+        ZTK::Command.new(options).exec(command, extracted_options)
       end
 
 ################################################################################
