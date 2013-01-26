@@ -320,35 +320,39 @@ class CucumberChef < Thor
 
           test_lab.drb.load_containers
 
-          headers = [:name, :alive, :arch, :distro, :ip, :mac, :"chef version", :persist]
-          results = ZTK::Report.new.spreadsheet(test_lab.drb.containers, headers) do |name, detail|
-            chef_version = "N/A"
-            alive = (test_lab.drb.command_run_local(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}, :ignore_exit_status => true).exit_code == 0)
-            if alive
-              chef_version = test_lab.drb.command_run_chroot(name, %Q{/usr/bin/env chef-client -v}, :ignore_exit_status => true).output.chomp
+          if test_lab.drb.containers.count > 0
+            headers = [:name, :alive, :arch, :distro, :ip, :mac, :"chef version", :persist]
+            results = ZTK::Report.new.spreadsheet(test_lab.drb.containers, headers) do |name, detail|
+              chef_version = "N/A"
+              alive = (test_lab.drb.command_run_local(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}, :ignore_exit_status => true).exit_code == 0)
+              if alive
+                chef_version = test_lab.drb.command_run_chroot(name, %Q{/usr/bin/env chef-client -v}, :ignore_exit_status => true).output.chomp
+              end
+
+              OpenStruct.new(
+                :name => name,
+                :ip => detail[:ip],
+                :mac => detail[:mac],
+                :distro => detail[:distro],
+                :arch => detail[:arch],
+                :alive => alive,
+                :"chef version" => chef_version,
+                :persist => detail[:persist],
+                :chef_attributes => detail[:chef_client]
+              )
             end
 
-            OpenStruct.new(
-              :name => name,
-              :ip => detail[:ip],
-              :mac => detail[:mac],
-              :distro => detail[:distro],
-              :arch => detail[:arch],
-              :alive => alive,
-              :"chef version" => chef_version,
-              :persist => detail[:persist],
-              :chef_attributes => detail[:chef_client]
-            )
-          end
-
-          if @options.attributes?
-            results.rows.each do |result|
-              puts
-              puts("-" * results.width)
-              puts("Chef-Client attributes for '#{result.name.to_s.downcase}':")
-              puts("-" * results.width)
-              puts(JSON.pretty_generate(result.chef_attributes))
+            if @options.attributes?
+              results.rows.each do |result|
+                puts
+                puts("-" * results.width)
+                puts("Chef-Client attributes for '#{result.name.to_s.downcase}':")
+                puts("-" * results.width)
+                puts(JSON.pretty_generate(result.chef_attributes))
+              end
             end
+          else
+            raise Cucumber::Chef::Error, "We could not find any containers!"
           end
 
           test_lab.cc_server.down
