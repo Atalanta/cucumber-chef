@@ -103,9 +103,9 @@ module Cucumber
 
 ################################################################################
 
-      def cc_server
-        @cc_server ||= Cucumber::Chef::Server.new(self, @stdout, @stderr, @stdin, @logger)
-        @cc_server
+      def cc_client
+        @cc_client ||= Cucumber::Chef::Client.new(self, @stdout, @stderr, @stdin, @logger)
+        @cc_client
       end
 
 ################################################################################

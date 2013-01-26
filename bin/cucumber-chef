@@ -205,8 +205,7 @@ class CucumberChef < Thor
           puts
 
           ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
-            cc_server = Cucumber::Chef::Server.new(test_lab)
-            cc_server.up(:silence => true)
+            test_lab.cc_client.up(:silence => true)
           end
 
           args.each do |container|
@@ -217,6 +216,11 @@ class CucumberChef < Thor
               test_lab.drb.save_containers
             end
           end
+
+          ZTK::Benchmark.bench(:message => "Stop cc-server", :mark => "completed in %0.4f seconds.") do
+            test_lab.cc_client.down
+          end
+
         else
           puts
           puts(set_color("Whew! That was close!", :green, true))
@@ -315,7 +319,7 @@ class CucumberChef < Thor
       if @options.containers?
         if test_lab.alive?
           ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_server.up(:silence => true)
+            test_lab.cc_client.up(:silence => true)
           end
 
           test_lab.drb.load_containers
@@ -355,7 +359,9 @@ class CucumberChef < Thor
             raise Cucumber::Chef::Error, "We could not find any containers!"
           end
 
-          test_lab.cc_server.down
+          ZTK::Benchmark.bench(:message => "Stop cc-server", :mark => "completed in %0.4f seconds.") do
+            test_lab.cc_client.down
+          end
         else
           raise Cucumber::Chef::Error, "We could not find a running test lab."
         end

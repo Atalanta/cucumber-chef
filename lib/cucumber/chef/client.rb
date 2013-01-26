@@ -21,9 +21,9 @@
 module Cucumber
   module Chef
 
-    class ServerError < Error; end
+    class ClientError < Error; end
 
-    class Server
+    class Client
       attr_accessor :test_lab, :stdout, :stderr, :stdin, :logger
 
 ################################################################################

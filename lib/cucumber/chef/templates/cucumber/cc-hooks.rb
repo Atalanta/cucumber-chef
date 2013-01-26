@@ -23,8 +23,8 @@ puts("  * #{tag}")
 Cucumber::Chef.boot(tag)
 
 if (($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.alive?)
-  $cc_server = Cucumber::Chef::Server.new($test_lab)
-  $cc_server.up
+  $cc_client = $test_lab.cc_client
+  $cc_client.up
 else
   message = "No running cucumber-chef test labs to connect to!"
   Cucumber::Chef.logger.fatal { message }
@@ -37,15 +37,15 @@ end
 ################################################################################
 
 Before do |scenario|
-  $cc_server.before(scenario)
+  $cc_client.before(scenario)
 end
 
 After do |scenario|
-  $cc_server.after(scenario)
+  $cc_client.after(scenario)
 end
 
 Kernel.at_exit do
-  $cc_server.at_exit
+  $cc_client.at_exit
 end
 
 ################################################################################
