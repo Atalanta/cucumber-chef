@@ -4,16 +4,15 @@ rvm:
   - 1.9.2
   - 1.9.3
 
-branches:
-  only:
-    - master
-
-notifications:
-  irc:
-    - "irc.freenode.net#jovelabs"
+before_install:
+  - sudo apt-get -qq update
 
 before_script:
   - mkdir -p $HOME/.chef/
 
-# uncomment this line if your project needs to run something other than `rake`:
-#script: bundle exec rspec spec
+bundler_args: --binstubs
+
+script: "rake spec"
+
+notifications:
+  irc: "irc.freenode.net#jovelabs"
