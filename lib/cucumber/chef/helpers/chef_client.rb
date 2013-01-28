@@ -62,7 +62,8 @@ module Cucumber::Chef::Helpers::ChefClient
     arguments = {
       "--node-name" => name,
       "--json-attributes" => File.join("/etc", "chef", "attributes.json").to_s,
-      "--log_level" => (ENV['LOG_LEVEL'] || "INFO").downcase
+      "--log_level" => (ENV['LOG_LEVEL'] || "INFO").downcase,
+      "--logfile" => "/var/log/chef/client.log"
     }.reject{ |k,v| v.nil? }.sort
 
     output = nil
