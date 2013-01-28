@@ -514,6 +514,7 @@ class CucumberChef < Thor
       "root_dir" => Cucumber::Chef.root_dir,
       "home_dir" => Cucumber::Chef.home_dir,
       "log_file" => Cucumber::Chef.log_file,
+      "artifacts_dir" => Cucumber::Chef.artifacts_dir,
       "config_rb" => Cucumber::Chef.config_rb,
       "containers_bin" => Cucumber::Chef.containers_bin,
       "knife_rb" => Cucumber::Chef.knife_rb,
