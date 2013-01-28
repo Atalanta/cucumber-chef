@@ -10,7 +10,7 @@ branches:
 
 notifications:
   irc:
-    - "irc.freenode.org#cucumber-chef"
+    - "irc.freenode.net#jovelabs"
 
 before_script:
   - mkdir -p $HOME/.chef/
