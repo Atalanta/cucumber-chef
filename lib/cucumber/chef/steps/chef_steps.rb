@@ -23,8 +23,8 @@ And /^the following (databag|databags) (has|have) been (updated|uploaded):$/ do 
   table.hashes.each do |entry|
     data_bag = entry['databag']
     data_bag_path = entry['databag_path']
-
-    $test_lab.knife_cli(%Q{data bag from file #{data_bag} #{data_bag_path}}, :silence => true)
+    $test_lab.knife_cli(%Q{data bag create "#{data_bag}"}, :silence => true)
+    $test_lab.knife_cli(%Q{data bag from file "#{data_bag}" "#{data_bag_path}"}, :silence => true)
   end
 end
 
