@@ -60,6 +60,7 @@ And /^"([^\"]*)" is in the "([^\"]*)" environment$/ do |name, environment|
 end
 
 And /^the chef-client has been run on "([^\"]*)"$/ do |name|
+  $test_lab.knife_cli(%Q{index rebuild --yes --verbose})
   $test_lab.drb.chef_run_client(name)
   chef_client_artifacts(name)
 end
