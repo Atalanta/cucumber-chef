@@ -62,13 +62,15 @@ module Cucumber::Chef::Helpers::ChefClient
     arguments = {
       "--node-name" => name,
       "--json-attributes" => File.join("/etc", "chef", "attributes.json").to_s,
-      "--log_level" => (ENV['LOG_LEVEL'] || "INFO").downcase,
-      "--logfile" => "/var/log/chef/client.log"
+      "--log_level" => @chef_client_config[:log_level],
+      "--logfile" => @chef_client_config[:log_location],
+      "--server" => @chef_client_config[:chef_server_url],
+      "--environment" => @chef_client_config[:environment]
     }.reject{ |k,v| v.nil? }.sort
 
     output = nil
     bm = ::Benchmark.realtime do
-      output = command_run_chroot(name, ["/usr/bin/chef-client", arguments, args].flatten.join(" "))
+      output = command_run_chroot(name, ["/usr/bin/chef-client", arguments, args, "--once"].flatten.join(" "))
     end
     logger.info { "Chef client run on container '#{name}' took %0.4f seconds." % bm }
 
