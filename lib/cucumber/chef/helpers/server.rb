@@ -25,6 +25,7 @@ module Cucumber::Chef::Helpers::Server
 
   def server_init(name)
     @containers[name] ||= Hash.new
+    @containers[name][:chef_client] = nil
   end
 
 ################################################################################
