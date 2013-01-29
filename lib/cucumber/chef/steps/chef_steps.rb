@@ -28,6 +28,15 @@ And /^the following (databag|databags) (has|have) been (updated|uploaded):$/ do 
   end
 end
 
+And /^the following (databag|databags) (has|have) been (deleted|removed):$/ do |ignore0, ignore1, ignore2, table|
+  table.hashes.each do |entry|
+    data_bag = entry['databag']
+    $test_lab.knife_cli(%Q{data bag delete "#{data_bag}" --yes}, :silence => true)
+  end
+end
+
+################################################################################
+
 And /^the following (role|roles) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   table.hashes.each do |entry|
     role = entry['role']
@@ -43,6 +52,8 @@ And /^the following (role|roles) (has|have) been (updated|uploaded):$/ do |ignor
   end
 end
 
+################################################################################
+
 And /^the following (cookbook|cookbooks) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   cookbooks = table.hashes.inject(Hash.new) do |memo, entry|
     cookbook = entry['cookbook']
@@ -55,6 +66,12 @@ And /^the following (cookbook|cookbooks) (has|have) been (updated|uploaded):$/ d
     $test_lab.knife_cli(%Q{cookbook upload #{cookbooks.join(" ")} -o #{cookbook_path}}, :silence => true)
   end
 end
+
+And /^all of the cookbooks in "([^\"]*)" (has|have) been (updated|uploaded)$/ do |cookbook_path, ignore0, ignore1|
+  $test_lab.knife_cli(%Q{cookbook upload -a -o #{cookbook_path}}, :silence => true)
+end
+
+################################################################################
 
 And /^the following (environment|environments) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   table.hashes.each do |entry|
@@ -70,3 +87,5 @@ And /^the following (environment|environments) (has|have) been (updated|uploaded
     end
   end
 end
+
+################################################################################
