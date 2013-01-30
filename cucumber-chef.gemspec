@@ -43,6 +43,7 @@ Gem::Specification.new do |s|
 
   # TDD
   s.add_dependency("cucumber", ">= 1.2.0")
+  s.add_dependency("gherkin", "<= 2.11.5")
   s.add_dependency("rspec", ">= 2.10.0")
 
   # Support
