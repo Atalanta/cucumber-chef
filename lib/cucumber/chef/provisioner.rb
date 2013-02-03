@@ -69,7 +69,7 @@ module Cucumber
       def bootstrap
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
-        ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           chef_client_attributes = {
             "run_list" => "role[test_lab]",
             "cucumber_chef" => {
@@ -108,7 +108,7 @@ module Cucumber
 ################################################################################
 
       def download_chef_credentials
-        ZTK::Benchmark.bench(:message => "Downloading chef-server credentials", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Downloading chef-server credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
 
@@ -122,7 +122,7 @@ module Cucumber
 ################################################################################
 
       def download_proxy_ssh_credentials
-        ZTK::Benchmark.bench(:message => "Downloading proxy SSH credentials", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Downloading proxy SSH credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
@@ -139,7 +139,7 @@ module Cucumber
 ################################################################################
 
       def render_knife_rb
-        ZTK::Benchmark.bench(:message => "Building 'cc-knife' configuration", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Building 'cc-knife' configuration", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb")
 
           context = {
@@ -158,7 +158,7 @@ module Cucumber
 
       def upload_cookbook
         @ui.logger.debug { "Uploading cucumber-chef cookbooks..." }
-        ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' cookbooks", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' cookbooks", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           @test_lab.knife_cli(%Q{cookbook upload cucumber-chef -o #{@cookbooks_path}}, :silence => true)
         end
       end
@@ -167,7 +167,7 @@ module Cucumber
 
       def upload_role
         @ui.logger.debug { "Uploading cucumber-chef test lab role..." }
-        ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' roles", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' roles", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           @test_lab.knife_cli(%Q{role from file #{File.join(@roles_path, "test_lab.rb")}}, :silence => true)
         end
       end
@@ -176,7 +176,7 @@ module Cucumber
 
       def tag_node
         @ui.logger.debug { "Tagging cucumber-chef test lab node..." }
-        ZTK::Benchmark.bench(:message => "Tagging 'cucumber-chef' node", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Tagging 'cucumber-chef' node", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           @test_lab.knife_cli(%Q{tag create #{Cucumber::Chef.lab_hostname_full} #{Cucumber::Chef::Config.mode}}, :silence => true)
         end
       end
@@ -185,7 +185,7 @@ module Cucumber
 
       def add_node_role
         @ui.logger.debug { "Setting up cucumber-chef test lab run list..." }
-        ZTK::Benchmark.bench(:message => "Setting 'cucumber-chef' run list", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Setting 'cucumber-chef' run list", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           @test_lab.knife_cli(%Q{node run_list add #{Cucumber::Chef.lab_hostname_full} "role[test_lab]"}, :silence => true)
         end
       end
@@ -193,7 +193,7 @@ module Cucumber
 ################################################################################
 
       def chef_first_run
-        ZTK::Benchmark.bench(:message => "Performing chef-client run", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Performing chef-client run", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
           command = "sudo #{command}"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
@@ -203,11 +203,11 @@ module Cucumber
 ################################################################################
 
       def wait_for_chef_server
-        ZTK::Benchmark.bench(:message => "Waiting for the chef-server", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Waiting for the chef-server", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4000, :data => "GET", :wait => 120).wait
         end
 
-        ZTK::Benchmark.bench(:message => "Waiting for the chef-server-webui", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Waiting for the chef-server-webui", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4040, :data => "GET", :wait => 120).wait
         end
       end
@@ -215,7 +215,7 @@ module Cucumber
 ################################################################################
 
       def reboot_test_lab
-        ZTK::Benchmark.bench(:message => "Rebooting the test lab", :mark => "completed in %0.4f seconds.", :ui = @ui) do
+        ZTK::Benchmark.bench(:message => "Rebooting the test lab", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           command = "sudo reboot"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => @test_lab.port, :wait => 120).wait
