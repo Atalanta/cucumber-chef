@@ -4,14 +4,14 @@ require 'cucumber-chef'
 tag = Cucumber::Chef.tag("cc-push")
 puts(tag)
 Cucumber::Chef.boot(tag)
-$logger = Cucumber::Chef.logger
 
-if ($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.alive?
+ui = ZTK::UI.new(:logger => Cucumber::Chef.logger)
+if (test_lab = Cucumber::Chef::TestLab.new(ui)) && test_lab.alive?
   gem_name = "cucumber-chef-#{Cucumber::Chef::VERSION}.gem"
   gem_path = File.join(Cucumber::Chef.root_dir, gem_name)
 
-  $logger.info { "gem_name == '#{gem_name}'" }
-  $logger.info { "gem_path == '#{gem_path}'" }
+  ui.logger.info { "gem_name == '#{gem_name}'" }
+  ui.logger.info { "gem_path == '#{gem_path}'" }
 
   if !File.exists?(gem_path)
     puts
@@ -21,13 +21,13 @@ if ($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.alive?
     puts
   else
     local_file = File.join(Cucumber::Chef.root_dir, gem_name)
-    remote_file = File.join("/", "home", $test_lab.ssh.config.user, gem_name)
-    $logger.info { "#{local_file} -> #{$test_lab.ssh.config.user}@#{$test_lab.ip}:#{remote_file}" }
+    remote_file = File.join("/", "home", test_lab.bootstrap_ssh.config.user, gem_name)
+    ui.logger.info { "#{local_file} -> #{test_lab.bootstrap_ssh.config.user}@#{test_lab.ip}:#{remote_file}" }
 
-    $test_lab.ssh.upload(local_file, remote_file)
+    test_lab.bootstrap_ssh.upload(local_file, remote_file)
     FileUtils.rm_f(File.join(Cucumber::Chef.root_dir, "*.gem"))
 
-    $test_lab.ssh.exec(<<-EOH
+    test_lab.bootstrap_ssh.exec(<<-EOH
 sudo /bin/bash -c '
 pkill -9 cc-server
 cd #{File.dirname(remote_file)}
@@ -36,11 +36,11 @@ gem uninstall cucumber-chef ztk --all --ignore-dependencies --executables --back
 rm -fv /usr/lib/ruby/gems/1.8/cache/#{gem_name}
 gem cleanup cucumber-chef --backtrace
 gem install #{remote_file} --backtrace
-rm -fv /home/#{$test_lab.ssh.config.user}/*.gem
+rm -fv /home/#{test_lab.bootstrap_ssh.config.user}/*.gem
 exit 0'
 EOH
     )
-    File.exists?(gem_path) && File.delete(gem_path)
+    File.exists?(gem_path) and File.delete(gem_path)
   end
 
 else
