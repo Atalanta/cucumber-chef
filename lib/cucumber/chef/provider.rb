@@ -27,21 +27,18 @@ module Cucumber
     class ProviderError < Error; end
 
     class Provider
-      attr_accessor :stdout, :stderr, :stdin, :logger
-
       PROXY_METHODS = %w(create destroy up halt reload status id state username ip port chef_server_api chef_server_webui alive? dead? exists?)
 
 ################################################################################
 
-      def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
-        @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
-        @stdout.sync = true if @stdout.respond_to?(:sync=)
+      def initialize(ui=ZTK::UI.new)
+        @ui = ui
 
         @provider = case Cucumber::Chef::Config.provider
         when :aws then
-          Cucumber::Chef::Provider::AWS.new(@stdout, @stderr, @stdin, @logger)
+          Cucumber::Chef::Provider::AWS.new(@ui)
         when :vagrant then
-          Cucumber::Chef::Provider::Vagrant.new(@stdout, @stderr, @stdin, @logger)
+          Cucumber::Chef::Provider::Vagrant.new(@ui)
         end
       end
 
@@ -79,8 +76,8 @@ module Cucumber
         end
 
       rescue Exception => e
-        Cucumber::Chef.logger.fatal { e.message }
-        Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+        @ui.logger.fatal { e.message }
+        @ui.logger.fatal { e.backtrace.join("\n") }
         raise ProviderError, e.message
       end
 
@@ -90,7 +87,7 @@ module Cucumber
         if Cucumber::Chef::Provider::PROXY_METHODS.include?(method_name.to_s)
           result = @provider.send(method_name.to_sym, *method_args)
           splat = [method_name, *method_args].flatten.compact
-          Cucumber::Chef.logger.debug { "Provider: #{splat.inspect}=#{result.inspect}" }
+          @ui.logger.debug { "Provider: #{splat.inspect}=#{result.inspect}" }
           result
         else
           super(method_name, *method_args)

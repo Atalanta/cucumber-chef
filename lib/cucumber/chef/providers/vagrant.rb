@@ -25,7 +25,7 @@ module Cucumber
       class VagrantError < Error; end
 
       class Vagrant
-        attr_accessor :env, :vm, :stdout, :stderr, :stdin, :logger
+        attr_accessor :env, :vm
 
         INVALID_STATES = %w(not_created aborted).map(&:to_sym)
         RUNNING_STATES =  %w(running).map(&:to_sym)
@@ -34,9 +34,8 @@ module Cucumber
 
 ################################################################################
 
-        def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
-          @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
-          @stdout.sync = true if @stdout.respond_to?(:sync=)
+        def initialize(ui=ZTK::UI.new)
+          @ui = ui
 
           @env = ::Vagrant::Environment.new
           @vm = @env.primary_vm
@@ -55,8 +54,8 @@ module Cucumber
           self
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise VagrantError, e.message
         end
 
@@ -72,8 +71,8 @@ module Cucumber
           end
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise VagrantError, e.message
         end
 
@@ -90,8 +89,8 @@ module Cucumber
           end
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise VagrantError, e.message
         end
 
@@ -107,8 +106,8 @@ module Cucumber
           end
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise VagrantError, e.message
         end
 
@@ -124,8 +123,8 @@ module Cucumber
           end
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise VagrantError, e.message
         end
 

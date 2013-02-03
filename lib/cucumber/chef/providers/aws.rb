@@ -25,7 +25,7 @@ module Cucumber
       class AWSError < Error; end
 
       class AWS
-        attr_accessor :connection, :server, :stdout, :stderr, :stdin, :logger
+        attr_accessor :connection, :server
 
         INVALID_STATES = %w(terminated pending).map(&:to_sym)
         RUNNING_STATES =  %w(running starting-up).map(&:to_sym)
@@ -34,9 +34,8 @@ module Cucumber
 
 ################################################################################
 
-        def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
-          @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
-          @stdout.sync = true if @stdout.respond_to?(:sync=)
+        def initialize(ui=ZTK::UI.new)
+          @ui = ui
 
           @connection = Fog::Compute.new(
             :provider => 'AWS',
@@ -55,7 +54,7 @@ module Cucumber
 
         def create
           if (exists? && alive?)
-            @stdout.puts("A test lab already exists using the #{Cucumber::Chef::Config.provider.upcase} credentials you have supplied; attempting to reprovision it.")
+            @ui.stdout.puts("A test lab already exists using the #{Cucumber::Chef::Config.provider.upcase} credentials you have supplied; attempting to reprovision it.")
           else
             server_definition = {
               :image_id => Cucumber::Chef::Config.aws_image_id,
@@ -68,7 +67,7 @@ module Cucumber
             }
 
             if (@server = @connection.servers.create(server_definition))
-              ZTK::Benchmark.bench(:message => "Creating #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
+              ZTK::Benchmark.bench(:message => "Creating #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
                 @server.wait_for { ready? }
                 tag_server
                 ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
@@ -79,8 +78,8 @@ module Cucumber
           self
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { "Backtrace:\n#{e.backtrace.join("\n")}" }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { "Backtrace:\n#{e.backtrace.join("\n")}" }
           raise AWSError, e.message
         end
 
@@ -96,8 +95,8 @@ module Cucumber
           end
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise AWSError, e.message
         end
 
@@ -118,8 +117,8 @@ module Cucumber
           end
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise AWSError, e.message
         end
 
@@ -137,8 +136,8 @@ module Cucumber
           end
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise AWSError, e.message
         end
 
@@ -156,8 +155,8 @@ module Cucumber
           end
 
         rescue Exception => e
-          Cucumber::Chef.logger.fatal { e.message }
-          Cucumber::Chef.logger.fatal { e.backtrace.join("\n") }
+          @ui.logger.fatal { e.message }
+          @ui.logger.fatal { e.backtrace.join("\n") }
           raise AWSError, e.message
         end
 
@@ -203,16 +202,16 @@ module Cucumber
 ################################################################################
 
         def filter_servers(servers, states=VALID_STATES)
-          Cucumber::Chef.logger.debug("states") { states.collect{ |s| s.inspect }.join(", ") }
+          @ui.logger.debug("states") { states.collect{ |s| s.inspect }.join(", ") }
           results = servers.select do |server|
-            Cucumber::Chef.logger.debug("candidate") { "id=#{server.id.inspect}, state=#{server.state.inspect}, tags=#{server.tags.inspect}" }
+            @ui.logger.debug("candidate") { "id=#{server.id.inspect}, state=#{server.state.inspect}, tags=#{server.tags.inspect}" }
 
             ( server.tags['cucumber-chef-mode'] == Cucumber::Chef::Config.mode.to_s &&
               server.tags['cucumber-chef-user'] == Cucumber::Chef::Config.user.to_s &&
               states.any?{ |state| state.to_s == server.state } )
           end
           results.each do |server|
-            Cucumber::Chef.logger.debug("results") { "id=#{server.id.inspect}, state=#{server.state.inspect}" }
+            @ui.logger.debug("results") { "id=#{server.id.inspect}, state=#{server.state.inspect}" }
           end
           results.first
         end

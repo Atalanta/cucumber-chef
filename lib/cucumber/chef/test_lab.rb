@@ -25,15 +25,14 @@ module Cucumber
     class TestLabError < Error; end
 
     class TestLab
-      attr_accessor :provider, :stdout, :stderr, :stdin, :logger
+      attr_accessor :provider
 
 ################################################################################
 
-      def initialize(stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
-        @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
-        @stdout.sync = true if @stdout.respond_to?(:sync=)
+      def initialize(ui=ZTK::UI.new)
+        @ui = ui
 
-        @provider = Cucumber::Chef::Provider.new(@stdout, @stderr, @stdin, @logger)
+        @provider = Cucumber::Chef::Provider.new(@ui)
       end
 
 ################################################################################
@@ -42,7 +41,7 @@ module Cucumber
         dead? and raise TestLabError, "The test lab must be running in order to start a bootstrap SSH session!"
 
         if (!defined?(@ssh) || @ssh.nil?)
-          @ssh ||= ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin, :timeout => Cucumber::Chef::Config.command_timeout)
+          @ssh ||= ZTK::SSH.new(:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout)
 
           @ssh.config.host_name = self.ip
           @ssh.config.port = self.port
@@ -58,7 +57,7 @@ module Cucumber
         dead? and raise TestLabError, "The test lab must be running in order to start an SSH session!"
 
         if (!defined?(@ssh) || @ssh.nil?)
-          @ssh ||= ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin, :timeout => Cucumber::Chef::Config.command_timeout)
+          @ssh ||= ZTK::SSH.new(:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout)
 
           @ssh.config.host_name = self.ip
           @ssh.config.port = self.port
@@ -76,7 +75,7 @@ module Cucumber
         container = container.to_sym
         @proxy_ssh ||= Hash.new
         if (!defined?(@proxy_ssh[container]) || @proxy_ssh[container].nil?)
-          @proxy_ssh[container] ||= ZTK::SSH.new(:stdout => @stdout, :stderr => @stderr, :stdin => @stdin, :timeout => Cucumber::Chef::Config.command_timeout)
+          @proxy_ssh[container] ||= ZTK::SSH.new(:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout)
 
           @proxy_ssh[container].config.proxy_host_name = self.ip
           @proxy_ssh[container].config.proxy_port = self.port
@@ -95,7 +94,7 @@ module Cucumber
       def cc_client
         dead? and raise TestLabError, "The test lab must be running in order to start the cc-server/client session!"
 
-        @cc_client ||= Cucumber::Chef::Client.new(self, @stdout, @stderr, @stdin, @logger)
+        @cc_client ||= Cucumber::Chef::Client.new(self, @ui)
         @cc_client
       end
 
@@ -130,7 +129,7 @@ module Cucumber
         if Cucumber::Chef::Provider::PROXY_METHODS.include?(method_name.to_s)
           result = @provider.send(method_name.to_sym, *method_args)
           splat = [method_name, *method_args].flatten.compact
-          Cucumber::Chef.logger.debug { "TestLab: #{splat.inspect}=#{result.inspect}" }
+          @ui.logger.debug { "TestLab: #{splat.inspect}=#{result.inspect}" }
           result
         else
           super(method_name, *method_args)

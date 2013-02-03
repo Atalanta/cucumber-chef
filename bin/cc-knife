@@ -4,12 +4,12 @@ require 'cucumber-chef'
 # if we have bundler binstubs use that; otherwise attempt to detect
 knife = (Cucumber::Chef.locate(:file, "bin", "knife") rescue "/usr/bin/env knife")
 
-message = "cc-knife v#{Cucumber::Chef::VERSION}"
-puts(message)
-Cucumber::Chef.logger.info { message }
+tag = Cucumber::Chef.tag("cc-knife")
+puts(tag)
+Cucumber::Chef.boot(tag)
 
-Cucumber::Chef::Config.load
-if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
+ui = ZTK::UI.new(:logger => Cucumber::Chef.logger)
+if (test_lab = Cucumber::Chef::TestLab.new(ui)) && test_lab.alive?
 
   knife_rb = Cucumber::Chef.knife_rb
   if File.exists?(knife_rb)

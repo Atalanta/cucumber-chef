@@ -24,15 +24,13 @@ module Cucumber
     class ClientError < Error; end
 
     class Client
-      attr_accessor :test_lab, :stdout, :stderr, :stdin, :logger
+      attr_accessor :test_lab
 
 ################################################################################
 
-      def initialize(test_lab, stdout=STDOUT, stderr=STDERR, stdin=STDIN, logger=$logger)
-        @stdout, @stderr, @stdin, @logger = stdout, stderr, stdin, logger
-        @stdout.sync = true if @stdout.respond_to?(:sync=)
-
+      def initialize(test_lab, ui=ZTK::UI.new)
         @test_lab = test_lab
+        @ui = ui
       end
 
 ################################################################################
@@ -124,7 +122,7 @@ module Cucumber
 ################################################################################
 
       def at_exit
-        @logger.fatal { "Waiting for cc-server to shutdown." }
+        @ui.logger.fatal { "Waiting for cc-server to shutdown." }
         self.down
         @background.wait
       end
