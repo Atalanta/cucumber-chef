@@ -184,7 +184,8 @@ module Cucumber
       vagrant           ({:lab_user => "vagrant",
                           :lxc_user => "root"})
 
-      chef              ({:amqp_password => "p@ssw0rd1",
+      chef              ({:version => "10.18.2",
+                          :amqp_password => "p@ssw0rd1",
                           :admin_password => "p@ssw0rd1"})
 
       test_lab          ({:hostname => "cucumber-chef",
