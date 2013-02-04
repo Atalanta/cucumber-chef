@@ -22,11 +22,12 @@ tag = Cucumber::Chef.tag("cucumber-chef")
 puts("  * #{tag}")
 Cucumber::Chef.boot(tag)
 
-if (($test_lab = Cucumber::Chef::TestLab.new) && $test_lab.alive?)
+$ui = ZTK::UI.new(:logger => Cucumber::Chef.logger)
+if (($test_lab = Cucumber::Chef::TestLab.new($ui)) && $test_lab.alive?)
   $test_lab.cc_client.up
 else
   message = "No running cucumber-chef test labs to connect to!"
-  Cucumber::Chef.logger.fatal { message }
+  $ui.logger.fatal { message }
   raise message
 end
 
