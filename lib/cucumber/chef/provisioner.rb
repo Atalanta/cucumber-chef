@@ -86,7 +86,8 @@ module Cucumber
             :admin_password => Cucumber::Chef::Config.chef[:admin_password],
             :user => Cucumber::Chef::Config.user,
             :hostname_short => Cucumber::Chef.lab_hostname_short,
-            :hostname_full => Cucumber::Chef.lab_hostname_full
+            :hostname_full => Cucumber::Chef.lab_hostname_full,
+            :chef_version => Cucumber::Chef::Config.chef[:version]
           }
 
           local_bootstrap_file = Tempfile.new("bootstrap")
