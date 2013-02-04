@@ -73,7 +73,8 @@ module Cucumber::Chef::Helpers::Container
           commands << "yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server"
         end
         commands << "chroot #{cache_rootfs} /bin/bash -c 'locale-gen en_US'"
-        commands << "chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh -O - | bash'"
+        commands << "chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh'"
+        commands << "chroot #{cache_rootfs} /bin/bash -c 'bash install.sh -v #{Cucumber::Chef::Config.chef[:version]}'"
         if distro.downcase == "fedora"
           commands << "chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm'"
         end
