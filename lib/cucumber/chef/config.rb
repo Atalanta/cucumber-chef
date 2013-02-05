@@ -165,13 +165,24 @@ module Cucumber
       mode              :user
       prerelease        (Cucumber::Chef.is_rc? ? true : false)
 
-      provider          :vagrant
       librarian_chef    false
 
       user              (ENV['OPSCODE_USER'] || ENV['USER'])
 
       artifacts         ({"chef-client-log" => "/var/log/chef/client.log",
                           "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"})
+
+      chef              ({:version => "10.18.2",
+                          :amqp_password => "p@ssw0rd1",
+                          :admin_password => "p@ssw0rd1",
+                          :render_client_rb => true})
+
+      test_lab          ({:hostname => "cucumber-chef",
+                          :tld => "test-lab"})
+
+      command_timeout   (60 * 30)
+
+      provider          :vagrant
 
       aws               ({:lab_user => "ubuntu",
                           :lxc_user => "root",
@@ -183,15 +194,6 @@ module Cucumber
 
       vagrant           ({:lab_user => "vagrant",
                           :lxc_user => "root"})
-
-      chef              ({:version => "10.18.2",
-                          :amqp_password => "p@ssw0rd1",
-                          :admin_password => "p@ssw0rd1"})
-
-      test_lab          ({:hostname => "cucumber-chef",
-                          :tld => "test-lab"})
-
-      command_timeout   (60 * 30)
 
 ################################################################################
 
