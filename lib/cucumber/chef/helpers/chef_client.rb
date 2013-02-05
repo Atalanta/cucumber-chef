@@ -84,23 +84,23 @@ module Cucumber::Chef::Helpers::ChefClient
     client_rb = File.join("/", container_root(name), "etc/chef/client.rb")
     FileUtils.mkdir_p(File.dirname(client_rb))
 
-    # Do not render out a chef-client config for now; we'll assume the user will
-    # use a cookbook/recipe to accomplish this to their liking.
+    # render the chef-client client.rb if we are configured to
+    if Cucumber::Chef::Config.chef[:render_client_rb]
+      File.exists?(client_rb) && File.delete(client_rb)
 
-    # File.exists?(client_rb) && File.delete(client_rb)
+      max_key_size = @chef_client_config.keys.collect{ |z| z.to_s.size }.max
 
-    # max_key_size = @chef_client_config.keys.collect{ |z| z.to_s.size }.max
-
-    # File.open(client_rb, 'w') do |f|
-    #   f.puts(Cucumber::Chef.generate_do_not_edit_warning("Chef Client Configuration"))
-    #   f.puts
-    #   @chef_client_config.merge(:node_name => name).each do |(key,value)|
-    #     next if value.nil?
-    #     f.puts("%-#{max_key_size}s  %s" % [key, value.inspect])
-    #   end
-    #   f.puts
-    #   f.puts("Mixlib::Log::Formatter.show_time = true")
-    # end
+      File.open(client_rb, 'w') do |f|
+        f.puts(Cucumber::Chef.generate_do_not_edit_warning("Chef Client Configuration"))
+        f.puts
+        @chef_client_config.merge(:node_name => name).each do |(key,value)|
+          next if value.nil?
+          f.puts("%-#{max_key_size}s  %s" % [key, value.inspect])
+        end
+        f.puts
+        f.puts("Mixlib::Log::Formatter.show_time = true")
+      end
+    end
 
     attributes_json = File.join("/", container_root(name), "etc", "chef", "attributes.json")
     FileUtils.mkdir_p(File.dirname(attributes_json))
