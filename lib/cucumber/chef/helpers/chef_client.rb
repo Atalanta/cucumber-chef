@@ -55,7 +55,7 @@ module Cucumber::Chef::Helpers::ChefClient
     chef_config_client(name)
 
     logger.info { "Removing artifacts #{Cucumber::Chef::Config[:artifacts].values.collect{|z| "'#{z}'" }.join(' ')}." }
-    (command_run_chroot(name, "/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}") rescue nil)
+    (command_run_remote(name, "/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}") rescue nil)
 
     logger.info { "Running chef client on container '#{name}'." }
 
@@ -70,7 +70,7 @@ module Cucumber::Chef::Helpers::ChefClient
 
     output = nil
     bm = ::Benchmark.realtime do
-      output = command_run_chroot(name, ["/usr/bin/chef-client", arguments, args, "--once"].flatten.join(" "))
+      output = command_run_remote(name, ["/usr/bin/chef-client", arguments, args, "--once"].flatten.join(" "))
     end
     logger.info { "Chef client run on container '#{name}' took %0.4f seconds." % bm }
 
