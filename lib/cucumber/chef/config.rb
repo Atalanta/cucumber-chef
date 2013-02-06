@@ -27,18 +27,24 @@ module Cucumber
     class Config
       extend(Mixlib::Config)
 
+################################################################################
+
       unless const_defined?(:KEYS)
         KEYS = %w(mode provider).map(&:to_sym)
       end
+
       unless const_defined?(:MODES)
         MODES = %w(user test).map(&:to_sym)
       end
+
       unless const_defined?(:PROVIDERS)
         PROVIDERS = %w(aws vagrant).map(&:to_sym)
       end
+
       unless const_defined?(:PROVIDER_AWS_KEYS)
         PROVIDER_AWS_KEYS = %w(aws_access_key_id aws_secret_access_key region availability_zone aws_ssh_key_id identity_file).map(&:to_sym)
       end
+
       unless const_defined?(:PROVIDER_VAGRANT_KEYS)
         PROVIDER_VAGRANT_KEYS = %w(identity_file).map(&:to_sym)
       end
