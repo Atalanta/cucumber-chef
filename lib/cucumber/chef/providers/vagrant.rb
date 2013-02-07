@@ -131,7 +131,7 @@ module Cucumber
 ################################################################################
 
         def exists?
-          (@env.vms.count > 0)
+          ((self.vagrant_cli("status").output =~ /not created/) ? false : true)
         end
 
         def alive?
@@ -145,23 +145,28 @@ module Cucumber
 ################################################################################
 
         def id
-          @vm.name
+          # @vm.name
+          "default"
         end
 
         def state
-          @vm.state.to_sym
+          # @vm.state.to_sym
+          "unknown"
         end
 
         def username
-          @vm.config.ssh.username
+          # @vm.config.ssh.username
+          "vagrant"
         end
 
         def ip
-          @vm.config.ssh.host
+          # @vm.config.ssh.host
+          "127.0.0.1"
         end
 
         def port
-          @vm.config.vm.forwarded_ports.select{ |fwd_port| (fwd_port[:name] == "ssh") }.first[:hostport].to_i
+          # @vm.config.vm.forwarded_ports.select{ |fwd_port| (fwd_port[:name] == "ssh") }.first[:hostport].to_i
+          2222
         end
 
 ################################################################################
