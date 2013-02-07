@@ -271,7 +271,6 @@ module Cucumber
           dependencies = {
             "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
             "chef_version" => ::Chef::VERSION.inspect,
-            "vagrant_version" => ::Vagrant::VERSION.inspect,
             "fog_version" => ::Fog::VERSION.inspect,
             "ruby_version" => RUBY_VERSION.inspect,
             "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,

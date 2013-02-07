@@ -31,7 +31,6 @@ require 'chef'
 require 'chef/cookbook_uploader'
 
 require 'fog'
-require 'vagrant'
 
 require 'json'
 require 'mixlib/config'

@@ -25,7 +25,7 @@ module Cucumber
       class VagrantError < Error; end
 
       class Vagrant
-        attr_accessor :env, :vm
+        # attr_accessor :env, :vm
 
         INVALID_STATES = %w(not_created aborted).map(&:to_sym)
         RUNNING_STATES =  %w(running).map(&:to_sym)
@@ -37,8 +37,8 @@ module Cucumber
         def initialize(ui=ZTK::UI.new)
           @ui = ui
 
-          @env = ::Vagrant::Environment.new
-          @vm = @env.primary_vm
+          # @env = ::Vagrant::Environment.new
+          # @vm = @env.primary_vm
         end
 
 ################################################################################

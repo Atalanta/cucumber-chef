@@ -39,7 +39,7 @@ Gem::Specification.new do |s|
 
   # Providers
   s.add_dependency("fog", ">= 1.3.1")
-  s.add_dependency("vagrant", ">= 1.0.5")
+  # s.add_dependency("vagrant", ">= 1.0.5")
 
   # TDD
   s.add_dependency("cucumber", ">= 1.2.0")

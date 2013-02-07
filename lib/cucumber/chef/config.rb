@@ -145,7 +145,6 @@ module Cucumber
 
       def self.verify_provider_vagrant
         # NOOP
-        require 'vagrant'
       end
 
 ################################################################################
