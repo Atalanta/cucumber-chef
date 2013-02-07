@@ -27,7 +27,7 @@ module Cucumber
       class Vagrant
         # attr_accessor :env, :vm
 
-        INVALID_STATES = %w(not_created aborted).map(&:to_sym)
+        INVALID_STATES = %w(not_created aborted unknown).map(&:to_sym)
         RUNNING_STATES =  %w(running).map(&:to_sym)
         SHUTDOWN_STATES = %w(paused saved poweroff).map(&:to_sym)
         VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
@@ -131,7 +131,7 @@ module Cucumber
 ################################################################################
 
         def exists?
-          ((self.vagrant_cli("status").output =~ /not created/) ? false : true)
+          (self.state != :not_created)
         end
 
         def alive?
@@ -150,8 +150,15 @@ module Cucumber
         end
 
         def state
-          # @vm.state.to_sym
-          "unknown"
+          output = self.vagrant_cli("status").output
+          result = :unknown
+          (VALID_STATES+INVALID_STATES).each do |state|
+            if output =~ /#{state}/
+              result = state
+              break
+            end
+          end
+          result.to_sym
         end
 
         def username
