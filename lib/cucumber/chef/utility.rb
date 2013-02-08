@@ -105,7 +105,7 @@ module Cucumber
 ################################################################################
 
       def home_dir
-        home_dir = File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef")
+        home_dir = (ENV['CUCUMBER_CHEF_HOME'] || File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
         FileUtils.mkdir_p(File.dirname(home_dir))
         home_dir
       end
