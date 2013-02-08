@@ -244,20 +244,17 @@ module Cucumber
 ################################################################################
 
       def load_chef_config
-        if (test_lab = (Cucumber::Chef::TestLab.new rescue nil)) && test_lab.alive?
-          if File.exists?(Cucumber::Chef.knife_rb)
-            logger.info { "load_chef_config(#{Cucumber::Chef.knife_rb})" }
-            ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
+        if File.exists?(Cucumber::Chef.knife_rb)
+          logger.info { "load_chef_config(#{Cucumber::Chef.knife_rb})" }
+          ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
 
+          if (test_lab = (Cucumber::Chef::TestLab.new rescue nil)) && test_lab.alive?
             chef_server_url = "http://#{test_lab.ip}:4000"
             logger.info { "chef_server_url(#{chef_server_url})" }
             ::Chef::Config[:chef_server_url] = chef_server_url
-          else
-            logger.warn { "We found the test lab; but the knife config '#{Cucumber::Chef.knife_rb}' was missing!" }
           end
         else
-          logger.info { "load_chef_config(#{Cucumber::Chef.knife_rb})" }
-          ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
+          logger.warn { "knife config '#{Cucumber::Chef.knife_rb}' was missing!" }
         end
       end
 
