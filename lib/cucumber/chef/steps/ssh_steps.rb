@@ -170,15 +170,15 @@ end
 
 Then /^package "([^\"]*)" should be installed$/ do |package|
   command = ""
-  if (dpkg = @connection.exec("which dpkg 2> /dev/null", options = {:silence => true}).output).length > 0
+  if (dpkg = @connection.exec("which dpkg 2> /dev/null", silence: true).output).length > 0
     command = "#{dpkg.chomp} --get-selections"
-  elsif (yum = @connection.exec("which yum 2> /dev/null", options = {:silence => true}).output).length > 0
+  elsif (yum = @connection.exec("which yum 2> /dev/null", silence: true).output).length > 0
     command = "#{yum.chomp} -q list installed"
 # could easily add more cases here, if I knew what they were :)
   end
 
-  @output = @connection.exec(command, options = {:silence => true})
-  @output.output.should =~ /#{package}/
+  @result = @connection.exec(command, silence: true)
+  @result.output.should =~ /#{package}/
 end
 
 # This regex is a little ugly, but it's so we can accept any of these
