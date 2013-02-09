@@ -177,8 +177,8 @@ Then /^package "([^\"]*)" should be installed$/ do |package|
 # could easily add more cases here, if I knew what they were :)
   end
 
-  @output = @connection.exec(command)
-  @output.should =~ /#{package}/
+  @output = @connection.exec(command, options = {:silence => true})
+  @output.output.should =~ /#{package}/
 end
 
 # This regex is a little ugly, but it's so we can accept any of these
