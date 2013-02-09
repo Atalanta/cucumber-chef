@@ -170,9 +170,9 @@ end
 
 Then /^package "([^\"]*)" should be installed$/ do |package|
   command = ""
-  if (dpkg = @connection.exec("which dpkg 2> /dev/null").output).length > 0
+  if (dpkg = @connection.exec("which dpkg 2> /dev/null", options = {:silence => true}).output).length > 0
     command = "#{dpkg.chomp} --get-selections"
-  elsif (yum = @connection.exec("which yum 2> /dev/null").output).length > 0
+  elsif (yum = @connection.exec("which yum 2> /dev/null", options = {:silence => true}).output).length > 0
     command = "#{yum.chomp} -q list installed"
 # could easily add more cases here, if I knew what they were :)
   end
