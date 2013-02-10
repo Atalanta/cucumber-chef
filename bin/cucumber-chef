@@ -56,7 +56,7 @@ class CucumberChef < Thor
 
     def boot
       tag = Cucumber::Chef.tag("cucumber-chef")
-      puts(set_color(tag, :green, true))
+      puts(tag)
       Cucumber::Chef.boot(tag)
       $logger = Cucumber::Chef.logger
 
