@@ -75,8 +75,6 @@ module Cucumber
           self.drb.ping
         end
 
-        File.exists?(Cucumber::Chef.artifacts_dir) && FileUtils.rm_rf(Cucumber::Chef.artifacts_dir)
-
         true
       end
 
