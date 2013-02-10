@@ -172,6 +172,12 @@ Then /^package "([^\"]*)" should be installed$/ do |package|
   @result.output.should =~ /#{package}/
 end
 
+Then /^"mod_([^ ])*" should be enabled$/ do |apachemod|
+  command = "apache2ctl -t -D DUMP_MODULES"
+  @result = @connection.exec(command, :silence => true)
+  @result.output.should =~ /#{apachemod}_module/
+end
+
 # This regex is a little ugly, but it's so we can accept any of these
 #
 # * "foo" is running
