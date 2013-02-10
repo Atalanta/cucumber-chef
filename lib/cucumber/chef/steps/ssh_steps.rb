@@ -91,14 +91,14 @@ Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   command = "ls %s" % [
     parent
   ]
-  @output = @connection.exec(command).output
+  @output = @connection.exec(command, :silence => true).output
   @output.should =~ /#{child}/
 
 # if a specific type (directory|file) was specified, test for it
   command = "stat -c %%F %s" % [
     path
   ]
-  @output = @connection.exec(command).output
+  @output = @connection.exec(command, :silence => true).output
   types = {
     "file" => /regular file/,
     "directory" => /directory/,
@@ -108,15 +108,6 @@ Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   if types.keys.include? type
     @output.should =~ types[type]
   end
-#  if type == "file"
-#    @output.should =~ /regular file/
-#  end
-#  if type == "directory"
-#    @output.should =~ /directory/
-#  end
-#  if type == "symlink"
-#    @output.should =~ /symbolic link/
-#  end
 end
 
 Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
@@ -170,15 +161,15 @@ end
 
 Then /^package "([^\"]*)" should be installed$/ do |package|
   command = ""
-  if (dpkg = @connection.exec("which dpkg 2> /dev/null").output).length > 0
+  if (dpkg = @connection.exec("which dpkg 2> /dev/null", silence: true).output).length > 0
     command = "#{dpkg.chomp} --get-selections"
-  elsif (yum = @connection.exec("which yum 2> /dev/null").output).length > 0
+  elsif (yum = @connection.exec("which yum 2> /dev/null", silence: true).output).length > 0
     command = "#{yum.chomp} -q list installed"
 # could easily add more cases here, if I knew what they were :)
   end
 
-  @output = @connection.exec(command)
-  @output.should =~ /#{package}/
+  @result = @connection.exec(command, :silence => true)
+  @result.output.should =~ /#{package}/
 end
 
 # This regex is a little ugly, but it's so we can accept any of these

@@ -16,3 +16,4 @@ tmtags
 *.swp
 .rvmrc
 *gem
+.idea/
