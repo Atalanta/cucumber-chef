@@ -3,6 +3,7 @@
 require 'thor'
 require 'cucumber-chef'
 
+
 # $logger = Cucumber::Chef.logger
 
 class CucumberChef < Thor
@@ -204,21 +205,12 @@ class CucumberChef < Thor
           puts("BOOM!")
           puts
 
-          ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_client.up(:silence => true)
-          end
-
           args.each do |container|
             ZTK::Benchmark.bench(:message => "Destroy container '#{container}'", :mark => "completed in %0.4f seconds.") do
-              test_lab.drb.load_containers
-              test_lab.drb.server_destroy(container)
-              test_lab.drb.server_delete(container)
-              test_lab.drb.save_containers
+              test_lab.containers.load
+              test_lab.containers.destroy(container)
+              test_lab.containers.save
             end
-          end
-
-          ZTK::Benchmark.bench(:message => "Stop cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_client.down
           end
 
         else
@@ -318,19 +310,16 @@ class CucumberChef < Thor
     if (test_lab = Cucumber::Chef::TestLab.new)
       if @options.containers?
         if test_lab.alive?
-          ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_client.up(:silence => true)
-          end
 
-          test_lab.drb.load_containers
+          test_lab.containers.load
 
-          if test_lab.drb.containers.count > 0
+          if test_lab.containers.count > 0
             headers = [:name, :alive, :arch, :distro, :ip, :mac, :"chef version", :persist]
-            results = ZTK::Report.new.spreadsheet(test_lab.drb.containers, headers) do |name, detail|
+            results = ZTK::Report.new.spreadsheet(test_lab.containers.to_a, headers) do |name, detail|
               chef_version = "N/A"
-              alive = (test_lab.drb.command_run_local(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}, :ignore_exit_status => true).exit_code == 0)
+              alive = (test_lab.bootstrap_ssh(:ignore_exit_status => true).exec(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}, :silence => true).exit_code == 0)
               if alive
-                chef_version = test_lab.drb.command_run_chroot(name, %Q{/usr/bin/env chef-client -v}, :ignore_exit_status => true).output.chomp
+                chef_version = test_lab.proxy_ssh(name, :ignore_exit_status => true).exec(%Q{/usr/bin/env chef-client -v}, :silence => true).output.chomp
               end
 
               OpenStruct.new(
@@ -359,9 +348,6 @@ class CucumberChef < Thor
             raise Cucumber::Chef::Error, "We could not find any containers!"
           end
 
-          ZTK::Benchmark.bench(:message => "Stop cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_client.down
-          end
         else
           raise Cucumber::Chef::Error, "We could not find a running test lab."
         end

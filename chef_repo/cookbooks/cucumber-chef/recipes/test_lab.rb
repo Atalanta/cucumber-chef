@@ -23,7 +23,7 @@
 # SYSTEM TWEAKS
 ################################################################################
 
-%w( build-essential wget chkconfig ruby-full ruby-dev libxml2-dev libxslt1-dev ).each do |p|
+%w(build-essential wget chkconfig).each do |p|
   package p
 end
 
@@ -47,16 +47,6 @@ end
     mode "0600"
 
     not_if { File.exists?(File.join(home_dir, ".ssh", "config")) }
-  end
-
-  template "create .gemrc for #{user}" do
-    path "#{home_dir}/.gemrc"
-    source "gemrc.erb"
-    owner user
-    group user
-    mode "0644"
-
-    not_if { File.exists?(File.join(home_dir, ".gemrc")) }
   end
 
   execute "generate ssh keypair for #{user}" do
@@ -103,36 +93,6 @@ template "install cucumber-chef motd" do
   mode "0644"
 
   not_if { File.exists?("/etc/motd") && !File.symlink?("/etc/motd") }
-end
-
-
-################################################################################
-# RUBY
-################################################################################
-bash "install rubygems" do
-  code <<-EOH
-cd /tmp
-wget http://production.cf.rubygems.org/rubygems/rubygems-1.8.19.tgz
-tar zxf rubygems-1.8.19.tgz
-cd rubygems-1.8.19
-ruby setup.rb --no-format-executable
-  EOH
-end
-
-gem_package "cucumber-chef" do
-  gem_binary("/usr/bin/gem")
-
-  version(node['cucumber_chef']['version'])
-
-  if node['cucumber_chef']['prerelease']
-    options("--prerelease")
-  end
-end
-
-%w( rspec ).each do |g|
-  gem_package g do
-    gem_binary("/usr/bin/gem")
-  end
 end
 
 

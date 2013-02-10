@@ -19,10 +19,6 @@
 #
 ################################################################################
 
-require 'drb'
-require 'readline'
-require 'socket'
-require 'stringio'
 require 'benchmark'
 
 ################################################################################
@@ -48,6 +44,7 @@ module Cucumber
 
     autoload :Client, 'cucumber/chef/client'
     autoload :Config, 'cucumber/chef/config'
+    autoload :Containers, 'cucumber/chef/containers'
     autoload :Provider, 'cucumber/chef/provider'
     autoload :Provisioner, 'cucumber/chef/provisioner'
     autoload :TestLab, 'cucumber/chef/test_lab'

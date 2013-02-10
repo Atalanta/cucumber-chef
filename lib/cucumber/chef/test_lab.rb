@@ -25,7 +25,7 @@ module Cucumber
     class TestLabError < Error; end
 
     class TestLab
-      attr_accessor :provider
+      attr_accessor :provider, :containers
 
 ################################################################################
 
@@ -33,31 +33,28 @@ module Cucumber
         @ui = ui
 
         @provider = Cucumber::Chef::Provider.new(@ui)
+        @containers = Cucumber::Chef::Containers.new(@ui, self)
       end
 
 ################################################################################
 
-      def bootstrap_ssh
-        dead? and raise TestLabError, "The test lab must be running in order to start a bootstrap SSH session!"
+      def bootstrap_ssh(options={})
+        if (!defined?(@bootstrap_ssh) || @bootstrap_ssh.nil?)
+          @bootstrap_ssh ||= ZTK::SSH.new({:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout}.merge(options))
 
-        if (!defined?(@ssh) || @ssh.nil?)
-          @ssh ||= ZTK::SSH.new(:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout)
-
-          @ssh.config.host_name = self.ip
-          @ssh.config.port = self.port
-          @ssh.config.user = Cucumber::Chef.bootstrap_user
-          @ssh.config.keys = Cucumber::Chef.bootstrap_identity
+          @bootstrap_ssh.config.host_name = self.ip
+          @bootstrap_ssh.config.port = self.port
+          @bootstrap_ssh.config.user = Cucumber::Chef.bootstrap_user
+          @bootstrap_ssh.config.keys = Cucumber::Chef.bootstrap_identity
         end
-        @ssh
+        @bootstrap_ssh
       end
 
 ################################################################################
 
-      def ssh
-        dead? and raise TestLabError, "The test lab must be running in order to start an SSH session!"
-
+      def ssh(options={})
         if (!defined?(@ssh) || @ssh.nil?)
-          @ssh ||= ZTK::SSH.new(:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout)
+          @ssh ||= ZTK::SSH.new({:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout}.merge(options))
 
           @ssh.config.host_name = self.ip
           @ssh.config.port = self.port
@@ -69,13 +66,11 @@ module Cucumber
 
 ################################################################################
 
-      def proxy_ssh(container)
-        dead? and raise TestLabError, "The test lab must be running in order to start a proxy SSH session!"
-
+      def proxy_ssh(container, options={})
         container = container.to_sym
         @proxy_ssh ||= Hash.new
         if (!defined?(@proxy_ssh[container]) || @proxy_ssh[container].nil?)
-          @proxy_ssh[container] ||= ZTK::SSH.new(:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout)
+          @proxy_ssh[container] ||= ZTK::SSH.new({:ui => @ui, :timeout => Cucumber::Chef::Config.command_timeout}.merge(options))
 
           @proxy_ssh[container].config.proxy_host_name = self.ip
           @proxy_ssh[container].config.proxy_port = self.port
@@ -91,28 +86,8 @@ module Cucumber
 
 ################################################################################
 
-      def cc_client
-        dead? and raise TestLabError, "The test lab must be running in order to start the cc-server/client session!"
-
-        @cc_client ||= Cucumber::Chef::Client.new(self, @ui)
-        @cc_client
-      end
-
-################################################################################
-
-      def drb
-        dead? and raise TestLabError, "The test lab must be running in order to start a Drb session!"
-
-        self.cc_client.drb
-      end
-
-################################################################################
-
       def knife_cli(args, options={})
         options = {:silence => true}.merge(options)
-
-        extracted_options = options.select{ |k,v| [:silence, :expected_exit_code].include?(k) }
-        options.reject!{ |k,v| [:silence, :expected_exit_code].include?(k) }
 
         arguments = Array.new
         arguments << "--user #{Cucumber::Chef::Config.user}"
@@ -120,7 +95,7 @@ module Cucumber
         arguments << "--config #{Cucumber::Chef.knife_rb}" if File.exists?(Cucumber::Chef.knife_rb)
 
         command = Cucumber::Chef.build_command("knife", args, arguments)
-        ZTK::Command.new(options).exec(command, extracted_options)
+        ZTK::Command.new.exec(command, options)
       end
 
 ################################################################################
