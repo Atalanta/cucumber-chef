@@ -91,14 +91,14 @@ Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   command = "ls %s" % [
     parent
   ]
-  @output = @connection.exec(command, silence: true).output
+  @output = @connection.exec(command, :silence => true).output
   @output.should =~ /#{child}/
 
 # if a specific type (directory|file) was specified, test for it
   command = "stat -c %%F %s" % [
     path
   ]
-  @output = @connection.exec(command, silence: true).output
+  @output = @connection.exec(command, :silence => true).output
   types = {
     "file" => /regular file/,
     "directory" => /directory/,
@@ -168,7 +168,7 @@ Then /^package "([^\"]*)" should be installed$/ do |package|
 # could easily add more cases here, if I knew what they were :)
   end
 
-  @result = @connection.exec(command, silence: true)
+  @result = @connection.exec(command, :silence => true)
   @result.output.should =~ /#{package}/
 end
 
