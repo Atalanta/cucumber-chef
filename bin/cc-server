@@ -35,7 +35,7 @@ class FrontObject
   def initialize
     logger.info { "DRB=#{DRb.config.inspect}" }
 
-    if ENV['PURGE']
+    if ENV['PURGE'] == 'YES'
       Cucumber::Chef.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
       load_containers
       containers.each do |name, value|
