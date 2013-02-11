@@ -75,9 +75,9 @@ end
 
 Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |boolean, key, name|
   if (!boolean)
-    @output.should =~ /#{$test_lab.drb.containers[name][key.downcase.to_sym]}/i
+    @output.should =~ /#{$test_lab.containers.to_a[name][key.downcase.to_sym]}/i
   else
-    @output.should_not =~ /#{$test_lab.drb.containers[name][key.downcase.to_sym]}/i
+    @output.should_not =~ /#{$test_lab.containers.to_a[name][key.downcase.to_sym]}/i
   end
 end
 
