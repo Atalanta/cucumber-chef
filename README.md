@@ -14,7 +14,7 @@ Issues:
 
 Wiki:
 
-* https://github.com/Atalanta/cucumber-chef/wiki
+* https://github.com/Atalanta/cucumber-chef/WIKI.md
 
 Chat:
 
