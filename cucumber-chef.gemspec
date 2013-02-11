@@ -34,9 +34,6 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = ">= 1.3.6"
   s.licenses = ["Apache 2.0"]
 
-  # Chef
-  s.add_dependency("chef", ">= 0.10.0")
-
   # Providers
   s.add_dependency("fog", ">= 1.3.1")
 

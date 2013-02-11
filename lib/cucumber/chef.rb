@@ -23,9 +23,6 @@ require 'benchmark'
 
 ################################################################################
 
-require 'chef'
-require 'chef/cookbook_uploader'
-
 require 'fog'
 
 require 'json'
