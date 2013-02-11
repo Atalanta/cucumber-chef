@@ -89,8 +89,7 @@ module Cucumber
           :persist => true,
           :distro => "ubuntu",
           :release => "lucid",
-          :arch => detect_arch(attributes[:distro] || "ubuntu")
-        }.merge(attributes)
+        }.merge(attributes).merge(:arch => detect_arch(attributes[:distro] || "ubuntu"))
 
         if running?(name)
           @ui.logger.info { "Container '#{name}' is already running." }
