@@ -66,6 +66,7 @@ if ENV['SETUP'] == 'YES'
   end
 
   Cucumber::Chef::Container.all.each do |container|
+    puts("  * Creating container '#{container.name}'...")
     $test_lab.containers.create(container)
     $test_lab.containers.chef_run_client(container)
   end
