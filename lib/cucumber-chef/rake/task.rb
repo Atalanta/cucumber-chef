@@ -6,6 +6,7 @@ namespace :cc do
 
   desc "Run features in a style suitable for Continuous Integration"
   task :ci do |t|
+    pushed = false
     exit_codes = Array.new
 
     puts("Cleaning up...")
@@ -28,7 +29,9 @@ namespace :cc do
 
         system(%Q{mkdir -pv #{File.dirname("public/#{filename}")}})
 
-        command = ["bundle exec cucumber", "features/support", feature, ENV['EXTRA_CUCUMBER_ARGS'], "--format html", "--out public/#{filename}"].flatten.compact.join(" ")
+        push = (pushed ? nil : %Q{PUSH="YES"})
+        command = [push, "bundle exec cucumber", "features/support", feature, ENV['EXTRA_CUCUMBER_ARGS'], "--format html", "--out public/#{filename}"].flatten.compact.join(" ")
+        pushed = true if !pushed
         puts("command=#{command.inspect}")
         system(command)
         exit_codes << $?.exitstatus
