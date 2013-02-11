@@ -24,7 +24,9 @@ Cucumber::Chef.boot(tag)
 
 $ui = ZTK::UI.new(:logger => Cucumber::Chef.logger)
 if (($test_lab = Cucumber::Chef::TestLab.new($ui)) && $test_lab.alive?)
-  $test_lab.cc_client.up
+  $test_lab.containers.load
+  $cc_client = Cucumber::Chef::Client.new($test_lab, $ui)
+  $cc_client.up
 else
   message = "No running cucumber-chef test labs to connect to!"
   $ui.logger.fatal { message }
@@ -37,16 +39,18 @@ end
 ################################################################################
 
 Before do |scenario|
-  $test_lab.cc_client.before(scenario)
+  $cc_client.before(scenario)
+  $test_lab.containers.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
+                                              :validation_client_name => "chef-validator")
 end
 
 After do |scenario|
   @connection and @connection.ssh.shutdown!
-  $test_lab.cc_client.after(scenario)
+  $cc_client.after(scenario)
 end
 
 Kernel.at_exit do
-  $test_lab.cc_client.at_exit
+  $cc_client.down
 end
 
 ################################################################################
