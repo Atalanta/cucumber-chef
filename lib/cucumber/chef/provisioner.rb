@@ -47,7 +47,6 @@ module Cucumber
         wait_for_chef_server
 
         download_chef_credentials
-        render_knife_rb
 
         upload_cookbook
         upload_role
@@ -110,10 +109,10 @@ module Cucumber
 
       def download_chef_credentials
         ZTK::Benchmark.bench(:message => "Downloading chef-server credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
+          local_path = File.dirname(Cucumber::Chef.chef_identity)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
 
-          files = [ "#{Cucumber::Chef::Config[:user]}.pem", "validation.pem" ]
+          files = [ File.basename(Cucumber::Chef.chef_identity), "validation.pem" ]
           files.each do |file|
             @test_lab.bootstrap_ssh.download(File.join(remote_path, file), File.join(local_path, file))
           end
@@ -133,24 +132,6 @@ module Cucumber
             File.exists?(local) and File.delete(local)
             @test_lab.bootstrap_ssh.download(File.join(remote_path, remote_file), local)
             File.chmod(0600, local)
-          end
-        end
-      end
-
-################################################################################
-
-      def render_knife_rb
-        ZTK::Benchmark.bench(:message => "Building 'cc-knife' configuration", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb")
-
-          context = {
-            :chef_server => @test_lab.ip,
-            :librarian_chef => Cucumber::Chef::Config.librarian_chef,
-            :user => Cucumber::Chef::Config.user
-          }
-
-          File.open(Cucumber::Chef.knife_rb, 'w') do |f|
-            f.puts(ZTK::Template.render(template_file, context))
           end
         end
       end

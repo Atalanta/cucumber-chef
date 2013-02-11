@@ -136,18 +136,22 @@ module Cucumber
 
 ################################################################################
 
-      def knife_rb
-        knife_rb = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "knife.rb")
-        FileUtils.mkdir_p(File.dirname(knife_rb))
-        knife_rb
+      def labfile
+        labfile = File.join(Cucumber::Chef.chef_repo, "Labfile")
+        FileUtils.mkdir_p(File.dirname(labfile))
+        labfile
       end
 
 ################################################################################
 
-      def ecosystems_rb
-        ecosystems_rb = File.join(Cucumber::Chef.home_dir, "ecosystems.rb")
-        FileUtils.mkdir_p(File.dirname(ecosystems_rb))
-        ecosystems_rb
+      def chef_user
+        Cucumber::Chef::Config.user
+      end
+
+      def chef_identity
+        chef_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "#{chef_user}.pem")
+        FileUtils.mkdir_p(File.dirname(chef_identity))
+        chef_identity
       end
 
 ################################################################################
@@ -236,7 +240,7 @@ module Cucumber
         name and logger.info { "loading #{name}" }
         logger.info { "boot(#{Cucumber::Chef.config_rb})" }
         Cucumber::Chef::Config.load
-        Cucumber::Chef::Ecosystem.load(Cucumber::Chef.ecosystems_rb)
+        Cucumber::Chef::Labfile.load(Cucumber::Chef.labfile)
       end
 
 ################################################################################
@@ -248,13 +252,11 @@ module Cucumber
 
           dependencies = {
             "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
-            # "chef_version" => ::Chef::VERSION.inspect,
             "fog_version" => ::Fog::VERSION.inspect,
             "ruby_version" => RUBY_VERSION.inspect,
             "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
             "ruby_platform" => RUBY_PLATFORM.inspect,
             "ztk_version" => ::ZTK::VERSION.inspect
-            # "cucumber_version" => ::Cucumber::VERSION.inspect
           }
           if RUBY_VERSION >= "1.9"
             dependencies.merge!("ruby_engine" => RUBY_ENGINE.inspect)
@@ -266,8 +268,7 @@ module Cucumber
             "chef_repo" => chef_repo.inspect,
             "log_file" => log_file.inspect,
             "config_rb" => config_rb.inspect,
-            "knife_rb" => knife_rb.inspect,
-            "ecosystems_rb" => ecosystems_rb.inspect
+            "labfile" => labfile.inspect
           }
 
           max_key_length = [dependencies.keys.collect{ |key| key.to_s.length }.max, details.keys.collect{ |key| key.to_s.length }.max].max + 2

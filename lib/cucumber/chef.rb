@@ -44,6 +44,7 @@ module Cucumber
     autoload :Container, 'cucumber/chef/container'
     autoload :Containers, 'cucumber/chef/containers'
     autoload :Ecosystem, 'cucumber/chef/ecosystem'
+    autoload :Labfile, 'cucumber/chef/labfile'
     autoload :Provider, 'cucumber/chef/provider'
     autoload :Provisioner, 'cucumber/chef/provisioner'
     autoload :TestLab, 'cucumber/chef/test_lab'

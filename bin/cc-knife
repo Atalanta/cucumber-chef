@@ -10,15 +10,7 @@ Cucumber::Chef.boot(tag)
 
 ui = ZTK::UI.new(:logger => Cucumber::Chef.logger)
 if (test_lab = Cucumber::Chef::TestLab.new(ui)) && test_lab.alive?
-
-  knife_rb = Cucumber::Chef.knife_rb
-  if File.exists?(knife_rb)
-    test_lab.knife_cli([ARGV], :replace_current_process => true)
-  else
-    puts("Could not find your Cucumber-Chef 'knife.rb'.  Did you setup your test lab?")
-    exit(2)
-  end
-
+  test_lab.knife_cli([ARGV], :replace_current_process => true)
 else
   puts("No running cucumber-chef test labs to connect to!")
   exit(1)
