@@ -29,7 +29,7 @@ namespace :cc do
 
         system(%Q{mkdir -pv #{File.dirname("public/#{filename}")}})
 
-        push = (pushed ? nil : %Q{PUSH="YES"})
+        push = (pushed ? nil : %Q{SETUP="YES"})
         command = [push, "bundle exec cucumber", "features/support", feature, ENV['EXTRA_CUCUMBER_ARGS'], "--format html", "--out public/#{filename}"].flatten.compact.join(" ")
         pushed = true if !pushed
         puts("command=#{command.inspect}")

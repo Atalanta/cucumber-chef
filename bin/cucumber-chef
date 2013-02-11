@@ -296,6 +296,20 @@ class CucumberChef < Thor
     fatal(e)
   end
 
+  desc "genmac", "Generate a private MAC address"
+  def genmac
+    boot
+
+    puts Cucumber::Chef::Containers.generate_mac
+  end
+
+  desc "genip", "Generate a private IP address"
+  def genip
+    boot
+
+    puts Cucumber::Chef::Containers.generate_ip
+  end
+
 ################################################################################
 # STATUS
 ################################################################################
@@ -311,27 +325,26 @@ class CucumberChef < Thor
       if @options.containers?
         if test_lab.alive?
 
-          test_lab.containers.load
-
           if test_lab.containers.count > 0
             headers = [:name, :alive, :arch, :distro, :ip, :mac, :"chef version", :persist]
-            results = ZTK::Report.new.spreadsheet(test_lab.containers.to_a, headers) do |name, detail|
+            puts Cucumber::Chef::Container.all.inspect
+            results = ZTK::Report.new.spreadsheet(Cucumber::Chef::Container.all, headers) do |container|
               chef_version = "N/A"
-              alive = (test_lab.bootstrap_ssh(:ignore_exit_status => true).exec(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}, :silence => true).exit_code == 0)
+              alive = (test_lab.bootstrap_ssh(:ignore_exit_status => true).exec(%Q{ping -n -c 1 -W 1 #{container.ip}}, :silence => true).exit_code == 0)
               if alive
                 chef_version = test_lab.proxy_ssh(name, :ignore_exit_status => true).exec(%Q{/usr/bin/env chef-client -v}, :silence => true).output.chomp
               end
 
               OpenStruct.new(
-                :name => name,
-                :ip => detail[:ip],
-                :mac => detail[:mac],
-                :distro => detail[:distro],
-                :arch => detail[:arch],
+                :name => container.name,
+                :ip => container.ip,
+                :mac => container.mac,
+                :distro => container.distro,
+                :arch => container.arch,
                 :alive => alive,
                 :"chef version" => chef_version,
-                :persist => detail[:persist],
-                :chef_attributes => detail[:chef_client]
+                :persist => container.persist,
+                :chef_attributes => container.chef_client
               )
             end
 

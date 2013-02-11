@@ -144,10 +144,10 @@ module Cucumber
 
 ################################################################################
 
-      def containers_bin
-        containers_bin = File.join(Cucumber::Chef.home_dir, "containers.bin")
-        FileUtils.mkdir_p(File.dirname(containers_bin))
-        containers_bin
+      def ecosystems_rb
+        ecosystems_rb = File.join(Cucumber::Chef.home_dir, "ecosystems.rb")
+        FileUtils.mkdir_p(File.dirname(ecosystems_rb))
+        ecosystems_rb
       end
 
 ################################################################################
@@ -236,26 +236,7 @@ module Cucumber
         name and logger.info { "loading #{name}" }
         logger.info { "boot(#{Cucumber::Chef.config_rb})" }
         Cucumber::Chef::Config.load
-        load_chef_config
-      end
-
-################################################################################
-# Load Chef::Config
-################################################################################
-
-      def load_chef_config
-        if File.exists?(Cucumber::Chef.knife_rb)
-          logger.info { "load_chef_config(#{Cucumber::Chef.knife_rb})" }
-          ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
-
-          if (test_lab = (Cucumber::Chef::TestLab.new rescue nil)) && test_lab.alive?
-            chef_server_url = "http://#{test_lab.ip}:4000"
-            logger.info { "chef_server_url(#{chef_server_url})" }
-            ::Chef::Config[:chef_server_url] = chef_server_url
-          end
-        else
-          logger.warn { "knife config '#{Cucumber::Chef.knife_rb}' was missing!" }
-        end
+        Cucumber::Chef::Ecosystem.load(Cucumber::Chef.ecosystems_rb)
       end
 
 ################################################################################
@@ -267,7 +248,7 @@ module Cucumber
 
           dependencies = {
             "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
-            "chef_version" => ::Chef::VERSION.inspect,
+            # "chef_version" => ::Chef::VERSION.inspect,
             "fog_version" => ::Fog::VERSION.inspect,
             "ruby_version" => RUBY_VERSION.inspect,
             "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
@@ -286,7 +267,7 @@ module Cucumber
             "log_file" => log_file.inspect,
             "config_rb" => config_rb.inspect,
             "knife_rb" => knife_rb.inspect,
-            "containers_bin" => containers_bin.inspect
+            "ecosystems_rb" => ecosystems_rb.inspect
           }
 
           max_key_length = [dependencies.keys.collect{ |key| key.to_s.length }.max, details.keys.collect{ |key| key.to_s.length }.max].max + 2

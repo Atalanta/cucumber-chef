@@ -31,19 +31,17 @@ end
 
 if ENV['PURGE'] == 'YES'
   $ui.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
-  $test_lab.containers.load
-
-  $test_lab.containers.to_a.each do |name, value|
-    $test_lab.containers.destroy(name)
+  Cucumber::Chef::Container.all.each do |container|
+    $test_lab.containers.destroy(container)
   end
-
-  File.exists?(Cucumber::Chef.containers_bin) && File.delete(Cucumber::Chef.containers_bin)
-  $test_lab.containers.load
 else
   $ui.logger.info { "Allowing existing containers to persist." }
 end
 
-if ENV['PUSH'] == 'YES'
+$test_lab.containers.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
+                                            :validation_client_name => "chef-validator")
+
+if ENV['SETUP'] == 'YES'
   # Upload all of the chef-repo environments
   puts("  * Pushing chef-repo environments to test lab...")
   $test_lab.knife_cli(%Q{environment from file ./environments/*.rb --yes}, :silence => true)
@@ -66,6 +64,11 @@ if ENV['PUSH'] == 'YES'
     $test_lab.knife_cli(%Q{data bag create "#{data_bag}" --yes}, :silence => true)
     $test_lab.knife_cli(%Q{data bag from file "#{data_bag}" "#{data_bag_path}" --yes}, :silence => true)
   end
+
+  Cucumber::Chef::Container.all.each do |container|
+    $test_lab.containers.create(container)
+    $test_lab.containers.chef_run_client(container)
+  end
 end
 
 
@@ -74,21 +77,9 @@ end
 ################################################################################
 
 Before do |scenario|
-  $scenario = scenario
-
-  $test_lab.containers.load
-
-  $test_lab.containers.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
-                                              :validation_client_name => "chef-validator")
 end
 
 After do |scenario|
-  $test_lab.containers.save
-
-  $test_lab.containers.to_a.select{ |name, attributes| !attributes[:persist] }.each do |name, attributes|
-    server_destroy(name)
-  end
-
   @connection and @connection.ssh.shutdown!
 end
 

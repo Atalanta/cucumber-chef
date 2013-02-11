@@ -19,8 +19,18 @@
 #
 ################################################################################
 
-require 'cucumber/chef/steps/chef_steps'
-require 'cucumber/chef/steps/minitest_steps'
-require 'cucumber/chef/steps/ssh_steps'
+module Cucumber
+  module Chef
+
+    class EcosystemError < Error; end
+
+    class Ecosystem < ZTK::DSL::Base
+      has_many :containers, :class_name => "Cucumber::Chef::Container"
+
+      attribute :name
+    end
+
+  end
+end
 
 ################################################################################
