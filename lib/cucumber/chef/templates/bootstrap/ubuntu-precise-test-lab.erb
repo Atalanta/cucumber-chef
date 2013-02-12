@@ -31,7 +31,10 @@ chef-solr chef-solr/amqp_password password <%= @amqp_password %>
 chef-server-webui chef-server-webui/admin_password password <%= @admin_password %>
 EOF
 
-apt-get -q -y --force-yes install chef chef-server
+CHEF_VERSION=`apt-cache showpkg chef | tee | grep -m 1 "<%= @chef_version %>" | cut -c -<%= @chef_version.length + 3 %>`
+CHEF_SERVER_VERSION=`apt-cache showpkg chef-server | tee | grep -m 1 "<%= @chef_version %>" | cut -c -<%= @chef_version.length + 3 %>`
+
+apt-get -q -y --force-yes install chef=$CHEF_VERSION chef-server=$CHEF_SERVER_VERSION
 
 echo -n "Waiting on validation.pem and webui.pem to appear..."
 until [ -f /etc/chef/validation.pem ] && [ -f /etc/chef/webui.pem ]; do
