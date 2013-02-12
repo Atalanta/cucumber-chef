@@ -31,9 +31,9 @@ end
 
 if ENV['PURGE'] == 'YES'
   $ui.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
-  Cucumber::Chef::Container.all.each do |container|
-    ZTK::Benchmark.bench(:message => ">>> Destroying container '#{container.name}'", :mark => "completed in %0.4f seconds.") do
-      $test_lab.containers.destroy(container)
+  $test_lab.containers.list.each do |name|
+    ZTK::Benchmark.bench(:message => ">>> Destroying container '#{name}'", :mark => "completed in %0.4f seconds.") do
+      $test_lab.containers.destroy(name)
     end
   end
 else
