@@ -326,8 +326,7 @@ class CucumberChef < Thor
         if test_lab.alive?
 
           if test_lab.containers.count > 0
-            headers = [:name, :alive, :arch, :distro, :ip, :mac, :"chef version", :persist]
-            puts Cucumber::Chef::Container.all.inspect
+            headers = [:name, :alive, :distro, :ip, :mac, :"chef version", :persist]
             results = ZTK::Report.new.spreadsheet(Cucumber::Chef::Container.all, headers) do |container|
               chef_version = "N/A"
               alive = (test_lab.bootstrap_ssh(:ignore_exit_status => true).exec(%Q{ping -n -c 1 -W 1 #{container.ip}}, :silence => true).exit_code == 0)
@@ -340,7 +339,6 @@ class CucumberChef < Thor
                 :ip => container.ip,
                 :mac => container.mac,
                 :distro => container.distro,
-                :arch => container.arch,
                 :alive => alive,
                 :"chef version" => chef_version,
                 :persist => container.persist,
