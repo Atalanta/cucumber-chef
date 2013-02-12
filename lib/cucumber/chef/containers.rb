@@ -43,7 +43,7 @@ module Cucumber
 
       def create(container)
         # if this is a new or non-persistent container destroy it
-        destroy(container) if !container.persist
+        destroy(container.name) if !container.persist
 
         container.ip ||= self.generate_ip
         container.mac ||= self.generate_mac
@@ -77,14 +77,14 @@ module Cucumber
 
 ################################################################################
 
-      def destroy(container)
-        @test_lab.knife_cli("node delete #{container.name}", :ignore_exit_status => true)
-        @test_lab.knife_cli("client delete #{container.name}", :ignore_exit_status => true)
+      def destroy(name)
+        @test_lab.knife_cli("node delete #{name}", :ignore_exit_status => true)
+        @test_lab.knife_cli("client delete #{name}", :ignore_exit_status => true)
 
-        if exists?(container.name)
-          stop(container.name)
-          @test_lab.bootstrap_ssh.exec("sudo lxc-destroy -n #{container.name}", :silence => true)
-          @ui.logger.info { "Destroyed container '#{container.name}'." }
+        if exists?(name)
+          stop(name)
+          @test_lab.bootstrap_ssh.exec("sudo lxc-destroy -n #{name}", :silence => true)
+          @ui.logger.info { "Destroyed container '#{name}'." }
           test_lab_config_dhcpd
         end
       end
@@ -185,6 +185,12 @@ module Cucumber
           mac
         end
 
+      end
+
+################################################################################
+
+      def list
+        @test_lab.bootstrap_ssh.exec("sudo lxc-ls 2>&1", :silence => true).output.split("\n").uniq
       end
 
 ################################################################################
@@ -386,12 +392,6 @@ module Cucumber
         when "fedora" then
           ((@arch =~ /x86_64/) ? "amd64" : "i686")
         end
-      end
-
-################################################################################
-
-      def containers
-        @test_lab.bootstrap_ssh.exec("sudo lxc-ls 2>&1", :silence => true).output.split("\n").uniq
       end
 
 ################################################################################
