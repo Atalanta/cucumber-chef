@@ -47,11 +47,9 @@ module Cucumber
         wait_for_chef_server
 
         download_chef_credentials
-        # render_knife_rb
 
         upload_cookbook
         upload_role
-        # add_node_role
 
         chef_first_run
 
@@ -138,22 +136,6 @@ module Cucumber
 
 ################################################################################
 
-      # def render_knife_rb
-      #   ZTK::Benchmark.bench(:message => "Building 'cc-knife' configuration", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-      #     template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb")
-      #     context = {
-      #       :chef_server => @test_lab.ip,
-      #       :librarian_chef => Cucumber::Chef::Config.librarian_chef,
-      #       :user => Cucumber::Chef::Config.user
-      #     }
-      #     File.open(Cucumber::Chef.knife_rb, 'w') do |f|
-      #       f.puts(ZTK::Template.render(template_file, context))
-      #     end
-      #   end
-      # end
-
-################################################################################
-
       def upload_cookbook
         @ui.logger.debug { "Uploading cucumber-chef cookbooks..." }
         ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' cookbooks", :mark => "completed in %0.4f seconds.", :ui => @ui) do
@@ -169,15 +151,6 @@ module Cucumber
           @test_lab.knife_cli(%Q{role from file #{File.join(@roles_path, "test_lab.rb")}}, :silence => true)
         end
       end
-
-################################################################################
-
-      # def add_node_role
-      #   @ui.logger.debug { "Setting up cucumber-chef test lab run list..." }
-      #   ZTK::Benchmark.bench(:message => "Setting 'cucumber-chef' run list", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-      #     @test_lab.knife_cli(%Q{node run_list add #{Cucumber::Chef.lab_hostname_full} "role[test_lab]"}, :silence => true)
-      #   end
-      # end
 
 ################################################################################
 

@@ -93,7 +93,6 @@ module Cucumber
         arguments << "--user #{Cucumber::Chef::Config.user}"
         arguments << "--key #{Cucumber::Chef.chef_identity}"
         arguments << "--server-url #{self.chef_server_api}"
-        # arguments << "--config #{Cucumber::Chef.knife_rb}" if File.exists?(Cucumber::Chef.knife_rb)
         arguments << "--disable-editing"
         arguments << "--yes"
         arguments << "-VV" if Cucumber::Chef.is_rc?
