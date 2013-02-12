@@ -51,8 +51,7 @@ module Cucumber
 
         upload_cookbook
         upload_role
-        tag_node
-        add_node_role
+        # add_node_role
 
         chef_first_run
 
@@ -154,6 +153,7 @@ module Cucumber
       # end
 
 ################################################################################
+
       def upload_cookbook
         @ui.logger.debug { "Uploading cucumber-chef cookbooks..." }
         ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' cookbooks", :mark => "completed in %0.4f seconds.", :ui => @ui) do
@@ -172,27 +172,20 @@ module Cucumber
 
 ################################################################################
 
-      def tag_node
-        @ui.logger.debug { "Tagging cucumber-chef test lab node..." }
-        ZTK::Benchmark.bench(:message => "Tagging 'cucumber-chef' node", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%Q{tag create #{Cucumber::Chef.lab_hostname_full} #{Cucumber::Chef::Config.mode}}, :silence => true)
-        end
-      end
-
-################################################################################
-
-      def add_node_role
-        @ui.logger.debug { "Setting up cucumber-chef test lab run list..." }
-        ZTK::Benchmark.bench(:message => "Setting 'cucumber-chef' run list", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%Q{node run_list add #{Cucumber::Chef.lab_hostname_full} "role[test_lab]"}, :silence => true)
-        end
-      end
+      # def add_node_role
+      #   @ui.logger.debug { "Setting up cucumber-chef test lab run list..." }
+      #   ZTK::Benchmark.bench(:message => "Setting 'cucumber-chef' run list", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+      #     @test_lab.knife_cli(%Q{node run_list add #{Cucumber::Chef.lab_hostname_full} "role[test_lab]"}, :silence => true)
+      #   end
+      # end
 
 ################################################################################
 
       def chef_first_run
         ZTK::Benchmark.bench(:message => "Performing chef-client run", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
+          log_level = (ENV['LOG_LEVEL'].downcase rescue (Cucumber::Chef.is_rc? ? "debug" : "info"))
+
+          command = "/usr/bin/chef-client -j /etc/chef/first-boot.json --log_level #{log_level} --once"
           command = "sudo #{command}"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
