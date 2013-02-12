@@ -117,10 +117,10 @@ end
 # CHEF-SOLR / APACHE SOLR
 ################################################################################
 
-template "install custom solr config" do
-  path "/var/lib/chef/solr/conf/solrconfig.xml"
-  source "solrconfig.erb"
-  owner "chef"
-  group "chef"
-  mode "0644"
-end
+# template "install custom solr config" do
+#   path "/var/lib/chef/solr/conf/solrconfig.xml"
+#   source "solrconfig.erb"
+#   owner "chef"
+#   group "chef"
+#   mode "0644"
+# end
