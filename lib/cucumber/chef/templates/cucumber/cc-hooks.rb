@@ -19,7 +19,7 @@
 ################################################################################
 
 tag = Cucumber::Chef.tag("cucumber-chef")
-puts("  * #{tag}")
+puts(">>> #{tag}")
 Cucumber::Chef.boot(tag)
 
 $ui = ZTK::UI.new(:logger => Cucumber::Chef.logger)
@@ -32,7 +32,9 @@ end
 if ENV['PURGE'] == 'YES'
   $ui.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
   Cucumber::Chef::Container.all.each do |container|
-    $test_lab.containers.destroy(container)
+    ZTK::Benchmark.bench(:message => ">>> Destroying container '#{container.name}'", :mark => "completed in %0.4f seconds.") do
+      $test_lab.containers.destroy(container)
+    end
   end
 else
   $ui.logger.info { "Allowing existing containers to persist." }
@@ -43,32 +45,39 @@ $test_lab.containers.chef_set_client_config(:chef_server_url => "http://192.168.
 
 if ENV['SETUP'] == 'YES'
   # Upload all of the chef-repo environments
-  puts("  * Pushing chef-repo environments to test lab...")
-  $test_lab.knife_cli(%Q{environment from file ./environments/*.rb}, :silence => true)
+  ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo environments to the test lab", :mark => "completed in %0.4f seconds.") do
+    $test_lab.knife_cli(%Q{environment from file ./environments/*.rb}, :silence => true)
+  end
 
   # Upload all of the chef-repo cookbooks
-  puts("  * Pushing chef-repo cookbooks to test lab...")
-  cookbook_paths = ["./cookbooks"]
-  cookbook_paths << "./site-cookbooks" if Cucumber::Chef::Config.librarian_chef
-  $test_lab.knife_cli(%Q{cookbook upload --all --cookbook-path #{cookbook_paths.join(':')} --force}, :silence => true)
+  ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo cookbooks to the test lab", :mark => "completed in %0.4f seconds.") do
+    cookbook_paths = ["./cookbooks"]
+    cookbook_paths << "./site-cookbooks" if Cucumber::Chef::Config.librarian_chef
+    $test_lab.knife_cli(%Q{cookbook upload --all --cookbook-path #{cookbook_paths.join(':')} --force}, :silence => true)
+  end
 
   # Upload all of the chef-repo roles
-  puts("  * Pushing chef-repo roles to test lab...")
-  $test_lab.knife_cli(%Q{role from file ./roles/*.rb}, :silence => true)
+  ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo roles to the test lab", :mark => "completed in %0.4f seconds.") do
+    $test_lab.knife_cli(%Q{role from file ./roles/*.rb}, :silence => true)
+  end
 
   # Upload all of our chef-repo data bags
   Dir.glob("./data_bags/*").each do |data_bag_path|
     next if !File.directory?(data_bag_path)
-    puts("  * Pushing chef-repo data bag '#{File.basename(data_bag_path)}' to test lab...")
-    data_bag = File.basename(data_bag_path)
-    $test_lab.knife_cli(%Q{data bag create "#{data_bag}"}, :silence => true)
-    $test_lab.knife_cli(%Q{data bag from file "#{data_bag}" "#{data_bag_path}"}, :silence => true)
+    ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo data bag '#{File.basename(data_bag_path)}' to the test lab", :mark => "completed in %0.4f seconds.") do
+      data_bag = File.basename(data_bag_path)
+      $test_lab.knife_cli(%Q{data bag create "#{data_bag}"}, :silence => true)
+      $test_lab.knife_cli(%Q{data bag from file "#{data_bag}" "#{data_bag_path}"}, :silence => true)
+    end
   end
 
   Cucumber::Chef::Container.all.each do |container|
-    puts("  * Creating container '#{container.name}'...")
-    $test_lab.containers.create(container)
-    $test_lab.containers.chef_run_client(container)
+    ZTK::Benchmark.bench(:message => ">>> Creating container '#{container.name}'", :mark => "completed in %0.4f seconds.") do
+      $test_lab.containers.create(container)
+    end
+    ZTK::Benchmark.bench(:message => ">>> Provisioning container '#{container.name}'", :mark => "completed in %0.4f seconds.") do
+      $test_lab.containers.chef_run_client(container)
+    end
   end
 end
 
