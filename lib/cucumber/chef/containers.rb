@@ -63,19 +63,25 @@ module Cucumber
           end
           @ui.logger.info { "Container '#{container.name}' creation took %0.4f seconds." % bm }
 
-          # bm = ::Benchmark.realtime do
-          #   ZTK::TCPSocketCheck.new(:host => @containers[name][:ip], :port => 22).wait
-          # end
-          # @ui.logger.info { "Container '#{name}' SSHD responded after %0.4f seconds." % bm }
+          bm = ::Benchmark.realtime do
+            ZTK::RescueRetry.try(:tries => 32) do
+              @test_lab.ssh.exec("host #{container.name}", :silence => true)
+            end
+            ZTK::RescueRetry.try(:tries => 32) do
+              @test_lab.proxy_ssh(container.name).exec("uptime", :silence => true)
+            end
+          end
+          @ui.logger.info { "Container '#{container.name}' SSHD responded after %0.4f seconds." % bm }
         end
       end
 
 ################################################################################
 
       def destroy(container)
+        @test_lab.knife_cli("node delete #{container.name}", :ignore_exit_status => true)
+        @test_lab.knife_cli("client delete #{container.name}", :ignore_exit_status => true)
+
         if exists?(container.name)
-          @test_lab.knife_cli("node delete #{container.name} --yes", :ignore_exit_status => true)
-          @test_lab.knife_cli("client delete #{container.name} --yes", :ignore_exit_status => true)
           stop(container.name)
           @test_lab.bootstrap_ssh.exec("sudo lxc-destroy -n #{container.name}", :silence => true)
           @ui.logger.info { "Destroyed container '#{container.name}'." }
