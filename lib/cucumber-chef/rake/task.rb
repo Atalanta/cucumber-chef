@@ -18,6 +18,10 @@ namespace :cc do
     end
 
     def run_feature(feature_file)
+      puts("=" * 80)
+      puts("run_feature(#{feature_file.inspect})")
+      puts("=" * 80)
+
       filename = feature_file.gsub(/(\w*).feature/, '\1.html')
       puts("#{feature_file} -> public/#{filename}")
 
@@ -28,7 +32,7 @@ namespace :cc do
       command = [push, "bundle exec cucumber", "features/support", feature_file, ENV['EXTRA_CUCUMBER_ARGS'], "--format html", "--out", output_file].flatten.compact.join(" ")
       @pushed = true if !@pushed
       puts("command=#{command.inspect}")
-      # system(command)
+      system(command)
       @exit_codes << $?.exitstatus
 
       passed = "<font style='font-weight: bold; color: green;'>PASSED</font>"
