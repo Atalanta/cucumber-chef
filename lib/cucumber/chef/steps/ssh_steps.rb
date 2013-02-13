@@ -192,7 +192,7 @@ end
 # works
 Then /^(?:(?:service|application|process)? )?"([^\"]*)" should( not)? be running$/ do |service, boolean|
   command = "ps ax"
-  @output = @connection.exec(command).output
+  @output = @connection.exec(command, :silence => true).output
   if (!boolean)
     @output.should =~ /#{service}/
   else
