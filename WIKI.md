@@ -87,8 +87,9 @@ Here is a sample of what a `Labfile` might look like:
 
     end
 
+# Cucumber-Chef Tasks
 
-# `cucumber-chef status`
+## `cucumber-chef status`
 
 Displays information on the status of the current test lab.
 
@@ -114,10 +115,10 @@ Displays information on the status of the current test lab containers.
     +----------------------+-------+--------+---------------+-------------------+---------------+---------+
     | NAME                 | ALIVE | DISTRO | IP            | MAC               | CHEF VERSION  | PERSIST |
     +----------------------+-------+--------+---------------+-------------------+---------------+---------+
-    | nginx-lb-test-1      | true  | ubuntu | 192.168.0.100 | 00:00:5e:35:ea:d5 | Chef: 10.18.2 | false   |
-    | nginx-unicorn-test-1 | true  | ubuntu | 192.168.0.200 | 00:00:5e:d1:fa:08 | Chef: 10.18.2 | false   |
-    | redis-test-1         | true  | ubuntu | 192.168.0.210 | 00:00:5e:eb:8d:a3 | Chef: 10.18.2 | false   |
-    | mysql-test-1         | true  | ubuntu | 192.168.0.220 | 00:00:5e:ea:fe:28 | Chef: 10.18.2 | false   |
+    | nginx-lb-test-1      | true  | ubuntu | 192.168.0.100 | 00:00:5e:35:ea:d5 | Chef: 10.18.2 | true    |
+    | nginx-unicorn-test-1 | true  | ubuntu | 192.168.0.200 | 00:00:5e:d1:fa:08 | Chef: 10.18.2 | true    |
+    | redis-test-1         | true  | ubuntu | 192.168.0.210 | 00:00:5e:eb:8d:a3 | Chef: 10.18.2 | true    |
+    | mysql-test-1         | true  | ubuntu | 192.168.0.220 | 00:00:5e:ea:fe:28 | Chef: 10.18.2 | true    |
     +----------------------+-------+--------+---------------+-------------------+---------------+---------+
 
 
