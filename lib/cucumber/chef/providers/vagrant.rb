@@ -98,7 +98,7 @@ module Cucumber
 # HALT
 ################################################################################
 
-        def halt
+        def down
           if (exists? && alive?)
             self.vagrant_cli("halt")
           else

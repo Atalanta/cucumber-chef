@@ -126,7 +126,7 @@ module Cucumber
 # HALT
 ################################################################################
 
-        def halt
+        def down
           if (exists? && alive?)
             if !@server.stop
               raise AWSError, "Failed to halt the test lab!"

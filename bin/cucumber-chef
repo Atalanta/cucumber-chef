@@ -253,16 +253,16 @@ class CucumberChef < Thor
   end
 
 ################################################################################
-# HALT
+# DOWN
 ################################################################################
 
-  desc "halt", "Power off the cucumber-chef test lab"
-  def halt
+  desc "down", "Power off the cucumber-chef test lab"
+  def down
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
-      ZTK::Benchmark.bench(:message => "Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'", :mark => "completed in %0.4f seconds.") do
-        test_lab.halt
+      ZTK::Benchmark.bench(:message => "Downing #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'", :mark => "completed in %0.4f seconds.") do
+        test_lab.down
       end
     else
       raise Cucumber::Chef::Error, "We could not find a running test lab."
@@ -571,8 +571,7 @@ class CucumberChef < Thor
   depreciated_tasks = {
     "teardown" => "You should execute the 'destroy' task instead.",
     "info" => "You should execute the 'status' task instead.",
-    "test" => "You should execute 'cucumber' or 'rspec' directly.",
-    "down" => "You should execute the 'halt' task instead."
+    "test" => "You should execute 'cucumber' or 'rspec' directly."
   }
 
   depreciated_tasks.each do |old_task, message|
