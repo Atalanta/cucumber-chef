@@ -319,7 +319,7 @@ module Cucumber
           if (result.output =~ /0/)
             @ui.logger.info { "Retrieving artifact '#{remote_path}' from container '#{container.id}'." }
 
-            local_path = File.join(Cucumber::Chef.artifacts_dir, "#{container.id}.log")
+            local_path = File.join(Cucumber::Chef.artifacts_dir, "#{container.id}-#{File.basename(remote_path)}")
             tmp_path = File.join("/tmp", label)
 
             FileUtils.mkdir_p(File.dirname(local_path))
