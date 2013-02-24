@@ -127,7 +127,7 @@ module Cucumber
 
         output = nil
         bm = ::Benchmark.realtime do
-          output = @test_lab.proxy_ssh(container.id).exec(["/usr/bin/chef-client", arguments, args, "--once"].flatten.join(" "), :silence => true)
+          output = @test_lab.proxy_ssh(container.id).exec(["/usr/bin/chef-client", arguments, args, "--once"].flatten.join(" "), :silence => true, :ignore_exit_status => true)
         end
         @ui.logger.info { "Chef client run on container '#{container.id}' took %0.4f seconds." % bm }
 
@@ -213,7 +213,7 @@ module Cucumber
           omnibus_chef_client = File.join("/", "opt", "chef", "bin", "chef-client")
           omnibus_cache = File.join(cache_rootfs, omnibus_chef_client)
           @ui.logger.info { "looking for omnibus cache in #{omnibus_cache}" }
-          if @test_lab.bootstrap_ssh.exec(%Q{sudo /bin/bash -c '[[ -f #{omnibus_cache} ]] ; echo $? ; true'}, :silence => true).output.chomp =~ /1/
+          if @test_lab.bootstrap_ssh.exec(%Q{sudo /bin/bash -c '[[ -f #{omnibus_cache} ]]'}, :silence => true, :ignore_exit_status => true).exit_code == 1
             case distro.downcase
             when "ubuntu" then
               @test_lab.bootstrap_ssh.exec(%Q{sudo chroot #{cache_rootfs} /bin/bash -c 'DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes install wget'}, :silence => true)
