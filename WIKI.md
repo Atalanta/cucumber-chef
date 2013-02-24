@@ -89,6 +89,22 @@ Here is a sample of what a `Labfile` might look like:
 
 # Cucumber-Chef Tasks
 
+## `cucumber-chef up`
+
+Power up the cucumber-chef test lab.
+
+    $ cucumber-chef up
+    cucumber-chef v3.0.0.rc.0
+    Booting VAGRANT instance 'default' completed in 37.2031 seconds.
+
+## `cucumber-chef down`
+
+Power off the cucumber-chef test lab.
+
+    $ cucumber-chef down
+    cucumber-chef v3.0.0.rc.0
+    Downing VAGRANT instance 'default' completed in 31.1460 seconds.
+
 ## `cucumber-chef status`
 
 Displays information on the status of the current test lab.
