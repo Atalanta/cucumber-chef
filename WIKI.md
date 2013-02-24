@@ -16,7 +16,7 @@ Your `chef-repo` should be setup in a manner as follows:
 * Use something like bundler for your rubygems with your chef-repo
 * Use something like berkshelf for your chef cookbooks with your chef-repo
 
-If you do not use these patterns you will have an unplesant time in general.
+If you do not use these patterns you will have an unpleasant time in general.
 
 # Workflow
 
