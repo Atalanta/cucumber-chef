@@ -28,78 +28,83 @@ module Cucumber
 
 ################################################################################
 
-      def initialize(test_lab, ui=ZTK::UI.new)
-        @test_lab = test_lab
-        @ui = ui
+      def initialize
+        tag = Cucumber::Chef.tag("cucumber-chef")
+        puts(">>> #{tag}")
+        Cucumber::Chef.boot(tag)
+
+        @ui = ZTK::UI.new(:logger => Cucumber::Chef.logger)
+
+        if !((@test_lab = Cucumber::Chef::TestLab.new(@ui)) && @test_lab.alive?)
+          message = "No running cucumber-chef test labs to connect to!"
+          @ui.logger.fatal { message }
+          raise message
+        end
+
       end
 
 ################################################################################
 
       def up(options={})
-        # user = Cucumber::Chef.lab_user
-        # home_dir = Cucumber::Chef.lab_user_home_dir
-        # provider = Cucumber::Chef::Config.provider.to_s
-        # @test_lab.ssh.exec("sudo mkdir -p #{File.join(home_dir, ".cucumber-chef", provider)}")
-        # @test_lab.ssh.exec("sudo cp -f #{File.join(home_dir, ".chef", "knife.rb")} #{File.join(home_dir, ".cucumber-chef", provider, "knife.rb")}")
-        # @test_lab.ssh.exec("sudo chown -R #{user}:#{user} #{File.join(home_dir, ".cucumber-chef")}")
+        if ENV['PURGE'] == 'YES'
+          @ui.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
+          @test_lab.containers.list.each do |name|
+            ZTK::Benchmark.bench(:message => ">>> Destroying container '#{name}'", :mark => "completed in %0.4f seconds.") do
+              @test_lab.containers.destroy(name)
+            end
+          end
+        else
+          @ui.logger.info { "Allowing existing containers to persist." }
+        end
 
-        # local_file = Cucumber::Chef.config_rb
-        # remote_file = File.join(home_dir, ".cucumber-chef", "config.rb")
-        # @test_lab.ssh.upload(local_file, remote_file)
+        @test_lab.containers.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
+                                                    :validation_client_name => "chef-validator")
 
-        # begin
-        #   self.ping
-        # rescue
-        #   @background = ZTK::Background.new
-        #   @background.process do
-        #     self.down
+        if ENV['SETUP'] == 'YES'
+          # Upload all of the chef-repo environments
+          ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo environments to the test lab", :mark => "completed in %0.4f seconds.") do
+            @test_lab.knife_cli(%Q{environment from file ./environments/*.rb}, :silence => true)
+          end
 
-        #     environment = Array.new
-        #     %w(PURGE VERBOSE LOG_LEVEL).each do |env_var|
-        #       environment << "#{env_var}=#{ENV[env_var].inspect}" if (!ENV[env_var].nil? && !ENV[env_var].empty?)
-        #     end
-        #     environment = environment.join(" ")
-        #     external_ip = Cucumber::Chef.external_ip
+          # Upload all of the chef-repo cookbooks
+          ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo cookbooks to the test lab", :mark => "completed in %0.4f seconds.") do
+            cookbook_paths = ["./cookbooks"]
+            cookbook_paths << "./site-cookbooks" if Cucumber::Chef::Config.librarian_chef
+            @test_lab.knife_cli(%Q{cookbook upload --all --cookbook-path #{cookbook_paths.join(':')} --force}, :silence => true)
+          end
 
-        #     command = %Q{nohup sudo #{environment} /usr/bin/env cc-server #{external_ip} &}
+          # Upload all of the chef-repo roles
+          ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo roles to the test lab", :mark => "completed in %0.4f seconds.") do
+            @test_lab.knife_cli(%Q{role from file ./roles/*.rb}, :silence => true)
+          end
 
-        #     @test_lab.ssh.exec(command, options)
-        #   end
+          # Upload all of our chef-repo data bags
+          Dir.glob("./data_bags/*").each do |data_bag_path|
+            next if !File.directory?(data_bag_path)
+            ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo data bag '#{File.basename(data_bag_path)}' to the test lab", :mark => "completed in %0.4f seconds.") do
+              data_bag = File.basename(data_bag_path)
+              @test_lab.knife_cli(%Q{data bag create "#{data_bag}"}, :silence => true)
+              @test_lab.knife_cli(%Q{data bag from file "#{data_bag}" "#{data_bag_path}"}, :silence => true)
+            end
+          end
 
-        #   Kernel.at_exit do
-        #     self.at_exit
-        #   end
-        # end
-
-        # ZTK::RescueRetry.try(:tries => 30) do
-        #   self.drb.ping
-        # end
+          Cucumber::Chef::Container.all.each do |container|
+            ZTK::Benchmark.bench(:message => ">>> Creating container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
+              @test_lab.containers.create(container)
+            end
+            ZTK::Benchmark.bench(:message => ">>> Provisioning container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
+              @test_lab.containers.chef_run_client(container)
+            end
+          end
+        end
 
         true
       end
 
 ################################################################################
 
-      def down
-        # (@test_lab.drb.shutdown rescue nil)
-      end
-
-################################################################################
-
-      # def drb
-      #   @drb and DRb.stop_service
-      #   @drb = DRbObject.new_with_uri("druby://#{@test_lab.ip}:8787")
-      #   @drb and DRb.start_service
-      #   @drb
-      # end
-
-################################################################################
-
       def before(scenario)
-        # store the current scenario here; espcially since I don't know a better way to get at this information
-        # we use various aspects of the scenario to name our artifacts
         $scenario = scenario
-
       end
 
 ################################################################################
@@ -109,11 +114,8 @@ module Cucumber
 
 ################################################################################
 
-      # def at_exit
-      #   @ui.logger.fatal { "Waiting for cc-server to shutdown." }
-      #   self.down
-      #   @background.wait
-      # end
+      def at_exit
+      end
 
 ################################################################################
 

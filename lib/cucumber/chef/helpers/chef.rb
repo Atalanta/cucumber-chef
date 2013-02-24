@@ -24,12 +24,12 @@ module Cucumber::Chef::Helpers::Chef
 ################################################################################
 
   def create_data_bag(data_bag, data_bag_path)
-    $test_lab.knife_cli(%Q{data bag create "#{data_bag}"}, :silence => true)
-    $test_lab.knife_cli(%Q{data bag from file "#{data_bag}" "#{data_bag_path}"}, :silence => true)
+    $cc_client.test_lab.knife_cli(%Q{data bag create "#{data_bag}"}, :silence => true)
+    $cc_client.test_lab.knife_cli(%Q{data bag from file "#{data_bag}" "#{data_bag_path}"}, :silence => true)
   end
 
   def delete_data_bag(data_bag)
-    $test_lab.knife_cli(%Q{data bag delete "#{data_bag}" --yes}, :silence => true)
+    $cc_client.test_lab.knife_cli(%Q{data bag delete "#{data_bag}" --yes}, :silence => true)
   end
 
 ################################################################################
@@ -37,10 +37,10 @@ module Cucumber::Chef::Helpers::Chef
   def role_from_file(role, role_path)
     if File.extname(role).empty?
       Dir.glob(File.join(role_path, "#{role}.*")).each do |role_file|
-        $test_lab.knife_cli(%Q{role from file #{role_file}}, :silence => true)
+        $cc_client.test_lab.knife_cli(%Q{role from file #{role_file}}, :silence => true)
       end
     else
-      $test_lab.knife_cli(%Q{role from file #{File.join(role_path, role)}}, :silence => true)
+      $cc_client.test_lab.knife_cli(%Q{role from file #{File.join(role_path, role)}}, :silence => true)
     end
   end
 
