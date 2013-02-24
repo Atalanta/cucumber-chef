@@ -105,6 +105,22 @@ Power off the cucumber-chef test lab.
     cucumber-chef v3.0.0.rc.0
     Downing VAGRANT instance 'default' completed in 31.1460 seconds.
 
+## `cucumber-chef genmac`
+
+Generate an RFC compliant private MAC address.
+
+    $ cucumber-chef genmac
+    cucumber-chef v3.0.0.rc.0
+    00:00:5e:4f:96:b0
+
+## `cucumber-chef genip`
+
+Generate an RFC compliant private IP address.
+
+    $ cucumber-chef genip
+    cucumber-chef v3.0.0.rc.0
+    192.168.244.120
+
 ## `cucumber-chef status`
 
 Displays information on the status of the current test lab.
