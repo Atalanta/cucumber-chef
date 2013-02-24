@@ -107,7 +107,7 @@ Power off the cucumber-chef test lab.
 
 ## `cucumber-chef genmac`
 
-Generate an RFC compliant private MAC address.
+Generate an RFC compliant private MAC address for use in a `Labfile`.
 
     $ cucumber-chef genmac
     cucumber-chef v3.0.0.rc.0
@@ -115,7 +115,7 @@ Generate an RFC compliant private MAC address.
 
 ## `cucumber-chef genip`
 
-Generate an RFC compliant private IP address.
+Generate an RFC compliant private IP address for use in a `Labfile`.
 
     $ cucumber-chef genip
     cucumber-chef v3.0.0.rc.0
