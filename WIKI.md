@@ -91,7 +91,7 @@ Here is a sample of what a `Labfile` might look like:
 
 ## `cucumber-chef up`
 
-Power up the cucumber-chef test lab.
+Power up the cucumber-chef test lab:
 
     $ cucumber-chef up
     cucumber-chef v3.0.0.rc.0
@@ -99,15 +99,37 @@ Power up the cucumber-chef test lab.
 
 ## `cucumber-chef down`
 
-Power off the cucumber-chef test lab.
+Power off the cucumber-chef test lab:
 
     $ cucumber-chef down
     cucumber-chef v3.0.0.rc.0
     Downing VAGRANT instance 'default' completed in 31.1460 seconds.
 
+## `cucumber-chef ssh [container]`
+
+SSH to cucumber-chef test lab:
+
+    $ cucumber-chef ssh
+    cucumber-chef v3.0.0.rc.0
+    Attempting SSH connection to the 'test lab'...
+          _____                           _                _____ _           __
+         / ____|                         | |              / ____| |         / _|
+        | |    _   _  ___ _   _ _ __ ___ | |__   ___ _ __| |    | |__   ___| |_
+        | |   | | | |/ __| | | | '_ ` _ \| '_ \ / _ \ '__| |    | '_ \ / _ \  _|
+        | |___| |_| | (__| |_| | | | | | | |_) |  __/ |  | |____| | | |  __/ |
+         \_____\__,_|\___|\__,_|_| |_| |_|_.__/ \___|_|   \_____|_| |_|\___|_|
+
+
+        Welcome to the Cucumber Chef Test Lab v3.0.0.rc.0
+
+    Last login: Fri Sep 14 06:23:18 2012 from 10.0.2.2
+    vagrant@cucumber-chef:~$
+
+SSH to a container:
+
 ## `cucumber-chef genmac`
 
-Generate an RFC compliant private MAC address for use in a `Labfile`.
+Generate an RFC compliant private MAC address for use in a `Labfile`:
 
     $ cucumber-chef genmac
     cucumber-chef v3.0.0.rc.0
@@ -115,7 +137,7 @@ Generate an RFC compliant private MAC address for use in a `Labfile`.
 
 ## `cucumber-chef genip`
 
-Generate an RFC compliant private IP address for use in a `Labfile`.
+Generate an RFC compliant private IP address for use in a `Labfile`:
 
     $ cucumber-chef genip
     cucumber-chef v3.0.0.rc.0
@@ -123,7 +145,7 @@ Generate an RFC compliant private IP address for use in a `Labfile`.
 
 ## `cucumber-chef status`
 
-Displays information on the status of the current test lab.
+Displays information on the status of the current test lab:
 
     $ cucumber-chef status
     cucumber-chef v3.0.0.rc.0
@@ -140,7 +162,7 @@ Displays information on the status of the current test lab.
     |  CHEF-SERVER DEFAULT PASSWORD: p@ssw0rd1                          |
     +-------------------------------------------------------------------+
 
-Displays information on the status of the current test lab containers.
+Displays information on the status of the current test lab containers:
 
     $ cucumber-chef status --containers
     cucumber-chef v3.0.0.rc.0
