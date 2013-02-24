@@ -331,11 +331,11 @@ class CucumberChef < Thor
               chef_version = "N/A"
               alive = (test_lab.bootstrap_ssh(:ignore_exit_status => true).exec(%Q{ping -n -c 1 -W 1 #{container.ip}}, :silence => true).exit_code == 0)
               if alive
-                chef_version = test_lab.proxy_ssh(container.name, :ignore_exit_status => true).exec(%Q{/usr/bin/env chef-client -v}, :silence => true).output.chomp
+                chef_version = test_lab.proxy_ssh(container.id, :ignore_exit_status => true).exec(%Q{/usr/bin/env chef-client -v}, :silence => true).output.chomp
               end
 
               OpenStruct.new(
-                :name => container.name,
+                :name => container.id,
                 :ip => container.ip,
                 :mac => container.mac,
                 :distro => container.distro,

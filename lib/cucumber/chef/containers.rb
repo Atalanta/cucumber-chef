@@ -43,7 +43,7 @@ module Cucumber
 
       def create(container)
         # if this is a new or non-persistent container destroy it
-        destroy(container.name) if !container.persist
+        destroy(container.id) if !container.persist
 
         container.ip ||= self.generate_ip
         container.mac ||= self.generate_mac
@@ -52,26 +52,26 @@ module Cucumber
         container.release ||= "lucid"
         container.arch = detect_arch(container.distro || "ubuntu")
 
-        if running?(container.name)
-          @ui.logger.info { "Container '#{container.name}' is already running." }
+        if running?(container.id)
+          @ui.logger.info { "Container '#{container.id}' is already running." }
         else
           @ui.logger.info { "Please wait, creating container #{container.inspect}." }
           bm = ::Benchmark.realtime do
             test_lab_config_dhcpd
             config_network(container)
-            _create(container.name, container.distro, container.release, container.arch)
+            _create(container.id, container.distro, container.release, container.arch)
           end
-          @ui.logger.info { "Container '#{container.name}' creation took %0.4f seconds." % bm }
+          @ui.logger.info { "Container '#{container.id}' creation took %0.4f seconds." % bm }
 
           bm = ::Benchmark.realtime do
             ZTK::RescueRetry.try(:tries => 32) do
-              @test_lab.ssh.exec("host #{container.name}", :silence => true)
+              @test_lab.ssh.exec("host #{container.id}", :silence => true)
             end
             ZTK::RescueRetry.try(:tries => 32) do
-              @test_lab.proxy_ssh(container.name).exec("uptime", :silence => true)
+              @test_lab.proxy_ssh(container.id).exec("uptime", :silence => true)
             end
           end
-          @ui.logger.info { "Container '#{container.name}' SSHD responded after %0.4f seconds." % bm }
+          @ui.logger.info { "Container '#{container.id}' SSHD responded after %0.4f seconds." % bm }
         end
       end
 
@@ -112,12 +112,12 @@ module Cucumber
         chef_config_client(container)
 
         @ui.logger.info { "Removing artifacts #{Cucumber::Chef::Config[:artifacts].values.collect{|z| "'#{z}'" }.join(' ')}." }
-        (@test_lab.proxy_ssh(container.name).exec("/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}", :silence => true) rescue nil)
+        (@test_lab.proxy_ssh(container.id).exec("/bin/rm -fv #{Cucumber::Chef::Config[:artifacts].values.join(' ')}", :silence => true) rescue nil)
 
-        @ui.logger.info { "Running chef client on container '#{container.name}'." }
+        @ui.logger.info { "Running chef client on container '#{container.id}'." }
 
         arguments = {
-          "--node-name" => container.name,
+          "--node-name" => container.id,
           "--json-attributes" => File.join("/etc", "chef", "attributes.json").to_s,
           "--log_level" => @chef_client_config[:log_level],
           "--logfile" => @chef_client_config[:log_location],
@@ -127,9 +127,9 @@ module Cucumber
 
         output = nil
         bm = ::Benchmark.realtime do
-          output = @test_lab.proxy_ssh(container.name).exec(["/usr/bin/chef-client", arguments, args, "--once"].flatten.join(" "), :silence => true)
+          output = @test_lab.proxy_ssh(container.id).exec(["/usr/bin/chef-client", arguments, args, "--once"].flatten.join(" "), :silence => true)
         end
-        @ui.logger.info { "Chef client run on container '#{container.name}' took %0.4f seconds." % bm }
+        @ui.logger.info { "Chef client run on container '#{container.id}' took %0.4f seconds." % bm }
 
         chef_client_artifacts(container)
 
@@ -267,8 +267,8 @@ module Cucumber
 ################################################################################
 
       def chef_config_client(container)
-        tempfile = Tempfile.new(container.name)
-        client_rb = File.join("/", root(container.name), "etc/chef/client.rb")
+        tempfile = Tempfile.new(container.id)
+        client_rb = File.join("/", root(container.id), "etc/chef/client.rb")
 
         @test_lab.bootstrap_ssh.exec(%Q{sudo mkdir -pv #{File.dirname(client_rb)}}, :silence => true)
 
@@ -278,7 +278,7 @@ module Cucumber
           File.open(tempfile, 'w') do |f|
             f.puts(Cucumber::Chef.generate_do_not_edit_warning("Chef Client Configuration"))
             f.puts
-            @chef_client_config.merge(:node_name => container.name).each do |(key,value)|
+            @chef_client_config.merge(:node_name => container.id).each do |(key,value)|
               next if value.nil?
               f.puts("%-#{max_key_size}s  %s" % [key, value.inspect])
             end
@@ -291,8 +291,8 @@ module Cucumber
           @test_lab.bootstrap_ssh.exec(%Q{sudo /bin/bash -c '[[ -f #{client_rb} ]] && rm -fv #{client_rb}'}, :silence => true, :ignore_exit_status => true)
         end
 
-        tempfile = Tempfile.new(container.name)
-        attributes_json = File.join("/", root(container.name), "etc", "chef", "attributes.json")
+        tempfile = Tempfile.new(container.id)
+        attributes_json = File.join("/", root(container.id), "etc", "chef", "attributes.json")
         @test_lab.bootstrap_ssh.exec(%Q{sudo mkdir -pv #{File.dirname(attributes_json)}}, :silence => true)
         File.open(tempfile, 'w') do |f|
           f.puts((container.chef_client || {}).to_json)
@@ -301,10 +301,10 @@ module Cucumber
         @test_lab.bootstrap_ssh.exec(%Q{sudo mv -v #{File.basename(tempfile.path)} #{attributes_json}}, :silence => true)
 
         # make sure our log location is there
-        log_location = File.join("/", root(container.name), @chef_client_config[:log_location])
+        log_location = File.join("/", root(container.id), @chef_client_config[:log_location])
         @test_lab.bootstrap_ssh.exec(%Q{sudo mkdir -pv #{File.dirname(log_location)}}, :silence => true)
 
-        @test_lab.bootstrap_ssh.exec(%Q{sudo cp /etc/chef/validation.pem #{root(container.name)}/etc/chef/}, :silence => true)
+        @test_lab.bootstrap_ssh.exec(%Q{sudo cp /etc/chef/validation.pem #{root(container.id)}/etc/chef/}, :silence => true)
 
         true
       end
@@ -312,14 +312,14 @@ module Cucumber
 ################################################################################
 
       def chef_client_artifacts(container)
-        ssh = @test_lab.proxy_ssh(container.name)
+        ssh = @test_lab.proxy_ssh(container.id)
 
         Cucumber::Chef::Config[:artifacts].each do |label, remote_path|
           result = ssh.exec("sudo /bin/bash -c '[[ -f #{remote_path} ]] ; echo $? ; true'", :silence => true)
           if (result.output =~ /0/)
-            @ui.logger.info { "Retrieving artifact '#{remote_path}' from container '#{container.name}'." }
+            @ui.logger.info { "Retrieving artifact '#{remote_path}' from container '#{container.id}'." }
 
-            local_path = File.join(Cucumber::Chef.artifacts_dir, "#{container.name}.log")
+            local_path = File.join(Cucumber::Chef.artifacts_dir, "#{container.id}.log")
             tmp_path = File.join("/tmp", label)
 
             FileUtils.mkdir_p(File.dirname(local_path))
@@ -339,8 +339,8 @@ module Cucumber
 ################################################################################
 
       def config_network(container)
-        tempfile = Tempfile.new(container.name)
-        lxc_network_config = File.join("/etc/lxc", container.name)
+        tempfile = Tempfile.new(container.id)
+        lxc_network_config = File.join("/etc/lxc", container.id)
         File.open(tempfile, 'w') do |f|
           f.puts(Cucumber::Chef.generate_do_not_edit_warning("LXC Container Configuration"))
           f.puts("")
@@ -366,10 +366,10 @@ module Cucumber
             next if [container.mac, container.ip].any?{ |z| z.nil? }
 
             f.puts
-            f.puts("host #{container.name} {")
+            f.puts("host #{container.id} {")
             f.puts("  hardware ethernet #{container.mac};")
             f.puts("  fixed-address #{container.ip};")
-            f.puts("  ddns-hostname \"#{container.name}\";")
+            f.puts("  ddns-hostname \"#{container.id}\";")
             f.puts("}")
           end
           f.flush
