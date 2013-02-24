@@ -2,7 +2,7 @@
 
 [![Build Status](https://secure.travis-ci.org/jovelabs/cucumber-chef.png)](http://travis-ci.org/jovelabs/cucumber-chef)
 
-I was not particularly happen with the state of the 2.x documents and considering workflow changes, etc it made sense to me to start over with the documentation.  Since most things are the same the 2.x documentation will remain available in the repo as `WIKI.2.x.md`.
+I was not particularly happy with the state of the 2.x documents and considering workflow changes, etc it made sense to me to start over with the documentation.  Since most things are the same the 2.x documentation will remain available in the repo as `WIKI.2.x.md`.  This is WIP.
 
 # Cucumber-Chef 3.x Documentation
 
