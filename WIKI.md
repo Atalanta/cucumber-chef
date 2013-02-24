@@ -37,7 +37,7 @@ Here is a sample of what a `Labfile` might look like:
         distro "ubuntu"
         release "lucid"
         persist true
-        ip "192.168.32.210"
+        ip "192.168.32.200"
         mac "00:00:5e:eb:8d:d3"
         chef_client  ({ :environment => "test",
                         :run_list => [
