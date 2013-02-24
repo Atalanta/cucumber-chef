@@ -378,8 +378,8 @@ class CucumberChef < Thor
 # SSH
 ################################################################################
 
-  desc "ssh [container]", "SSH to cucumber-chef test lab or [container] if specified."
-  method_option :bootstrap, :type => :boolean, :desc => "Use the bootstrap settings.", :default => false
+  desc "ssh [container]", "SSH to cucumber-chef test lab or [container] if specified"
+  method_option :bootstrap, :type => :boolean, :desc => "Use the bootstrap settings", :default => false
   def ssh(*args)
     boot
 
