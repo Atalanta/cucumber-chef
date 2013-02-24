@@ -27,7 +27,7 @@ module Cucumber
     class ProviderError < Error; end
 
     class Provider
-      PROXY_METHODS = %w(create destroy up halt reload status id state username ip port chef_server_api chef_server_webui alive? dead? exists?)
+      PROXY_METHODS = %w(create destroy up down reload status id state username ip port chef_server_api chef_server_webui alive? dead? exists?)
 
 ################################################################################
 
