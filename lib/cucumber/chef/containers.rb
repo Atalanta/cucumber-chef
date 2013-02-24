@@ -93,7 +93,7 @@ module Cucumber
 
       def chef_set_client_config(config={})
         @chef_client_config = (@chef_client_config || {
-          :log_level => :info,
+          :log_level => :debug,
           :log_location => "/var/log/chef/client.log",
           :chef_server_url => "https://api.opscode.com/organizations/#{config[:orgname]}",
           :validation_client_name => "#{config[:orgname]}-validator",
