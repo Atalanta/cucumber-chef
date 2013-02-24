@@ -234,7 +234,7 @@ class CucumberChef < Thor
 # UP
 ################################################################################
 
-  desc "up", "Startup the cucumber-chef test lab"
+  desc "up", "Power up the cucumber-chef test lab"
   def up
     boot
 
@@ -296,14 +296,14 @@ class CucumberChef < Thor
     fatal(e)
   end
 
-  desc "genmac", "Generate a private MAC address"
+  desc "genmac", "Generate an RFC compliant private MAC address"
   def genmac
     boot
 
     puts Cucumber::Chef::Containers.generate_mac
   end
 
-  desc "genip", "Generate a private IP address"
+  desc "genip", "Generate an RFC compliant private IP address"
   def genip
     boot
 
