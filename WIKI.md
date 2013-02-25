@@ -100,6 +100,46 @@ Here is a sample of what a `Labfile` might look like:
 
 # Cucumber-Chef Tasks
 
+All tasks should function in a similar manner across all providers.
+
+## `cucumber-chef destroy [container] [...]`
+
+Destroy the cucumber-chef test lab:
+
+    $ cucumber-chef destroy
+    cucumber-chef v3.0.0.rc.0
+    +-------------------------------------------------------------------+
+    |                      PROVIDER: Cucumber::Chef::Provider::Vagrant  |
+    |                            ID: default                            |
+    |                         STATE: running                            |
+    |                      USERNAME: vagrant                            |
+    |                    IP ADDRESS: 127.0.0.1                          |
+    |                          PORT: 2222                               |
+    |               CHEF-SERVER API: http://127.0.0.1:4000              |
+    |             CHEF-SERVER WEBUI: http://127.0.0.1:4040              |
+    |      CHEF-SERVER DEFAULT USER: admin                              |
+    |  CHEF-SERVER DEFAULT PASSWORD: p@ssw0rd1                          |
+    +-------------------------------------------------------------------+
+    Are you sure you want to destroy the test lab? y
+
+    You have 5 seconds to abort!
+
+    5...4...3...2...1...BOOM!
+
+    Destroy VAGRANT instance 'default' completed in 7.4898 seconds.
+
+Destroy single or multiple containers:
+
+    $ cucumber-chef destroy nginx-lb-test-1
+    cucumber-chef v3.0.0.rc.0
+    Are you sure you want to destroy the container 'nginx-lb-test-1'? y
+
+    You have 5 seconds to abort!
+
+    5...4...3...2...1...BOOM!
+
+    Destroy container 'nginx-lb-test-1' completed in 24.4092 seconds.
+
 ## `cucumber-chef up`
 
 Power up the cucumber-chef test lab:
