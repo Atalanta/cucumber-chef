@@ -21,8 +21,8 @@ If you do not use these patterns you will have an unplesant time in general.
 # Workflow
 
 1. `cucumber`/`rspec` is executed; cucumber-chef is called
-2. `cucumber-chef` (re)creates the ecosystem from the `Labfile`
-3. `cucumber-chef` runs the chef-client across the ecosystem using attributes from the `Labfile`
+2. `cucumber-chef` (re)creates the ecosystem from the `Labfile` (optionally executed)
+3. `cucumber-chef` runs the chef-client across the ecosystem using attributes from the `Labfile` (optionally executed)
 4. `cucumber`/`rspec` resumes execution
 
 # Configuration
