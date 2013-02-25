@@ -10,7 +10,7 @@ Cucumber-chef is a library of tools to enable the emerging discipline of infrast
 
 # Prerequsites/Recommendations
 
-Your `chef-repo` should be setup in a manner as follows:
+Your Chef-Repo should be setup in a manner as follows:
 
 * Use something like RVM for your ruby with your chef-repo
 * Use something like bundler for your rubygems with your chef-repo
@@ -25,9 +25,13 @@ If you do not use these patterns you will have an unplesant time in general.
 3. `cucumber-chef` runs the chef-client across the ecosystem using attributes from the `Labfile`
 4. `cucumber`/`rspec` resumes execution
 
-# `Labfile`
+# Configuration
 
-When doing integration testing it makes sense that one generally wants to test across an entire ecosystem of servers.  You typically acquire a set of virtual or bare metal servers, provision those servers acordingly, put them into play then rinse and repeat.  I introduce the `Labfile`, the concept is simple if you haven't already guessed it.  You define a set of servers, i.e. an ecosystem, also dictating the settings and configuration.  Part of this change is because a) it makes alot of sense to me and b) it greatly decreases runtimes.  Also in cucumber-chef 2.x, we had insane background sections which bothered me tremendously and this change cleans up all of that mess as well.  The ultimate goal is to support configuration of multiple ecosystems, but we've got other ground to cover first so that feature will have to wait for a bit.  The `Labfile` should reside in the root of your `chef-repo`.
+Cucumber-Chef creates a home directory for itself named `.cucumber-chef` off the root of your Chef-Repo.  Here you can find the configuration files as well as logs and artifacts from test runs.  There are two main configuration files for Cucumber-Chef.  The `Labfile` in the Chef-Repo directory and `config.rb` in the Cucumber-Chef home directory.
+
+## `Labfile`
+
+When doing integration testing it makes sense that one generally wants to test across an entire ecosystem of servers.  You typically acquire a set of virtual or bare metal servers, provision those servers acordingly, put them into play then rinse and repeat.  I introduce the `Labfile`, the concept is simple if you haven't already guessed it.  You define a set of servers, i.e. an ecosystem, also dictating the settings and configuration.  Part of this change is because a) it makes alot of sense to me and b) it greatly decreases runtimes.  Also in cucumber-chef 2.x, we had insane background sections which bothered me tremendously and this change cleans up all of that mess as well.  The ultimate goal is to support configuration of multiple ecosystems, but we've got other ground to cover first so that feature will have to wait for a bit.  The `Labfile` should reside in the root of your Chef-Repo.
 
 Here is a sample of what a `Labfile` might look like:
 
