@@ -128,7 +128,7 @@ class CucumberChef < Thor
 # SETUP
 ################################################################################
 
-  desc "setup", "Setup cucumber-chef test lab in Amazon EC2"
+  desc "setup", "Setup the cucumber-chef test lab"
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def setup
     boot
