@@ -106,6 +106,31 @@ Here is a sample of what a `Labfile` might look like:
 
 All tasks should function in a similar manner across all providers.
 
+## `cucumber-chef help`
+
+    $ cucumber-chef help
+    Tasks:
+      cucumber-chef create <project>           # Create a project template for testing an infrastructure.
+      cucumber-chef destroy [container] [...]  # Destroy the cucumber-chef test lab or a single or multiple containers if specified
+      cucumber-chef diagnose <container>       # Provide diagnostics from the chef-client on the specified container.
+      cucumber-chef displayconfig              # Display the current cucumber-chef config.
+      cucumber-chef down                       # Power off the cucumber-chef test lab
+      cucumber-chef genip                      # Generate an RFC compliant private IP address
+      cucumber-chef genmac                     # Generate an RFC compliant private MAC address
+      cucumber-chef help [TASK]                # Describe available tasks or one specific task
+      cucumber-chef info                       # *DEPRECIATED* - You should execute the 'status' task instead.
+      cucumber-chef init                       # Initalize cucumber-chef configuration
+      cucumber-chef log                        # Streams the cucumber-chef local and test lab logs to the terminal.
+      cucumber-chef ps [ps-options]            # Snapshot of the current cucumber-chef test lab container processes.
+      cucumber-chef reload                     # Reload the cucumber-chef test lab
+      cucumber-chef setup                      # Setup the cucumber-chef test lab
+      cucumber-chef ssh [container]            # SSH to cucumber-chef test lab or [container] if specified
+      cucumber-chef status                     # Displays the current status of the test lab.
+      cucumber-chef teardown                   # *DEPRECIATED* - You should execute the 'destroy' task instead.
+      cucumber-chef test                       # *DEPRECIATED* - You should execute 'cucumber' or 'rspec' directly.
+      cucumber-chef up                         # Power up the cucumber-chef test lab
+
+
 ## `cucumber-chef setup`
 
 Setup the cucumber-chef test lab:
