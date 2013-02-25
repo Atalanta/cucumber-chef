@@ -166,7 +166,7 @@ class CucumberChef < Thor
 # DESTROY
 ################################################################################
 
-  desc "destroy [container]", "Destroy the cucumber-chef test lab in Amazon EC2 or a test lab [container] if specified."
+  desc "destroy [container] [...]", "Destroy the cucumber-chef test lab or a single or multiple containers if specified"
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def destroy(*args)
     boot
@@ -207,9 +207,7 @@ class CucumberChef < Thor
 
           args.each do |container|
             ZTK::Benchmark.bench(:message => "Destroy container '#{container}'", :mark => "completed in %0.4f seconds.") do
-              test_lab.containers.load
               test_lab.containers.destroy(container)
-              test_lab.containers.save
             end
           end
 
