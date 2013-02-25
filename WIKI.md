@@ -29,8 +29,6 @@ If you do not use these patterns you will have an unplesant time in general.
 
 Cucumber-Chef creates a home directory for itself named `.cucumber-chef` off the root of your Chef-Repo.  Here you can find the configuration files as well as logs and artifacts from test runs.  There are two main configuration files for Cucumber-Chef.  The `Labfile` in the Chef-Repo directory and `config.rb` in the Cucumber-Chef home directory.
 
-- - -
-
 ## `Labfile`
 
 When doing integration testing it makes sense that one generally wants to test across an entire ecosystem of servers.  You typically acquire a set of virtual or bare metal servers, provision those servers acordingly, put them into play then rinse and repeat.  I introduce the `Labfile`, the concept is simple if you haven't already guessed it.  You define a set of servers, i.e. an ecosystem, also dictating the settings and configuration.  Part of this change is because a) it makes alot of sense to me and b) it greatly decreases runtimes.  Also in cucumber-chef 2.x, we had insane background sections which bothered me tremendously and this change cleans up all of that mess as well.  The ultimate goal is to support configuration of multiple ecosystems, but we've got other ground to cover first so that feature will have to wait for a bit.  The `Labfile` should reside in the root of your Chef-Repo.
@@ -102,8 +100,6 @@ Here is a sample of what a `Labfile` might look like:
 
 # Cucumber-Chef Tasks
 
-- - -
-
 ## `cucumber-chef up`
 
 Power up the cucumber-chef test lab:
@@ -112,8 +108,6 @@ Power up the cucumber-chef test lab:
     cucumber-chef v3.0.0.rc.0
     Booting VAGRANT instance 'default' completed in 37.2031 seconds.
 
-- - -
-
 ## `cucumber-chef down`
 
 Power off the cucumber-chef test lab:
@@ -121,8 +115,6 @@ Power off the cucumber-chef test lab:
     $ cucumber-chef down
     cucumber-chef v3.0.0.rc.0
     Downing VAGRANT instance 'default' completed in 31.1460 seconds.
-
-- - -
 
 ## `cucumber-chef ssh [container]`
 
@@ -146,7 +138,22 @@ SSH to cucumber-chef test lab:
 
 SSH to a container:
 
-- - -
+    $ cucumber-chef ssh nginx-lb-test-1
+    cucumber-chef v3.0.0.rc.0
+    Attempting proxy SSH connection to the container 'nginx-lb-test-1'...
+          _____                           _                _____ _           __
+         / ____|                         | |              / ____| |         / _|
+        | |    _   _  ___ _   _ _ __ ___ | |__   ___ _ __| |    | |__   ___| |_
+        | |   | | | |/ __| | | | '_ ` _ \| '_ \ / _ \ '__| |    | '_ \ / _ \  _|
+        | |___| |_| | (__| |_| | | | | | | |_) |  __/ |  | |____| | | |  __/ |
+         \_____\__,_|\___|\__,_|_| |_| |_|_.__/ \___|_|   \_____|_| |_|\___|_|
+
+
+        Welcome to the Cucumber Chef Test Lab v3.0.0.rc.0
+
+        You are now logged in to the nginx-lb-test-1 container!
+
+    root@nginx-lb-test-1:~#
 
 ## `cucumber-chef genmac`
 
@@ -156,8 +163,6 @@ Generate an RFC compliant private MAC address for use in a `Labfile`:
     cucumber-chef v3.0.0.rc.0
     00:00:5e:4f:96:b0
 
-- - -
-
 ## `cucumber-chef genip`
 
 Generate an RFC compliant private IP address for use in a `Labfile`:
@@ -165,8 +170,6 @@ Generate an RFC compliant private IP address for use in a `Labfile`:
     $ cucumber-chef genip
     cucumber-chef v3.0.0.rc.0
     192.168.244.120
-
-- - -
 
 ## `cucumber-chef status`
 
@@ -201,8 +204,6 @@ Displays information on the status of the current test lab containers:
     +----------------------+-------+--------+---------------+-------------------+---------------+---------+
 
 
-- - -
-
 # RESOURCES
 
 Source:
@@ -220,8 +221,6 @@ Wiki:
 Chat:
 
 * #cucumber-chef on irc.freenode.net
-
-- - -
 
 # LICENSE
 
