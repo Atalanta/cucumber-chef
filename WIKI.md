@@ -18,7 +18,7 @@ Your Chef-Repo should be setup in a manner as follows:
 
 If you do not use these patterns you will have an unplesant time in general.
 
-When using Cucumber-Chef, especially at first, I highly recommend you tail the log.  Open another terminal, naviagate to your Chef-Repo root directory and run `tail -f .cucumber-chef/cucumber-chef.log`.  You'll have a much better idea what's going on in the background this way.  And root causes of issues that are not so obvious on the console will hopefully be very obvious in the log.
+When using Cucumber-Chef, especially at first, I highly recommend you tail the log.  Open another terminal, naviagate to your Chef-Repo root directory and run `tail -f .cucumber-chef/cucumber-chef.log`.  You'll have a much better idea what's going on in the background this way, especially during bootstrapping and provisioning.  And root causes of issues that are not so obvious on the console will hopefully be very obvious in the log.
 
 # Workflow
 
@@ -99,6 +99,8 @@ Here is a sample of what a `Labfile` might look like:
       end
 
     end
+
+## `config.rb`
 
 # Cucumber-Chef Tasks
 
