@@ -106,6 +106,42 @@ Here is a sample of what a `Labfile` might look like:
 
 All tasks should function in a similar manner across all providers.
 
+## `cucumber-chef setup`
+
+Setup the cucumber-chef test lab:
+
+    $ cucumber-chef setup
+    cucumber-chef v3.0.0.rc.0
+    Creating VAGRANT instance completed in 53.2361 seconds.
+    Bootstrapping VAGRANT instance completed in 757.4014 seconds.
+    Waiting for the chef-server completed in 0.1007 seconds.
+    Waiting for the chef-server-webui completed in 0.1007 seconds.
+    Downloading chef-server credentials completed in 1.2088 seconds.
+    Uploading 'cucumber-chef' cookbooks completed in 6.8571 seconds.
+    Uploading 'cucumber-chef' roles completed in 5.5413 seconds.
+    Performing chef-client run completed in 45.9874 seconds.
+    Downloading proxy SSH credentials completed in 0.3013 seconds.
+    Rebooting the test lab completed in 21.2672 seconds.
+    Waiting for the chef-server completed in 0.1008 seconds.
+    Waiting for the chef-server-webui completed in 0.1009 seconds.
+
+    If you are using AWS, be sure to log into the chef-server webui and change the default admin password at least.
+
+    Your test lab has now been provisioned!  Enjoy!
+
+    +-------------------------------------------------------------------+
+    |                      PROVIDER: Cucumber::Chef::Provider::Vagrant  |
+    |                            ID: default                            |
+    |                         STATE: running                            |
+    |                      USERNAME: vagrant                            |
+    |                    IP ADDRESS: 127.0.0.1                          |
+    |                          PORT: 2222                               |
+    |               CHEF-SERVER API: http://127.0.0.1:4000              |
+    |             CHEF-SERVER WEBUI: http://127.0.0.1:4040              |
+    |      CHEF-SERVER DEFAULT USER: admin                              |
+    |  CHEF-SERVER DEFAULT PASSWORD: p@ssw0rd1                          |
+    +-------------------------------------------------------------------+
+
 ## `cucumber-chef destroy [container] [...]`
 
 Destroy the cucumber-chef test lab:
