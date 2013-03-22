@@ -50,12 +50,12 @@ And /^the following (cookbook|cookbooks) (has|have) been (updated|uploaded):$/ d
   end
 
   cookbooks.each do |cookbook_path, cookbooks|
-    $cc_client.test_lab.knife_cli(%Q{cookbook upload #{cookbooks.join(" ")} -o #{cookbook_path}}, :silence => true)
+    $cc_client.test_lab.knife_cli(%(cookbook upload #{cookbooks.join(" ")} -o #{cookbook_path}), :silence => true)
   end
 end
 
 And /^all of the cookbooks in "([^\"]*)" (has|have) been (updated|uploaded)$/ do |cookbook_path, ignore0, ignore1|
-  $cc_client.test_lab.knife_cli(%Q{cookbook upload -a -o #{cookbook_path}}, :silence => true)
+  $cc_client.test_lab.knife_cli(%(cookbook upload -a -o #{cookbook_path}), :silence => true)
 end
 
 ################################################################################
@@ -67,10 +67,10 @@ And /^the following (environment|environments) (has|have) been (updated|uploaded
 
     if File.extname(environment).empty?
       Dir.glob(File.join(environment_path, "#{environment}.*")).each do |environment_file|
-        $cc_client.test_lab.knife_cli(%Q{environment from file #{environment_file}}, :silence => true)
+        $cc_client.test_lab.knife_cli(%(environment from file #{environment_file}), :silence => true)
       end
     else
-      $cc_client.test_lab.knife_cli(%Q{environment from file #{File.join(environment_path, environment)}}, :silence => true)
+      $cc_client.test_lab.knife_cli(%(environment from file #{File.join(environment_path, environment)}), :silence => true)
     end
   end
 end

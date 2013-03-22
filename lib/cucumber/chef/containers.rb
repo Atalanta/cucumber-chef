@@ -213,37 +213,37 @@ module Cucumber
           omnibus_chef_client = File.join("/", "opt", "chef", "bin", "chef-client")
           omnibus_cache = File.join(cache_rootfs, omnibus_chef_client)
           @ui.logger.info { "looking for omnibus cache in #{omnibus_cache}" }
-          if @test_lab.bootstrap_ssh.exec(%Q{sudo /bin/bash -c '[[ -f #{omnibus_cache} ]]'}, :silence => true, :ignore_exit_status => true).exit_code == 1
+          if @test_lab.bootstrap_ssh.exec(%(sudo /bin/bash -c '[[ -f #{omnibus_cache} ]]'), :silence => true, :ignore_exit_status => true).exit_code == 1
             case distro.downcase
             when "ubuntu" then
-              @test_lab.bootstrap_ssh.exec(%Q{sudo chroot #{cache_rootfs} /bin/bash -c 'DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes install wget'}, :silence => true)
+              @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'DEBIAN_FRONTEND=noninteractive apt-get -y --force-yes install wget'), :silence => true)
             when "fedora" then
-              @test_lab.bootstrap_ssh.exec(%Q{sudo yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server}, :silence => true)
+              @test_lab.bootstrap_ssh.exec(%(sudo yum --nogpgcheck --installroot=#{cache_rootfs} -y install wget openssh-server), :silence => true)
             end
-            @test_lab.bootstrap_ssh.exec(%Q{sudo chroot #{cache_rootfs} /bin/bash -c 'locale-gen'}, :silence => true)
-            @test_lab.bootstrap_ssh.exec(%Q{sudo chroot #{cache_rootfs} /bin/bash -c 'locale-gen en_US'}, :silence => true)
-            @test_lab.bootstrap_ssh.exec(%Q{sudo chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh'}, :silence => true)
-            @test_lab.bootstrap_ssh.exec(%Q{sudo chroot #{cache_rootfs} /bin/bash -c 'bash install.sh -v #{Cucumber::Chef::Config.chef[:version]}'}, :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'locale-gen'), :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'locale-gen en_US'), :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh'), :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'bash install.sh -v #{Cucumber::Chef::Config.chef[:version]}'), :silence => true)
             if distro.downcase == "fedora"
-              @test_lab.bootstrap_ssh.exec(%Q{sudo chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm'}, :silence => true)
+              @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm'), :silence => true)
             end
-            @test_lab.bootstrap_ssh.exec(%Q{sudo lxc-destroy -n #{name}}, :silence => true)
-            @test_lab.bootstrap_ssh.exec(%Q{sudo #{create_command(name, distro, release, arch)}}, :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo lxc-destroy -n #{name}), :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo #{create_command(name, distro, release, arch)}), :silence => true)
           end
 
           lab_ssh_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
           ssh_path = File.join(root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")
           motd_path = File.join(root(name), "etc", "motd")
 
-          @test_lab.bootstrap_ssh.exec(%Q{sudo mkdir -vp #{ssh_path}}, :silence => true)
-          @test_lab.bootstrap_ssh.exec(%Q{sudo chmod 0700 #{ssh_path}}, :silence => true)
-          @test_lab.bootstrap_ssh.exec(%Q{sudo cat #{File.join(lab_ssh_path, "id_rsa.pub")} | sudo tee -a #{File.join(ssh_path, "authorized_keys")}}, :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo mkdir -vp #{ssh_path}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo chmod 0700 #{ssh_path}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo cat #{File.join(lab_ssh_path, "id_rsa.pub")} | sudo tee -a #{File.join(ssh_path, "authorized_keys")}), :silence => true)
 
-          @test_lab.bootstrap_ssh.exec(%Q{sudo rm -vf #{motd_path}}, :silence => true)
-          @test_lab.bootstrap_ssh.exec(%Q{sudo cp -v /etc/motd #{motd_path}}, :silence => true)
-          @test_lab.bootstrap_ssh.exec(%Q{echo "    You are now logged in to the "#{name}" container!\n" | sudo tee -a #{motd_path}}, :silence => true)
-          @test_lab.bootstrap_ssh.exec(%Q{echo "127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}" | sudo tee -a #{File.join(root(name), "etc", "hosts")}}, :silence => true)
-          @test_lab.bootstrap_ssh.exec(%Q{echo "#{name}.test-lab" | sudo tee #{File.join(root(name), "etc", "hostname")}}, :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo rm -vf #{motd_path}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo cp -v /etc/motd #{motd_path}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(echo "    You are now logged in to the "#{name}" container!\n" | sudo tee -a #{motd_path}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(echo "127.0.0.1 #{name}.#{Cucumber::Chef::Config.test_lab[:tld]} #{name}" | sudo tee -a #{File.join(root(name), "etc", "hosts")}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(echo "#{name}.test-lab" | sudo tee #{File.join(root(name), "etc", "hostname")}), :silence => true)
         end
         start(name)
       end
@@ -270,7 +270,7 @@ module Cucumber
         tempfile = Tempfile.new(container.id)
         client_rb = File.join("/", root(container.id), "etc/chef/client.rb")
 
-        @test_lab.bootstrap_ssh.exec(%Q{sudo mkdir -pv #{File.dirname(client_rb)}}, :silence => true)
+        @test_lab.bootstrap_ssh.exec(%(sudo mkdir -pv #{File.dirname(client_rb)}), :silence => true)
 
         if Cucumber::Chef::Config.chef[:render_client_rb]
           max_key_size = @chef_client_config.keys.collect{ |z| z.to_s.size }.max
@@ -286,25 +286,25 @@ module Cucumber
             f.puts("Mixlib::Log::Formatter.show_time = true")
           end
           @test_lab.bootstrap_ssh.upload(tempfile.path, File.basename(tempfile.path))
-          @test_lab.bootstrap_ssh.exec(%Q{sudo mv -v #{File.basename(tempfile.path)} #{client_rb}}, :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo mv -v #{File.basename(tempfile.path)} #{client_rb}), :silence => true)
         else
-          @test_lab.bootstrap_ssh.exec(%Q{sudo /bin/bash -c '[[ -f #{client_rb} ]] && rm -fv #{client_rb}'}, :silence => true, :ignore_exit_status => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo /bin/bash -c '[[ -f #{client_rb} ]] && rm -fv #{client_rb}'), :silence => true, :ignore_exit_status => true)
         end
 
         tempfile = Tempfile.new(container.id)
         attributes_json = File.join("/", root(container.id), "etc", "chef", "attributes.json")
-        @test_lab.bootstrap_ssh.exec(%Q{sudo mkdir -pv #{File.dirname(attributes_json)}}, :silence => true)
+        @test_lab.bootstrap_ssh.exec(%(sudo mkdir -pv #{File.dirname(attributes_json)}), :silence => true)
         File.open(tempfile, 'w') do |f|
           f.puts((container.chef_client || {}).to_json)
         end
         @test_lab.bootstrap_ssh.upload(tempfile.path, File.basename(tempfile.path))
-        @test_lab.bootstrap_ssh.exec(%Q{sudo mv -v #{File.basename(tempfile.path)} #{attributes_json}}, :silence => true)
+        @test_lab.bootstrap_ssh.exec(%(sudo mv -v #{File.basename(tempfile.path)} #{attributes_json}), :silence => true)
 
         # make sure our log location is there
         log_location = File.join("/", root(container.id), @chef_client_config[:log_location])
-        @test_lab.bootstrap_ssh.exec(%Q{sudo mkdir -pv #{File.dirname(log_location)}}, :silence => true)
+        @test_lab.bootstrap_ssh.exec(%(sudo mkdir -pv #{File.dirname(log_location)}), :silence => true)
 
-        @test_lab.bootstrap_ssh.exec(%Q{sudo cp /etc/chef/validation.pem #{root(container.id)}/etc/chef/}, :silence => true)
+        @test_lab.bootstrap_ssh.exec(%(sudo cp /etc/chef/validation.pem #{root(container.id)}/etc/chef/), :silence => true)
 
         true
       end
@@ -352,7 +352,7 @@ module Cucumber
           f.puts("lxc.network.ipv4 = 0.0.0.0")
         end
         @test_lab.bootstrap_ssh.upload(tempfile.path, File.basename(tempfile.path))
-        @test_lab.bootstrap_ssh.exec(%Q{sudo mv -v #{File.basename(tempfile.path)} #{lxc_network_config}}, :silence => true)
+        @test_lab.bootstrap_ssh.exec(%(sudo mv -v #{File.basename(tempfile.path)} #{lxc_network_config}), :silence => true)
       end
 
 ################################################################################
@@ -376,7 +376,7 @@ module Cucumber
           f.close
         end
         @test_lab.bootstrap_ssh.upload(tempfile.path, File.basename(tempfile.path))
-        @test_lab.bootstrap_ssh.exec(%Q{sudo mv -v #{File.basename(tempfile.path)} #{dhcpd_config}}, :silence => true)
+        @test_lab.bootstrap_ssh.exec(%(sudo mv -v #{File.basename(tempfile.path)} #{dhcpd_config}), :silence => true)
 
         @test_lab.bootstrap_ssh.exec("sudo service isc-dhcp-server restart", :silence => true)
         @test_lab.bootstrap_ssh.exec("sudo service bind9 restart", :silence => true)

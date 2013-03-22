@@ -139,7 +139,7 @@ module Cucumber
       def upload_cookbook
         @ui.logger.debug { "Uploading cucumber-chef cookbooks..." }
         ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' cookbooks", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%Q{cookbook upload cucumber-chef -o #{@cookbooks_path}}, :silence => true)
+          @test_lab.knife_cli(%(cookbook upload cucumber-chef -o #{@cookbooks_path}), :silence => true)
         end
       end
 
@@ -148,7 +148,7 @@ module Cucumber
       def upload_role
         @ui.logger.debug { "Uploading cucumber-chef test lab role..." }
         ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' roles", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%Q{role from file #{File.join(@roles_path, "test_lab.rb")}}, :silence => true)
+          @test_lab.knife_cli(%(role from file #{File.join(@roles_path, "test_lab.rb")}), :silence => true)
         end
       end
 
