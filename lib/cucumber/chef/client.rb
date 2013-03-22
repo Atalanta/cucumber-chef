@@ -92,9 +92,12 @@ module Cucumber
             ZTK::Benchmark.bench(:message => ">>> Creating container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
               @test_lab.containers.create(container)
             end
-            ZTK::Benchmark.bench(:message => ">>> Provisioning container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
-              @test_lab.containers.chef_run_client(container)
-            end
+          end
+        end
+
+        Cucumber::Chef::Container.all.each do |container|
+          ZTK::Benchmark.bench(:message => ">>> Provisioning container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
+            @test_lab.containers.chef_run_client(container)
           end
         end
 
