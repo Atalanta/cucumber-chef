@@ -257,16 +257,16 @@ module Cucumber
 ################################################################################
 
       def start(name)
-        status = @test_lab.bootstrap_ssh.exec("sudo lxc-info -n #{name}", :silence => true).output
+        status = @test_lab.bootstrap_ssh.exec(%(sudo lxc-info -n #{name}), :silence => true).output
         if status.include?("STOPPED")
-          @test_lab.bootstrap_ssh.exec("sudo lxc-start -d -n #{name}", :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo lxc-start -d -n #{name}), :silence => true)
         end
       end
 
       def stop(name)
-        status = @test_lab.bootstrap_ssh.exec("sudo lxc-info -n #{name}", :silence => true).output
+        status = @test_lab.bootstrap_ssh.exec(%(sudo lxc-info -n #{name}), :silence => true).output
         if status.include?("RUNNING")
-          @test_lab.bootstrap_ssh.exec("sudo lxc-stop -n #{name}", :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo lxc-stop -n #{name}), :silence => true)
         end
       end
 
@@ -321,7 +321,7 @@ module Cucumber
         ssh = @test_lab.proxy_ssh(container.id)
 
         Cucumber::Chef::Config[:artifacts].each do |label, remote_path|
-          result = ssh.exec("sudo /bin/bash -c '[[ -f #{remote_path} ]] ; echo $? ; true'", :silence => true)
+          result = ssh.exec(%(sudo /bin/bash -c '[[ -f #{remote_path} ]] ; echo $? ; true'), :silence => true)
           if (result.output =~ /0/)
             @ui.logger.info { "Retrieving artifact '#{remote_path}' from container '#{container.id}'." }
 
@@ -403,14 +403,14 @@ module Cucumber
 ################################################################################
 
       def running?(name)
-        status = @test_lab.bootstrap_ssh.exec("sudo lxc-info -n #{name}", :silence => true).output.chomp
+        status = @test_lab.bootstrap_ssh.exec(%(sudo lxc-info -n #{name}), :silence => true).output.chomp
         status.include?("RUNNING")
       end
 
 ################################################################################
 
       def exists?(name)
-        (@test_lab.bootstrap_ssh.exec("sudo /bin/bash -c '[[ -d #{root(name)} ]] ; echo $? ; true'", :silence => true).output.chomp =~ /0/)
+        (@test_lab.bootstrap_ssh.exec(%(sudo /bin/bash -c '[[ -d #{root(name)} ]] ; echo $? ; true'), :silence => true).output.chomp =~ /0/)
       end
 
 ################################################################################
@@ -435,9 +435,9 @@ module Cucumber
       def create_command(name, distro, release, arch)
         case distro.downcase
         when "ubuntu" then
-          "sudo DEBIAN_FRONTEND=noninteractive lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release} --arch #{arch}"
+          %(sudo DEBIAN_FRONTEND=noninteractive lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release} --arch #{arch})
         when "fedora" then
-          "sudo lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release}"
+          %(sudo lxc-create -n #{name} -f /etc/lxc/#{name} -t #{distro} -- --release #{release})
         end
       end
 
