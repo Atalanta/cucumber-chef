@@ -18,9 +18,13 @@ Wiki:
 
 * https://github.com/Atalanta/cucumber-chef/blob/master/WIKI.md
 
+Forums:
+
+* Cucumber-Chef Google Group @ https://groups.google.com/d/forum/cucumber-chef
+
 Chat:
 
-* #cucumber-chef on irc.freenode.net
+* #cucumber-chef @ irc.freenode.net
 
 # LICENSE
 

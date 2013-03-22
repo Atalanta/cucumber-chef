@@ -796,16 +796,20 @@ Wiki:
 
 * https://github.com/Atalanta/cucumber-chef/blob/master/WIKI.md
 
+Forums:
+
+* Cucumber-Chef Google Group @ https://groups.google.com/d/forum/cucumber-chef
+
 Chat:
 
-* #cucumber-chef on irc.freenode.net
+* #cucumber-chef @ irc.freenode.net
 
 # LICENSE
 
 Cucumber-Chef - A test driven infrastructure system
 
 * Author: Stephen Nelson-Smith <stephen@atalanta-systems.com>
-* Author: Zachary Patten <zachary@jovelabs.com>
+* Author: Zachary Patten <zachary@jovelabs.com> [![endorse](http://api.coderwall.com/zpatten/endorsecount.png)](http://coderwall.com/zpatten)
 * Copyright: Copyright (c) 2011-2013 Atalanta Systems Ltd
 * License: Apache License, Version 2.0
 
