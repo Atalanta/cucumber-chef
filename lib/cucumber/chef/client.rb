@@ -105,7 +105,7 @@ module Cucumber
                                                     :validation_client_name => "chef-validator")
         Cucumber::Chef::Container.all.each do |container|
           ZTK::Benchmark.bench(:message => ">>> Provisioning container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
-            @test_lab.containers.chef_run_client(container)
+            @test_lab.containers.provision(container)
           end
         end
 

@@ -91,6 +91,12 @@ module Cucumber
 
 ################################################################################
 
+      def provision(container, *args)
+        @test_lab.containers.chef_run_client(container, *args)
+      end
+
+################################################################################
+
       def chef_set_client_config(config={})
         @chef_client_config = (@chef_client_config || {
           :log_level => :debug,
