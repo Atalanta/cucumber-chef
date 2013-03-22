@@ -182,6 +182,7 @@ module Cucumber
         ZTK::Benchmark.bench(:message => "Rebooting the test lab", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           command = "sudo reboot"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
+          sleep(10)
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => @test_lab.port, :wait => 120).wait
         end
 
