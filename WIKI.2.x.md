@@ -798,7 +798,7 @@ Wiki:
 
 Forums:
 
-* Cucumber-Chef Google Group @ https://groups.google.com/d/forum/cucumber-chef
+* https://groups.google.com/d/forum/cucumber-chef
 
 Chat:
 
