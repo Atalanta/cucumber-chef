@@ -27,7 +27,7 @@ namespace :cc do
 
       system(%(mkdir -pv #{File.dirname("public/#{filename}")}))
 
-      push = (@pushed ? nil : %(SETUP="YES"))
+      push = (@pushed ? nil : %(PUSH="YES"))
       output_file = File.join(@output_dir, filename)
       command = [push, "bundle exec cucumber", "features/support", feature_file, ENV['EXTRA_CUCUMBER_ARGS'], "--format html", "--out", output_file].flatten.compact.join(" ")
       @pushed = true if !@pushed

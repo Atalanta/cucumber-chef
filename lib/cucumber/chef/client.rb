@@ -46,21 +46,10 @@ module Cucumber
 ################################################################################
 
       def up(options={})
-        if ENV['PURGE'] == 'YES'
-          @ui.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
-          @test_lab.containers.list.each do |name|
-            ZTK::Benchmark.bench(:message => ">>> Destroying container '#{name}'", :mark => "completed in %0.4f seconds.") do
-              @test_lab.containers.destroy(name)
-            end
-          end
-        else
-          @ui.logger.info { "Allowing existing containers to persist." }
-        end
 
-        @test_lab.containers.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
-                                                    :validation_client_name => "chef-validator")
-
-        if ENV['SETUP'] == 'YES'
+        # PUSH CHEF-REPO
+        #################
+        if environment_variable_set?("PUSH")
           # Upload all of the chef-repo environments
           ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo environments to the test lab", :mark => "completed in %0.4f seconds.") do
             @test_lab.knife_cli(%(environment from file ./environments/*.rb), :silence => true)
@@ -87,14 +76,33 @@ module Cucumber
               @test_lab.knife_cli(%(data bag from file "#{data_bag}" "#{data_bag_path}"), :silence => true)
             end
           end
+        end
 
-          Cucumber::Chef::Container.all.each do |container|
-            ZTK::Benchmark.bench(:message => ">>> Creating container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
-              @test_lab.containers.create(container)
+        # PURGE CONTAINERS
+        ###################
+        if environment_variable_set?("PURGE")
+          @ui.logger.warn { "PURGING CONTAINERS!  Container attributes will be reset!" }
+          @test_lab.containers.list.each do |name|
+            ZTK::Benchmark.bench(:message => ">>> Destroying container '#{name}'", :mark => "completed in %0.4f seconds.") do
+              @test_lab.containers.destroy(name)
             end
+          end
+        else
+          @ui.logger.info { "Allowing existing containers to persist." }
+        end
+
+        # CREATE CONTAINERS
+        ####################
+        Cucumber::Chef::Container.all.each do |container|
+          ZTK::Benchmark.bench(:message => ">>> Creating container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
+            @test_lab.containers.create(container)
           end
         end
 
+        # PROVISION CONTAINERS
+        #######################
+        @test_lab.containers.chef_set_client_config(:chef_server_url => "http://192.168.255.254:4000",
+                                                    :validation_client_name => "chef-validator")
         Cucumber::Chef::Container.all.each do |container|
           ZTK::Benchmark.bench(:message => ">>> Provisioning container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
             @test_lab.containers.chef_run_client(container)
@@ -121,6 +129,16 @@ module Cucumber
       end
 
 ################################################################################
+    private
+################################################################################
+
+      def environment_variable_set?(variable_name)
+        raise "You must supply an environment variable name!" if variable_name.nil?
+
+        variable_name = variable_name.strip.upcase
+
+        (!ENV[variable_name].nil? && ((ENV[variable_name] == '1') || (ENV[variable_name].strip.upcase == 'YES')))
+      end
 
     end
 
