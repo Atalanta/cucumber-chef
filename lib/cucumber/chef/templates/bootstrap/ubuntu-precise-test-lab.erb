@@ -70,20 +70,20 @@ knife client create <%= @user %> -d -a -f ${HOME}/.chef/<%= @user %>.pem
 
 chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
 
-nc -w 1 127.0.0.1 4040
-if [ $? -ne 0 ]; then
-  /etc/init.d/chef-server-webui stop && sleep 3
-  /usr/sbin/chef-server-webui -e production &
-  while true; do
-    nc -w 1 127.0.0.1 4040
-    if [ $? -eq 0 ]; then
-      break
-    fi
-    sleep 1
-  done
-  kill `jobs -p` && sleep 3
-  /etc/init.d/chef-server-webui start && sleep 3
-fi
+# nc -w 1 127.0.0.1 4040
+# if [ $? -ne 0 ]; then
+#   /etc/init.d/chef-server-webui stop && sleep 3
+#   /usr/sbin/chef-server-webui -e production &
+#   while true; do
+#     nc -w 1 127.0.0.1 4040
+#     if [ $? -eq 0 ]; then
+#       break
+#     fi
+#     sleep 1
+#   done
+#   kill `jobs -p` && sleep 3
+#   /etc/init.d/chef-server-webui start && sleep 3
+# fi
 
 if [ ! -f /etc/chef/client.pem ]; then
   /etc/init.d/chef-client restart
