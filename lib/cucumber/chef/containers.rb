@@ -196,7 +196,7 @@ module Cucumber
 ################################################################################
 
       def list
-        @test_lab.bootstrap_ssh.exec("sudo lxc-ls 2>&1", :silence => true).output.split("\n").uniq
+        @test_lab.bootstrap_ssh.exec("sudo lxc-ls 2>&1", :silence => true).output.strip.split(" ").uniq
       end
 
 ################################################################################
