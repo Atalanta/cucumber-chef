@@ -43,16 +43,11 @@ module Cucumber
 ################################################################################
 
       def build
+        upload_chef_repo
         bootstrap
         wait_for_chef_server
 
         download_chef_credentials
-
-        upload_cookbook
-        upload_role
-
-        chef_first_run
-
         download_proxy_ssh_credentials
 
         reboot_test_lab
@@ -63,18 +58,50 @@ module Cucumber
     private
 ################################################################################
 
+      def upload_chef_repo
+        ZTK::Benchmark.bench(:message => "Uploading embedded chef-repo", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+          local_path = File.join(Cucumber::Chef.root_dir, "chef_repo")
+          @ui.logger.debug { "local_path == #{local_path.inspect}" }
+
+          remote_path = File.join("/tmp", "chef-solo")
+          @ui.logger.debug { "remote_path == #{remote_path.inspect}" }
+
+          glob_dir = File.join(local_path, "**")
+          @ui.logger.debug { "glob_dir == #{glob_dir.inspect}" }
+
+          @test_lab.bootstrap_ssh.exec(%(mkdir -p #{remote_path}))
+
+          Dir.glob(glob_dir).each do |file|
+            file = File.basename(file)
+            @ui.logger.debug { "file == #{file.inspect}" }
+
+            local_file = File.join(local_path, file)
+            remote_file = File.join(remote_path, file)
+
+            File.directory?(local_file) and @test_lab.bootstrap_ssh.exec(%(mkdir -p #{remote_file}))
+
+            @test_lab.bootstrap_ssh.upload(local_file, remote_file)
+          end
+        end
+      end
+
+################################################################################
+
       def bootstrap
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
         ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           chef_client_attributes = {
-            "run_list" => "role[test_lab]",
+            "run_list" => %w(recipe[chef-server::rubygems-install] role[test_lab]),
             "cucumber_chef" => {
               "version" => Cucumber::Chef::VERSION,
               "prerelease" => Cucumber::Chef::Config.prerelease
             },
             "lab_user" => Cucumber::Chef.lab_user,
-            "lxc_user" => Cucumber::Chef.lxc_user
+            "lxc_user" => Cucumber::Chef.lxc_user,
+            "chef_server" => {
+              "webui_enabled" => true
+            }
           }
 
           context = {
@@ -108,10 +135,15 @@ module Cucumber
       def download_chef_credentials
         ZTK::Benchmark.bench(:message => "Downloading chef-server credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           local_path = File.dirname(Cucumber::Chef.chef_identity)
+          @ui.logger.debug { "local_path == #{local_path.inspect}" }
+
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
+          @ui.logger.debug { "remote_path == #{remote_path.inspect}" }
 
           files = [ File.basename(Cucumber::Chef.chef_identity), "validation.pem" ]
           files.each do |file|
+            @ui.logger.debug { "file == #{file.inspect}" }
+
             @test_lab.bootstrap_ssh.download(File.join(remote_path, file), File.join(local_path, file))
           end
         end
@@ -131,36 +163,6 @@ module Cucumber
             @test_lab.bootstrap_ssh.download(File.join(remote_path, remote_file), local)
             File.chmod(0600, local)
           end
-        end
-      end
-
-################################################################################
-
-      def upload_cookbook
-        @ui.logger.debug { "Uploading cucumber-chef cookbooks..." }
-        ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' cookbooks", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%(cookbook upload cucumber-chef -o #{@cookbooks_path}), :silence => true)
-        end
-      end
-
-################################################################################
-
-      def upload_role
-        @ui.logger.debug { "Uploading cucumber-chef test lab role..." }
-        ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' roles", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%(role from file #{File.join(@roles_path, "test_lab.rb")}), :silence => true)
-        end
-      end
-
-################################################################################
-
-      def chef_first_run
-        ZTK::Benchmark.bench(:message => "Performing chef-client run", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          log_level = (ENV['LOG_LEVEL'].downcase rescue (Cucumber::Chef.is_rc? ? "debug" : "info"))
-
-          command = "/usr/bin/chef-client -j /etc/chef/first-boot.json --log_level #{log_level} --once"
-          command = "sudo #{command}"
-          @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
       end
 

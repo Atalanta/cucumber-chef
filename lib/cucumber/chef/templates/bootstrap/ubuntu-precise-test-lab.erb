@@ -15,26 +15,33 @@ echo "127.0.0.1 <%= @hostname_full %> <%= @hostname_short %>" | tee -a /etc/host
 echo "<%= @hostname_full %>" | tee /etc/hostname
 hostname <%= @hostname_full %>
 
-echo "deb http://apt.opscode.com/ `lsb_release -cs`-0.10 main" | tee /etc/apt/sources.list.d/opscode.list
-mkdir -p /etc/apt/trusted.gpg.d
-gpg --fetch-key http://apt.opscode.com/packages@opscode.com.gpg.key
-gpg --export packages@opscode.com | tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null
-apt-get -q -y --force-yes update
-apt-get -q -y --force-yes -o Dpkg::Options::="--force-confnew" install opscode-keyring
-apt-get -q -y --force-yes update
-chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}/.gnupg
-apt-get -q -y upgrade
+apt-get -y --force-yes update
+apt-get -y --force-yes install build-essential
 
-cat <<EOF | debconf-set-selections
-chef chef/chef_server_url string http://<%= @hostname_short %>:4000
-chef-solr chef-solr/amqp_password password <%= @amqp_password %>
-chef-server-webui chef-server-webui/admin_password password <%= @admin_password %>
+wget http://www.opscode.com/chef/install.sh
+bash install.sh -v <%= @chef_version %>
+rpm -Uvh --nodeps /tmp/*rpm
+export PATH=/opt/chef/embedded/bin/:$PATH
+
+mkdir -p /etc/chef/
+mkdir -p /var/log/chef/
+
+cat <<EOF > /etc/chef/solo.rb
+file_cache_path "/tmp/chef-solo/"
+cookbook_path %w(/tmp/chef-solo/cookbooks/ /tmp/chef-solo/site-cookbooks/)
+role_path "/tmp/chef-solo/roles/"
 EOF
 
-CHEF_VERSION=`apt-cache showpkg chef | tee | grep -m 1 "<%= @chef_version %>" | cut -c -<%= @chef_version.length + 3 %>`
-CHEF_SERVER_VERSION=`apt-cache showpkg chef-server | tee | grep -m 1 "<%= @chef_version %>" | cut -c -<%= @chef_version.length + 3 %>`
+cat <<EOF > /etc/chef/bootstrap.json
+<%= @chef_client_attributes.to_json %>
+EOF
 
-apt-get -q -y --force-yes install chef=$CHEF_VERSION chef-server=$CHEF_SERVER_VERSION
+cd /tmp/chef-solo/
+gem install bundler --no-ri --no-rdoc
+bundle install --standalone --path vendor/bundle --binstubs
+bin/librarian-chef install
+
+chef-solo --config /etc/chef/solo.rb --json-attributes /etc/chef/bootstrap.json --logfile /var/log/chef/chef-solo.log --log_level debug
 
 echo -n "Waiting on validation.pem and webui.pem to appear..."
 until [ -f /etc/chef/validation.pem ] && [ -f /etc/chef/webui.pem ]; do
@@ -68,42 +75,6 @@ ${KNIFE_CONFIG_EXP_FILE}
 
 knife client create <%= @user %> -d -a -f ${HOME}/.chef/<%= @user %>.pem
 
-chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
-
-# nc -w 1 127.0.0.1 4040
-# if [ $? -ne 0 ]; then
-#   /etc/init.d/chef-server-webui stop && sleep 3
-#   /usr/sbin/chef-server-webui -e production &
-#   while true; do
-#     nc -w 1 127.0.0.1 4040
-#     if [ $? -eq 0 ]; then
-#       break
-#     fi
-#     sleep 1
-#   done
-#   kill `jobs -p` && sleep 3
-#   /etc/init.d/chef-server-webui start && sleep 3
-# fi
-
-if [ ! -f /etc/chef/client.pem ]; then
-  /etc/init.d/chef-client restart
-  echo -n "Waiting on client.pem to appear..."
-  i="0"
-  until [ -f /etc/chef/client.pem ]; do
-    i=$[$i+1]
-    sleep 1
-    echo -n "."
-    if [ $i -gt 60 ]; then
-      echo -n "restart-chef-client"
-      /etc/init.d/chef-client restart
-      i="0"
-    fi
-  done
-  echo "done."
-fi
-
-cat <<EOF > /etc/chef/first-boot.json
-<%= @chef_client_attributes.to_json %>
-EOF
+chown -Rv ${SUDO_USER}:${SUDO_USER} ${HOME}
 
 touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}
