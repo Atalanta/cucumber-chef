@@ -8,6 +8,13 @@ I was not particularly happy with the state of the 2.x documents and considering
 
 Cucumber-chef is a library of tools to enable the emerging discipline of infrastructure as code to practice test driven development.  It provides a testing platform within which Cucumber tests can be run which provision virtual machines, configure them by applying the appropriate Chef roles to them, and then run acceptance and integration tests against the environment.
 
+# Example Chef-Repo
+
+I have prepared a chef-repo which I use to develop off of and made it available to the community to use as a baseline for playing with cucumber-chef and experimenting with cucumber-chef.
+
+* https://github.com/zpatten/cc-chef-repo
+
+
 # Prerequsites/Recommendations
 
 Your Chef-Repo should be setup in a manner as follows:
