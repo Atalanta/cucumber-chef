@@ -92,7 +92,7 @@ module Cucumber
 
         ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           chef_client_attributes = {
-            "run_list" => %w(recipe[chef-server::rubygems-install] role[test_lab]),
+            "run_list" => %w(recipe[chef-server::rubygems-install] recipe[chef-server] recipe[chef-client] role[test_lab]),
             "cucumber_chef" => {
               "version" => Cucumber::Chef::VERSION,
               "prerelease" => Cucumber::Chef::Config.prerelease
@@ -101,6 +101,10 @@ module Cucumber
             "lxc_user" => Cucumber::Chef.lxc_user,
             "chef_server" => {
               "webui_enabled" => true
+            },
+            "chef_client" => {
+              "interval" => 900,
+              "splay" => 900
             }
           }
 
