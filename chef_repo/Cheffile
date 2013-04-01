@@ -1,3 +1,4 @@
 site 'http://community.opscode.com/api/v1'
 
 cookbook "chef-server"
+cookbook "chef-client"
