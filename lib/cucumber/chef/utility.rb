@@ -195,6 +195,10 @@ module Cucumber
         lab_identity
       end
 
+      def lab_ssh_port
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:ssh][:lab_port]
+      end
+
       def lab_hostname_short
         Cucumber::Chef::Config.test_lab[:hostname]
       end

@@ -191,6 +191,10 @@ module Cucumber
 
       aws               ({:lab_user => "ubuntu",
                           :lxc_user => "root",
+                          :ssh => {
+                            :lab_port => 22,
+                            :lxc_port => 22
+                          },
                           :ubuntu_release => "precise",
                           :aws_instance_arch => "i386",
                           :aws_instance_disk_store => "ebs",
@@ -198,7 +202,11 @@ module Cucumber
                           :aws_security_group => "cucumber-chef"})
 
       vagrant           ({:lab_user => "vagrant",
-                          :lxc_user => "root"})
+                          :lxc_user => "root",
+                          :ssh => {
+                            :lab_port => 2222,
+                            :lxc_port => 22
+                          } })
 
 ################################################################################
 
