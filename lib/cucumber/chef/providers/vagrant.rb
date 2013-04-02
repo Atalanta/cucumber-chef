@@ -36,9 +36,6 @@ module Cucumber
 
         def initialize(ui=ZTK::UI.new)
           @ui = ui
-
-          # @env = ::Vagrant::Environment.new
-          # @vm = @env.primary_vm
         end
 
 ################################################################################
@@ -145,7 +142,6 @@ module Cucumber
 ################################################################################
 
         def id
-          # @vm.name
           "default"
         end
 
@@ -162,17 +158,14 @@ module Cucumber
         end
 
         def username
-          # @vm.config.ssh.username
           "vagrant"
         end
 
         def ip
-          # @vm.config.ssh.host
           "127.0.0.1"
         end
 
         def port
-          # @vm.config.vm.forwarded_ports.select{ |fwd_port| (fwd_port[:name] == "ssh") }.first[:hostport].to_i
           2222
         end
 
