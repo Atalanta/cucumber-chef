@@ -118,7 +118,7 @@ end
 
 Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
   command = "stat -c %%U:%%G %s" % [
-    path
+      path
   ]
   @output = @connection.exec(command).output
   @output.should =~ /#{owner}/
@@ -127,7 +127,7 @@ end
 # we can now match multi-line strings. We want to match *contiguous lines*
 Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
   command = "cat %s" % [
-    path
+      path
   ]
 
 # turn the command-line output and the expectation string into Arrays and strip
