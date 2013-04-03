@@ -38,8 +38,8 @@ Gem::Specification.new do |s|
   s.add_dependency("fog", ">= 1.3.1")
 
   # TDD
-  s.add_dependency("cucumber", ">= 1.2.0")
-  s.add_dependency("rspec", ">= 2.10.0")
+  s.add_dependency("cucumber", ">= 0")
+  s.add_dependency("rspec", ">= 0")
 
   # Support
   s.add_dependency("mixlib-config", ">= 1.1.2")
