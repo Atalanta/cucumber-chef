@@ -1,0 +1,193 @@
+#!/bin/env bash
+#
+# Cucumber-Chef 'Chef < 11.0.0' Bootstrap Script
+#
+# Generated <%= Time.now.utc %>
+#
+set -x
+
+CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
+# [ -f ${CUCUMBER_CHEF_BOOTSTRAP_DONE} ] && echo "Already bootstrapped!" && exit
+
+export DEBIAN_FRONTEND=noninteractive
+
+echo "127.0.0.1 <%= @hostname_full %> <%= @hostname_short %>" | tee -a /etc/hosts
+echo "<%= @hostname_full %>" | tee /etc/hostname
+hostname <%= @hostname_full %>
+
+echo "deb http://apt.opscode.com/ `lsb_release -cs`-0.10 main" | tee /etc/apt/sources.list.d/opscode.list
+mkdir -p /etc/apt/trusted.gpg.d
+gpg --fetch-key http://apt.opscode.com/packages@opscode.com.gpg.key
+gpg --export packages@opscode.com | tee /etc/apt/trusted.gpg.d/opscode-keyring.gpg > /dev/null
+apt-get -y --force-yes update
+apt-get -y --force-yes -o Dpkg::Options::="--force-confnew" install opscode-keyring
+apt-get -y --force-yes update
+chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}/.gnupg
+
+cat <<EOF | debconf-set-selections
+chef chef/chef_server_url string http://<%= @hostname_short %>:4000
+chef-solr chef-solr/amqp_password password <%= @amqp_password %>
+chef-server-webui chef-server-webui/admin_password password <%= @admin_password %>
+EOF
+
+CHEF_VERSION=`apt-cache showpkg chef | tee | grep -m 1 "<%= @chef_version %>" | cut -c -<%= @chef_version.length + 3 %>`
+CHEF_SERVER_VERSION=`apt-cache showpkg chef-server | tee | grep -m 1 "<%= @chef_version %>" | cut -c -<%= @chef_version.length + 3 %>`
+
+apt-get -y --force-yes install chef=$CHEF_VERSION chef-server=$CHEF_SERVER_VERSION
+
+echo -n "Waiting on validation.pem and webui.pem to appear..."
+until [ -f /etc/chef/validation.pem ] && [ -f /etc/chef/webui.pem ]; do
+  echo -n "."
+  sleep 1
+done
+echo "done."
+
+mkdir -p ~/.chef
+cp /etc/chef/validation.pem /etc/chef/webui.pem ~/.chef
+knife configure -i --server-url http://127.0.0.1:4000 -u ${SUDO_USER} -r '' --defaults --disable-editing --yes -VV
+knife client create <%= @user %> -a -f ${HOME}/.chef/<%= @user %>.pem --disable-editing --yes -VV
+chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
+
+if [ ! -f /etc/chef/client.pem ]; then
+  /etc/init.d/chef-client restart
+  echo -n "Waiting on client.pem to appear..."
+  i="0"
+  until [ -f /etc/chef/client.pem ]; do
+    i=$[$i+1]
+    sleep 1
+    echo -n "."
+    if [ $i -gt 60 ]; then
+      echo -n "restart-chef-client"
+      /etc/init.d/chef-client restart
+      i="0"
+    fi
+  done
+  echo "done."
+fi
+
+knife cookbook upload --all --cookbook-path /tmp/chef-solo/cookbooks --force --yes -VV
+knife role from file /tmp/chef-solo/roles/*.rb --yes -VV
+
+cat <<EOF > /etc/chef/bootstrap-chef-client.json
+<%= @chef_client_attributes.to_json %>
+EOF
+chef-client -j /etc/chef/bootstrap-chef-client.json
+
+touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}
+
+
+
+# #!/bin/env bash
+# #
+# # Cucumber-Chef Bootstrap Script
+# #
+# # Generated <%= Time.now.utc %>
+# #
+# set -x
+
+# CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
+# [ -f ${CUCUMBER_CHEF_BOOTSTRAP_DONE} ] && echo "Already bootstrapped!" && exit
+
+# export DEBIAN_FRONTEND=noninteractive
+
+# mkdir -p $HOME/.ssh/
+# cat <<EOF > $HOME/.ssh/config
+# UserKnownHostsFile /dev/null
+# StrictHostKeyChecking no
+# ForwardAgent yes
+# EOF
+
+# mkdir -p /root/.ssh/
+# cp -v $HOME/.ssh/config /root/.ssh/config
+
+# echo "127.0.0.1 <%= @hostname_full %> <%= @hostname_short %>" | tee -a /etc/hosts
+# echo "<%= @hostname_full %>" | tee /etc/hostname
+# hostname <%= @hostname_full %>
+
+# apt-get -y --force-yes update
+# apt-get -y --force-yes install build-essential rpm ruby1.9.3 # git-core #ruby-full rubygems git-core
+# #rpm ruby1.9.3 # ruby-libxml
+
+# wget http://www.opscode.com/chef/install.sh
+# bash install.sh -v <%= @chef_version %>
+# # rpm -Uvh --nodeps /tmp/*rpm
+# # export PATH=/opt/chef/embedded/bin/:$PATH
+
+# mkdir -p /etc/chef/
+# mkdir -p /var/log/chef/
+
+# cat <<EOF > /etc/chef/solo.rb
+# file_cache_path "/tmp/chef-solo/"
+# cookbook_path %w(/tmp/chef-solo/cookbooks/ /tmp/chef-solo/site-cookbooks/)
+# role_path "/tmp/chef-solo/roles/"
+# EOF
+
+# cat <<EOF > /etc/chef/bootstrap-chef-client.json
+# <%= @chef_client_attributes.to_json %>
+# EOF
+
+# cat <<EOF > /tmp/chef-solo/Gemfile
+# source 'https://rubygems.org'
+# gem 'chef', '<%= @chef_version %>'
+# gem 'berkshelf'
+# gem 'moneta', '< 0.7.0'
+# EOF
+
+# cat <<EOF > /tmp/chef-solo/Berksfile
+# site :opscode
+# cookbook 'chef-server'
+# EOF
+
+# cd /tmp/chef-solo/
+
+# gem install bundler --no-ri --no-rdoc
+# # bundle install --standalone --path vendor/bundle --binstubs
+# bundle install
+# # bin/librarian-chef install
+# # librarian-chef install
+# berks install --path /tmp/chef-solo/cookbooks/
+
+# # git clone git://github.com/opscode-cookbooks/chef-server.git /tmp/chef-solo/cookbooks/chef-server --branch
+
+# chef-solo --config /etc/chef/solo.rb --json-attributes /etc/chef/bootstrap-chef-solo.json --logfile /var/log/chef/chef-solo.log
+
+# echo -n "Waiting on validation.pem and webui.pem to appear..."
+# until [ -f /etc/chef/validation.pem ] && [ -f /etc/chef/webui.pem ]; do
+#   echo -n "."
+#   sleep 1
+# done
+# echo "done."
+
+# mkdir -p ~/.chef
+# cp /etc/chef/validation.pem /etc/chef/webui.pem ~/.chef
+
+# # apt-get -q -y install expect
+# # KNIFE_CONFIG_EXP_FILE="/tmp/knife-config.exp"
+# # cat <<EOF > ${KNIFE_CONFIG_EXP_FILE}
+# # #!/usr/bin/expect -f
+# # set timeout 10
+# # spawn knife configure -i
+# # expect "Overwrite ${HOME}/.chef/knife.rb" { send "Y\n" }
+# # expect "Where should I put the config file?" { send "\n" }
+# # expect "Please enter the chef server URL" { send "\n" }
+# # expect "Please enter a clientname for the new client" { send "${SUDO_USER}\n" }
+# # expect "Please enter the existing admin clientname" { send "\n" }
+# # expect "Please enter the location of the existing admin client" { send "${HOME}/.chef/webui.pem\n" }
+# # expect "Please enter the validation clientname" { send "\n" }
+# # expect "Please enter the location of the validation key" { send "${HOME}/.chef/validation.pem\n" }
+# # expect "Please enter the path to a chef repository" { send "${HOME}/chef_repo\n" }
+# # interact
+# # EOF
+# # chmod +x ${KNIFE_CONFIG_EXP_FILE}
+# # ${KNIFE_CONFIG_EXP_FILE}
+# # run("#{try_sudo} knife configure -i -n -y -s http://localhost:4000 -u root -r '' --defaults", :hosts => server)
+
+# knife configure -i --server-url http://127.0.0.1:4000 -u ${SUDO_USER} --defaults --disable-editing --yes -VV
+# knife client create <%= @user %> -a -f ${HOME}/.chef/<%= @user %>.pem --disable-editing --yes -VV
+# chown -Rv ${SUDO_USER}:${SUDO_USER} ${HOME}
+
+# # knife cookbook upload --all --cookbook-path /tmp/chef-solo/cookbooks:/tmp/chef-solo/site-cookbooks --force --yes -VV
+# # knife role from file /tmp/chef-solo/roles/*.rb --yes -VV
+# # chef-client -j /etc/chef/bootstrap-chef-client.json
+
+# touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}
