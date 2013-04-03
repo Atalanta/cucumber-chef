@@ -12,8 +12,8 @@ When /^I have the following SSH sessions:$/ do |table|
       @ssh_sessions[id] = ZTK::SSH.new
 
       @ssh_sessions[id].config.proxy_host_name = $test_lab.ip
-      @ssh_sessions[id].config.proxy_user = Cucumber::Chef.lab_user
-      @ssh_sessions[id].config.proxy_keys = Cucumber::Chef.lab_identity
+      @ssh_sessions[id].config.proxy_user      = Cucumber::Chef.lab_user
+      @ssh_sessions[id].config.proxy_keys      = Cucumber::Chef.lab_identity
 
       hash['hostname'] and (@ssh_sessions[id].config.host_name = hash['hostname'])
       hash['username'] and (@ssh_sessions[id].config.user = hash['username'])
@@ -33,9 +33,9 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
     @connection = ZTK::SSH.new(:timeout => 120, :ignore_exit_status => true)
 
     @connection.config.proxy_host_name = $test_lab.ip
-    @connection.config.proxy_port = $test_lab.port
-    @connection.config.proxy_user = Cucumber::Chef.lab_user
-    @connection.config.proxy_keys = Cucumber::Chef.lab_identity
+    @connection.config.proxy_port      = $test_lab.port
+    @connection.config.proxy_user      = Cucumber::Chef.lab_user
+    @connection.config.proxy_keys      = Cucumber::Chef.lab_identity
 
     hostname and (@connection.config.host_name = hostname)
     session["password"] and (@connection.config.password = session["password"])
@@ -60,8 +60,8 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
 end
 
 And /^I run "([^\"]*)"$/ do |command|
-  @result = @connection.exec(command, :silence => true)
-  @output = @result.output
+  @result    = @connection.exec(command, :silence => true)
+  @output    = @result.output
   @exit_code = @result.exit_code
 end
 
@@ -86,23 +86,23 @@ Then /^the exit code should be "([^\"]*)"$/ do |exit_code|
 end
 
 Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
-  parent = File.dirname path
-  child = File.basename path
-  command = "ls %s" % [
-    parent
+  parent  = File.dirname path
+  child   = File.basename path
+  command = "ls -a %s" % [
+      parent
   ]
   @output = @connection.exec(command, :silence => true).output
   @output.should =~ /#{child}/
 
 # if a specific type (directory|file) was specified, test for it
   command = "stat -c %%F %s" % [
-    path
+      path
   ]
   @output = @connection.exec(command, :silence => true).output
-  types = {
-    "file" => /regular file/,
-    "directory" => /directory/,
-    "symlink" => /symbolic link/
+  types   = {
+      "file"      => /regular file/,
+      "directory" => /directory/,
+      "symlink"   => /symbolic link/
   }
 
   if types.keys.include? type
@@ -130,8 +130,8 @@ Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
   content = content.split("\n").map{ |i| i.strip }
 
 # assume no match
-  match = false
-  count = 0
+  match   = false
+  count   = 0
 
 # step through the command output array
   while count < @output.length
