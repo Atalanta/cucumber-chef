@@ -120,7 +120,7 @@ Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |pa
   command = "stat -c %%U:%%G %s" % [
       path
   ]
-  @output = @connection.exec(command).output
+  @output = @connection.exec(command, :silence => true).output
   @output.should =~ /#{owner}/
 end
 
@@ -132,8 +132,8 @@ Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
 
 # turn the command-line output and the expectation string into Arrays and strip
 # leading and trailing cruft from members
-  @output = @connection.exec(command).output.split("\n").map{ |i| i.strip }
-  content = content.split("\n").map{ |i| i.strip }
+  @output = @connection.exec(command, :silence => true).output.split("\n").map { |i| i.strip }
+  content = content.split("\n").map { |i| i.strip }
 
 # assume no match
   match   = false
