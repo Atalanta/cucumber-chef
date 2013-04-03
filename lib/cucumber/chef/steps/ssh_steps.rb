@@ -85,14 +85,18 @@ Then /^the exit code should be "([^\"]*)"$/ do |exit_code|
   @exit_code.to_i.should == exit_code.to_i
 end
 
-Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
+Then /^(path|directory|file|symlink) "([^\"]*)" should( not)? exist$/ do |type, path, boolean|
   parent  = File.dirname path
   child   = File.basename path
   command = "ls -a %s" % [
       parent
   ]
   @output = @connection.exec(command, :silence => true).output
-  @output.should =~ /#{child}/
+  if (!boolean)
+    @output.should =~ /#{child}/
+  else
+    @output.should_not =~ /#{child}/
+  end
 
 # if a specific type (directory|file) was specified, test for it
   command = "stat -c %%F %s" % [
@@ -106,7 +110,9 @@ Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
   }
 
   if types.keys.include? type
-    @output.should =~ types[type]
+    if (!boolean)
+      @output.should =~ types[type]
+    end
   end
 end
 
