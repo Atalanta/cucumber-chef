@@ -21,35 +21,30 @@ mkdir -p /var/chef/cache /var/chef/cookbooks/chef-server
 wget -qO- https://github.com/opscode-cookbooks/chef-server/archive/master.tar.gz | tar xvzC /var/chef/cookbooks/chef-server --strip-components=1
 chef-solo -o 'recipe[chef-server::default]'
 
-echo -n "Waiting on validation.pem and webui.pem to appear..."
-until [ -f /etc/chef/validation.pem ] && [ -f /etc/chef/webui.pem ]; do
+echo -n "Waiting on chef-validator.pem and chef-webui.pem to appear..."
+until [ -f /etc/chef-server/chef-validator.pem ] && [ -f /etc/chef-server/chef-webui.pem ]; do
   echo -n "."
   sleep 1
 done
 echo "done."
 
 mkdir -p ~/.chef
-cp /etc/chef/validation.pem /etc/chef/webui.pem ~/.chef
-knife configure -i --server-url http://127.0.0.1:4000 -u ${SUDO_USER} -r '' --defaults --disable-editing --yes -VV
+cp /etc/chef-server/chef-validator.pem /etc/chef-server/chef-webui.pem ~/.chef
+
+apt-get -y --force-yes install expect
+KNIFE_CONFIG_EXP_FILE="/tmp/knife-config.exp"
+cat <<EOF > ${KNIFE_CONFIG_EXP_FILE}
+#!/usr/bin/expect -f
+set timeout 10
+spawn knife configure -i --server-url http://127.0.0.1:4000 --admin-client-key /etc/chef-server/admin.pem -u ${SUDO_USER} -r '' --defaults --disable-editing --yes -VV
+expect "Please enter a password for the new user:" { send "password\n" }
+interact
+EOF
+chmod +x ${KNIFE_CONFIG_EXP_FILE}
+${KNIFE_CONFIG_EXP_FILE}
+
 knife client create <%= @user %> -a -f ${HOME}/.chef/<%= @user %>.pem --disable-editing --yes -VV
 chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
-
-if [ ! -f /etc/chef/client.pem ]; then
-  /etc/init.d/chef-client restart
-  echo -n "Waiting on client.pem to appear..."
-  i="0"
-  until [ -f /etc/chef/client.pem ]; do
-    i=$[$i+1]
-    sleep 1
-    echo -n "."
-    if [ $i -gt 60 ]; then
-      echo -n "restart-chef-client"
-      /etc/init.d/chef-client restart
-      i="0"
-    fi
-  done
-  echo "done."
-fi
 
 knife cookbook upload --all --cookbook-path /tmp/chef-solo/cookbooks --force --yes -VV
 knife role from file /tmp/chef-solo/roles/*.rb --yes -VV
@@ -57,6 +52,6 @@ knife role from file /tmp/chef-solo/roles/*.rb --yes -VV
 cat <<EOF > /etc/chef/bootstrap-chef-client.json
 <%= @chef_client_attributes.to_json %>
 EOF
-chef-client -j /etc/chef/bootstrap-chef-client.json
+chef-client -j /etc/chef/bootstrap-chef-client.json --validation_key /etc/chef-server/chef-validator.pem
 
 touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}
