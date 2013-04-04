@@ -92,7 +92,7 @@ module Cucumber
         arguments = Array.new
         arguments << "--user #{Cucumber::Chef::Config.user}"
         arguments << "--key #{Cucumber::Chef.chef_identity}"
-        arguments << "--server-url #{self.chef_server_api}"
+        arguments << "--server-url https://#{self.ip}"
         arguments << "--disable-editing"
         arguments << "--yes"
         arguments << "-VV" if Cucumber::Chef.is_rc?
