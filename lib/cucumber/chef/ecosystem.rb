@@ -25,7 +25,7 @@ module Cucumber
     class EcosystemError < Error; end
 
     class Ecosystem < ZTK::DSL::Base
-      belongs_to :labfile, :class_name => "Cucumber::Chef:Labfile"
+      belongs_to :labfile, :class_name => "Cucumber::Chef::Labfile"
       has_many :containers, :class_name => "Cucumber::Chef::Container"
 
       attribute :name

@@ -25,7 +25,7 @@ module Cucumber
     class ContainerError < Error; end
 
     class Container < ZTK::DSL::Base
-      belongs_to :ecosystem, :class_name => "Cucumber::Chef:Ecosystem"
+      belongs_to :ecosystem, :class_name => "Cucumber::Chef::Ecosystem"
 
       attribute :name
       attribute :ip
