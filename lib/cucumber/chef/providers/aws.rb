@@ -222,6 +222,7 @@ module Cucumber
           {
             "cucumber-chef-mode" => Cucumber::Chef::Config.mode,
             "cucumber-chef-user" => Cucumber::Chef::Config.user,
+            "Name" => "cucumber-chef-#{Cucumber::Chef::Config.user}",
             "purpose" => "cucumber-chef"
           }.each do |k, v|
             tag = @connection.tags.new
