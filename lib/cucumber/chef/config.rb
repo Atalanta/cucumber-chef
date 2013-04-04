@@ -177,7 +177,8 @@ module Cucumber
       artifacts         ({"chef-client-log" => "/var/log/chef/client.log",
                           "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"})
 
-      chef              ({:version => "10.18.2",
+      chef              ({:client_version => "10.18.2",
+                          :server_version => "10.18.2",
                           :amqp_password => "p@ssw0rd1",
                           :admin_password => "p@ssw0rd1",
                           :render_client_rb => true})

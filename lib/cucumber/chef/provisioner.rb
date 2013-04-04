@@ -37,7 +37,10 @@ module Cucumber
 
         @cookbooks_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "cookbooks")
         @roles_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "roles")
-        @bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-test-lab.erb")
+
+        @chef_pre_11 = (Cucumber::Chef::Config.chef[:server_version].to_f < 11.0)
+        bootstrap_template_file = (@chef_pre_11 ? 'ubuntu-precise-apt.erb' : 'ubuntu-precise-omnibus.erb')
+        @bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", bootstrap_template_file)
       end
 
 ################################################################################
@@ -66,22 +69,15 @@ module Cucumber
           remote_path = File.join("/tmp", "chef-solo")
           @ui.logger.debug { "remote_path == #{remote_path.inspect}" }
 
-          glob_dir = File.join(local_path, "**")
-          @ui.logger.debug { "glob_dir == #{glob_dir.inspect}" }
+          @test_lab.bootstrap_ssh.exec(%(rm -rf #{remote_path} ; mkdir -p #{remote_path}))
+          @test_lab.bootstrap_ssh.upload(local_path, remote_path)
 
-          @test_lab.bootstrap_ssh.exec(%(mkdir -p #{remote_path}))
+          # %w(Gemfile Gemfile.lock).each do |file|
+          #   local_file = File.join(Cucumber::Chef.chef_repo, file)
+          #   remote_file = File.join(remote_path, file)
 
-          Dir.glob(glob_dir).each do |file|
-            file = File.basename(file)
-            @ui.logger.debug { "file == #{file.inspect}" }
-
-            local_file = File.join(local_path, file)
-            remote_file = File.join(remote_path, file)
-
-            File.directory?(local_file) and @test_lab.bootstrap_ssh.exec(%(mkdir -p #{remote_file}))
-
-            @test_lab.bootstrap_ssh.upload(local_file, remote_file)
-          end
+          #   @test_lab.bootstrap_ssh.upload(local_file, remote_file)
+          # end
         end
       end
 
@@ -92,20 +88,13 @@ module Cucumber
 
         ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           chef_client_attributes = {
-            "run_list" => %w(recipe[chef-server::rubygems-install] recipe[chef-server] recipe[chef-client] role[test_lab]),
+            "run_list" => %w(role[test_lab]),
             "cucumber_chef" => {
               "version" => Cucumber::Chef::VERSION,
               "prerelease" => Cucumber::Chef::Config.prerelease
             },
             "lab_user" => Cucumber::Chef.lab_user,
-            "lxc_user" => Cucumber::Chef.lxc_user,
-            "chef_server" => {
-              "webui_enabled" => true
-            },
-            "chef_client" => {
-              "interval" => 900,
-              "splay" => 900
-            }
+            "lxc_user" => Cucumber::Chef.lxc_user
           }
 
           context = {
@@ -115,7 +104,8 @@ module Cucumber
             :user => Cucumber::Chef::Config.user,
             :hostname_short => Cucumber::Chef.lab_hostname_short,
             :hostname_full => Cucumber::Chef.lab_hostname_full,
-            :chef_version => Cucumber::Chef::Config.chef[:version]
+            :chef_server_version => Cucumber::Chef::Config.chef[:server_version],
+            :chef_client_version => Cucumber::Chef::Config.chef[:client_version]
           }
 
           local_bootstrap_file = Tempfile.new("bootstrap")
@@ -144,7 +134,12 @@ module Cucumber
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
           @ui.logger.debug { "remote_path == #{remote_path.inspect}" }
 
-          files = [ File.basename(Cucumber::Chef.chef_identity), "validation.pem" ]
+          files = [ File.basename(Cucumber::Chef.chef_identity) ]
+          if (@chef_pre_11 == true)
+            files << "validation.pem"
+          else
+            files << "chef-validator.pem"
+          end
           files.each do |file|
             @ui.logger.debug { "file == #{file.inspect}" }
 
@@ -172,13 +167,31 @@ module Cucumber
 
 ################################################################################
 
-      def wait_for_chef_server
-        ZTK::Benchmark.bench(:message => "Waiting for the chef-server", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4000, :data => "GET", :wait => 120).wait
-        end
+      def chef_first_run
+        ZTK::Benchmark.bench(:message => "Performing chef-client run", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+          log_level = (ENV['LOG_LEVEL'].downcase rescue (Cucumber::Chef.is_rc? ? "debug" : "info"))
 
-        ZTK::Benchmark.bench(:message => "Waiting for the chef-server-webui", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4040, :data => "GET", :wait => 120).wait
+          command = "/usr/bin/chef-client -j /etc/chef/first-boot.json --log_level #{log_level} --once"
+          command = "sudo #{command}"
+          @test_lab.bootstrap_ssh.exec(command, :silence => true)
+        end
+      end
+
+################################################################################
+
+      def wait_for_chef_server
+        if (@chef_pre_11 == true)
+          ZTK::Benchmark.bench(:message => "Waiting for the chef-server", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+            ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4000, :data => "GET", :wait => 120).wait
+          end
+
+          ZTK::Benchmark.bench(:message => "Waiting for the chef-server-webui", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+            ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4040, :data => "GET", :wait => 120).wait
+          end
+        else
+          ZTK::Benchmark.bench(:message => "Waiting for the chef-server nginx daemon", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+            ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 8080, :data => "GET", :wait => 120).wait
+          end
         end
       end
 

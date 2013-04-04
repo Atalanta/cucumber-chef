@@ -229,7 +229,7 @@ module Cucumber
             @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'locale-gen'), :silence => true)
             @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'locale-gen en_US'), :silence => true)
             @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'wget http://www.opscode.com/chef/install.sh'), :silence => true)
-            @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'bash install.sh -v #{Cucumber::Chef::Config.chef[:version]}'), :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'bash install.sh -v #{Cucumber::Chef::Config.chef[:server_version]}'), :silence => true)
             if distro.downcase == "fedora"
               @test_lab.bootstrap_ssh.exec(%(sudo chroot #{cache_rootfs} /bin/bash -c 'rpm -Uvh --nodeps /tmp/*rpm'), :silence => true)
             end

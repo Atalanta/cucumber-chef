@@ -7,7 +7,7 @@
 set -x
 
 CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
-[ -f ${CUCUMBER_CHEF_BOOTSTRAP_DONE} ] && echo "Already bootstrapped!" && exit
+# [ -f ${CUCUMBER_CHEF_BOOTSTRAP_DONE} ] && echo "Already bootstrapped!" && exit
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -15,11 +15,30 @@ echo "127.0.0.1 <%= @hostname_full %> <%= @hostname_short %>" | tee -a /etc/host
 echo "<%= @hostname_full %>" | tee /etc/hostname
 hostname <%= @hostname_full %>
 
+apt-get -y --force-yes update
+
+cat <<EOF > /tmp/chef-server.json
+{
+  "chef-server": {
+    "version": "<%= @chef_server_version %>",
+    "nginx": {
+      "enable_non_ssl": true,
+      "server_name": "localhost",
+      "url": "http://localhost"
+    },
+    "chef_server_webui": {
+      "enable": true
+    }
+  },
+  "run_list": [ "recipe[chef-server::default]" ]
+}
+EOF
+
 wget http://www.opscode.com/chef/install.sh
-bash install.sh -v <%= @chef_version %>
+bash install.sh -v <%= @chef_client_version %>
 mkdir -p /var/chef/cache /var/chef/cookbooks/chef-server
 wget -qO- https://github.com/opscode-cookbooks/chef-server/archive/master.tar.gz | tar xvzC /var/chef/cookbooks/chef-server --strip-components=1
-chef-solo -o 'recipe[chef-server::default]'
+chef-solo -j /tmp/chef-server.json
 
 echo -n "Waiting on chef-validator.pem and chef-webui.pem to appear..."
 until [ -f /etc/chef-server/chef-validator.pem ] && [ -f /etc/chef-server/chef-webui.pem ]; do
@@ -27,6 +46,9 @@ until [ -f /etc/chef-server/chef-validator.pem ] && [ -f /etc/chef-server/chef-w
   sleep 1
 done
 echo "done."
+
+ln -s /etc/chef-server/chef-validator.pem /etc/chef/validation.pem
+ln -s /etc/chef-server/admin.pem /etc/chef/admin.pem
 
 mkdir -p ~/.chef
 cp /etc/chef-server/chef-validator.pem /etc/chef-server/chef-webui.pem ~/.chef
@@ -36,8 +58,8 @@ KNIFE_CONFIG_EXP_FILE="/tmp/knife-config.exp"
 cat <<EOF > ${KNIFE_CONFIG_EXP_FILE}
 #!/usr/bin/expect -f
 set timeout 10
-spawn knife configure -i --server-url http://127.0.0.1:4000 --admin-client-key /etc/chef-server/admin.pem -u ${SUDO_USER} -r '' --defaults --disable-editing --yes -VV
-expect "Please enter a password for the new user:" { send "password\n" }
+spawn knife configure -i --server-url https://127.0.0.1 --admin-client-key /etc/chef-server/admin.pem -u ${SUDO_USER} -r '' --defaults --yes -VV
+expect "Please enter a password for the new user:" { send "p@ssw0rd1\n" }
 interact
 EOF
 chmod +x ${KNIFE_CONFIG_EXP_FILE}
@@ -52,6 +74,6 @@ knife role from file /tmp/chef-solo/roles/*.rb --yes -VV
 cat <<EOF > /etc/chef/bootstrap-chef-client.json
 <%= @chef_client_attributes.to_json %>
 EOF
-chef-client -j /etc/chef/bootstrap-chef-client.json --validation_key /etc/chef-server/chef-validator.pem
+chef-client -j /etc/chef/bootstrap-chef-client.json --validation_key /etc/chef-server/chef-validator.pem --server https://127.0.0.1
 
 touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}

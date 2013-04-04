@@ -27,7 +27,7 @@ module Cucumber
     class ProviderError < Error; end
 
     class Provider
-      PROXY_METHODS = %w(create destroy up down reload status id state username ip port chef_server_api chef_server_webui alive? dead? exists?)
+      PROXY_METHODS = %w(create destroy up down reload status id state username ip port alive? dead? exists?)
 
 ################################################################################
 
@@ -44,18 +44,10 @@ module Cucumber
 
 ################################################################################
 
-      def chef_server_webui
-        "http://#{ip}:4040"
-      end
-
-      def chef_server_api
-        "http://#{ip}:4000"
-      end
-
       def status
         if exists?
 
-          headers = [:provider, :id, :state, :username, :"ip address", :port, :"chef-server api", :"chef-server webui", :"chef-server default user", :"chef-server default password"]
+          headers = %w(provider id state username ip_address ssh_port).map(&:to_sym)
           results = ZTK::Report.new.list([nil], headers) do |noop|
 
             OpenStruct.new(
@@ -63,12 +55,8 @@ module Cucumber
               :id => self.id,
               :state => self.state,
               :username => self.username,
-              :"ip address" => self.ip,
-              :port => self.port,
-              :"chef-server api" => self.chef_server_api,
-              :"chef-server webui" => self.chef_server_webui,
-              :"chef-server default user" => "admin",
-              :"chef-server default password" => Cucumber::Chef::Config.chef[:admin_password]
+              :ip_address => self.ip,
+              :ssh_port => self.port
             )
           end
         else
@@ -79,6 +67,12 @@ module Cucumber
         @ui.logger.fatal { e.message }
         @ui.logger.fatal { e.backtrace.join("\n") }
         raise ProviderError, e.message
+      end
+
+################################################################################
+
+      def port
+        (Cucumber::Chef.lab_ssh_port || super(:port))
       end
 
 ################################################################################
