@@ -38,7 +38,7 @@ module Cucumber
         @cookbooks_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "cookbooks")
         @roles_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "roles")
 
-        @chef_pre_11 = (Cucumber::Chef::Config.chef[:server_version].to_f < 11.0)
+        @chef_pre_11 = Cucumber::Chef::Config.chef_pre_11
         bootstrap_template_file = (@chef_pre_11 ? 'ubuntu-precise-apt.erb' : 'ubuntu-precise-omnibus.erb')
         @bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", bootstrap_template_file)
       end
