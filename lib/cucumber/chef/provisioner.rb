@@ -71,8 +71,8 @@ module Cucumber
           # if it is not in place mkdir fails with Net::SFTP::StatusException on
           # the Net::SFTP mkdir internal call triggered by a Net::SFTP upload
           # call
+          @test_lab.bootstrap_ssh.exec(%(rm -rf #{remote_path}))
           begin
-            @test_lab.bootstrap_ssh.exec(%(rm -rf #{remote_path}))
             @test_lab.bootstrap_ssh.upload(local_path, remote_path)
           rescue Net::SFTP::StatusException => e
             @test_lab.bootstrap_ssh.exec(%(mkdir -p #{remote_path}))
