@@ -10,6 +10,7 @@ CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
 # [ -f ${CUCUMBER_CHEF_BOOTSTRAP_DONE} ] && echo "Already bootstrapped!" && exit
 
 export DEBIAN_FRONTEND=noninteractive
+cd /tmp
 
 echo "127.0.0.1 <%= @hostname_full %> <%= @hostname_short %>" | tee -a /etc/hosts
 echo "<%= @hostname_full %>" | tee /etc/hostname
@@ -65,7 +66,26 @@ if [ ! -f /etc/chef/client.pem ]; then
   echo "done."
 fi
 
-knife cookbook upload --all --cookbook-path /tmp/chef-solo/cookbooks --force --yes -VV
+cat <<EOF > /tmp/chef-solo/Gemfile
+source 'https://rubygems.org'
+gem 'chef', '<%= @chef_client_version %>'
+gem 'librarian-chef'
+EOF
+
+cat <<EOF > /tmp/chef-solo/Cheffile
+site 'http://community.opscode.com/api/v1'
+cookbook 'chef-server'
+cookbook 'chef-client'
+EOF
+
+cd /tmp/chef-solo
+mv cookbooks site-cookbooks
+gem install bundler --no-ri --no-rdoc
+bundle install
+librarian-chef install
+cd /tmp
+
+knife cookbook upload --all --cookbook-path /tmp/chef-solo/cookbooks:/tmp/chef-solo/site-cookbooks --force --yes -VV
 knife role from file /tmp/chef-solo/roles/*.rb --yes -VV
 
 cat <<EOF > /etc/chef/bootstrap-chef-client.json

@@ -521,7 +521,8 @@ class CucumberChef < Thor
       "lab_identity" => Cucumber::Chef.lab_identity,
       "lxc_user" => Cucumber::Chef.lxc_user,
       "lxc_user_home_dir" => Cucumber::Chef.lxc_user_home_dir,
-      "lxc_identity" => Cucumber::Chef.lxc_identity
+      "lxc_identity" => Cucumber::Chef.lxc_identity,
+      "chef_pre_11" => Cucumber::Chef.chef_pre_11
     }
     max_key_length = details.collect{ |k,v| k.to_s.length }.max
 
