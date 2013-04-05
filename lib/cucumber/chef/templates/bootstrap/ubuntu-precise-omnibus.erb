@@ -19,6 +19,20 @@ hostname <%= @hostname_full %>
 apt-get -y --force-yes update
 
 cat <<EOF > /tmp/chef-server.json
+{
+  "chef-server": {
+    "version": "<%= @chef_server_version %>",
+    "nginx": {
+      "enable_non_ssl": true,
+      "server_name": "localhost",
+      "url": "http://localhost"
+    },
+    "chef_server_webui": {
+      "enable": true
+    }
+  },
+  "run_list": [ "recipe[chef-server::default]" ]
+}
 EOF
 
 wget http://www.opscode.com/chef/install.sh
