@@ -27,7 +27,7 @@
   package p
 end
 
-[ node.lab_user, node.lxc_user ].flatten.each do |user|
+[ node.cucumber_chef.lab_user, node.cucumber_chef.lxc_user ].flatten.each do |user|
   home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
 
   directory "create .ssh directory for #{user}" do
