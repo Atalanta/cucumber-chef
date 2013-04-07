@@ -111,16 +111,3 @@ execute "set chef-client logging to debug" do
     ($? == 0)
   end
 end
-
-
-################################################################################
-# CHEF-SOLR / APACHE SOLR
-################################################################################
-
-# template "install custom solr config" do
-#   path "/var/lib/chef/solr/conf/solrconfig.xml"
-#   source "solrconfig.erb"
-#   owner "chef"
-#   group "chef"
-#   mode "0644"
-# end
