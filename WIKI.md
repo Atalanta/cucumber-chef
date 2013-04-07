@@ -388,7 +388,7 @@ Display various configuration information:
                lab_identity = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/vagrant/id_rsa-cucumber-chef"
                    lxc_user = "root"
           lxc_user_home_dir = "/root"
-               lxc_identity = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/vagrant/id_rsa-cucumber-chef"
+               lxc_identity = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/vagrant/id_rsa-root"
                 chef_pre_11 = true
     --------------------------------------------------------------------------------
 
