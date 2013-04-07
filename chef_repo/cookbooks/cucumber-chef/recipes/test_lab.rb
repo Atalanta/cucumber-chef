@@ -27,12 +27,13 @@
   package p
 end
 
-[ node.cucumber_chef.lab_user, node.cucumber_chef.lxc_user ].flatten.each do |username|
+[ node.cucumber_chef.lab_user, node.cucumber_chef.lxc_user ].each do |username|
   home_dir = ((username.downcase == "root") ? "/#{username}" : "/home/#{username}")
 
   user username do
     comment username
     home home_dir
+    shell "/bin/bash"
     supports :manage_home => true
   end
 
@@ -91,6 +92,13 @@ end
       ($? == 0)
     end
   end
+
+  file "ensure ssh authorized_keys ownership for #{username}" do
+    path "#{home_dir}/.ssh/authorized_keys"
+    owner username
+    group username
+  end
+
 end
 
 file "remove update-motd" do
