@@ -177,10 +177,8 @@ module Cucumber
       artifacts         ({"chef-client-log" => "/var/log/chef/client.log",
                           "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"})
 
-      chef              ({:client_version => "latest",
-                          :server_version => "latest",
-                          :amqp_password => "p@ssw0rd1",
-                          :admin_password => "p@ssw0rd1",
+      chef              ({:version => "latest",
+                          :default_password => "p@ssw0rd1",
                           :render_client_rb => true})
 
       test_lab          ({:hostname => "cucumber-chef",

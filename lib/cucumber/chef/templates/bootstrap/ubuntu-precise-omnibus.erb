@@ -1,66 +1,86 @@
 #!/bin/env bash
 #
-# Cucumber-Chef 'Chef >= 11.0.0' Bootstrap Script
+# Cucumber-Chef Bootstrap Script
 #
 # Generated <%= Time.now.utc %>
 #
 set -x
-
-CUCUMBER_CHEF_BOOTSTRAP_DONE="/.cucumber-chef-bootstrap-finished"
-# [ -f ${CUCUMBER_CHEF_BOOTSTRAP_DONE} ] && echo "Already bootstrapped!" && exit
-
 export DEBIAN_FRONTEND=noninteractive
-cd /tmp
+cd /tmp/chef-solo
 
 echo "127.0.0.1 <%= @hostname_full %> <%= @hostname_short %>" | tee -a /etc/hosts
 echo "<%= @hostname_full %>" | tee /etc/hostname
 hostname <%= @hostname_full %>
 
 apt-get -y --force-yes update
+apt-get -y --force-yes install build-essential expect
 
-cat <<EOF > /tmp/chef-server.json
-{
-  "chef-server": {
-    "version": "<%= @chef_server_version %>",
-    "nginx": {
-      "enable_non_ssl": true,
-      "server_name": "localhost",
-      "url": "http://localhost"
-    },
-    "chef_server_webui": {
-      "enable": true
-    }
-  },
-  "run_list": [ "recipe[chef-server::default]" ]
-}
+mkdir -p /etc/chef /var/log/chef ${HOME}/.chef
+
+cat <<EOF > /etc/chef/solo.rb
+file_cache_path "/tmp/chef-solo/"
+cookbook_path %w(/tmp/chef-solo/cookbooks/ /tmp/chef-solo/site-cookbooks/)
+role_path "/tmp/chef-solo/roles/"
+EOF
+
+cat <<EOF > /tmp/chef-solo/attributes.json
+<%= @chef_solo_attributes.to_json %>
 EOF
 
 wget http://www.opscode.com/chef/install.sh
-bash install.sh -v <%= @chef_client_version %>
-mkdir -p /var/chef/cache /var/chef/cookbooks/chef-server
-wget -qO- https://github.com/opscode-cookbooks/chef-server/archive/master.tar.gz | tar xvzC /var/chef/cookbooks/chef-server --strip-components=1
-chef-solo -j /tmp/chef-server.json
+bash install.sh -v <%= @chef_version %>
+<% if (@chef_pre_11 == false) -%>
 
-echo -n "Waiting on chef-validator.pem and chef-webui.pem to appear..."
-until [ -f /etc/chef-server/chef-validator.pem ] && [ -f /etc/chef-server/chef-webui.pem ]; do
+mkdir -p /var/chef/cache /tmp/chef-solo/cookbooks/chef-server
+wget -qO- https://github.com/opscode-cookbooks/chef-server/archive/master.tar.gz | tar xvzC /tmp/chef-solo/cookbooks/chef-server --strip-components=1
+<% else -%>
+
+export PATH=/opt/chef/embedded/bin:$PATH
+
+cat <<EOF > /tmp/chef-solo/Gemfile
+source 'https://rubygems.org'
+gem 'chef', '<%= @chef_version %>'
+gem 'berkshelf'
+gem 'moneta', '< 0.7.0'
+EOF
+
+cat <<EOF > /tmp/chef-solo/Berksfile
+site :opscode
+cookbook 'chef-server'
+EOF
+
+gem install bundler --no-ri --no-rdoc
+bundle install --standalone --path vendor/bundle --binstubs
+mv /tmp/chef-solo/cookbooks /tmp/chef-solo/site-cookbooks
+bin/berks install --path /tmp/chef-solo/cookbooks/
+<% end -%>
+
+chef-solo --config /etc/chef/solo.rb --json-attributes /tmp/chef-solo/attributes.json --logfile /var/log/chef/chef-solo.log
+
+echo -n "Waiting on <%= File.basename(@chef_validator) %> and <%= File.basename(@chef_webui) %> to appear..."
+until [ -f <%= @chef_validator %> ] && [ -f <%= @chef_webui %> ]; do
   echo -n "."
   sleep 1
 done
 echo "done."
 
-ln -s /etc/chef-server/chef-validator.pem /etc/chef/validation.pem
-ln -s /etc/chef-server/admin.pem /etc/chef/admin.pem
+cp -v <%= @chef_validator %> <%= @chef_webui %> ~/.chef
 
-mkdir -p ~/.chef
-cp /etc/chef-server/chef-validator.pem /etc/chef-server/chef-webui.pem ~/.chef
+<% if (@chef_pre_11 == false) -%>
+ln -s <%= @chef_validator %> /etc/chef/validation.pem
+ln -s <%= @chef_admin %> /etc/chef/admin.pem
+<% end -%>
 
-apt-get -y --force-yes install expect
 KNIFE_CONFIG_EXP_FILE="/tmp/knife-config.exp"
 cat <<EOF > ${KNIFE_CONFIG_EXP_FILE}
 #!/usr/bin/expect -f
 set timeout 10
-spawn knife configure -i --server-url https://127.0.0.1 --admin-client-key /etc/chef-server/admin.pem -u ${SUDO_USER} -r '' --defaults --yes -VV
-expect "Please enter a password for the new user:" { send "p@ssw0rd1\n" }
+<% if (@chef_pre_11 == false) -%>
+spawn knife configure -i --server-url https://127.0.0.1 --admin-client-key <%= @chef_admin %> -u ${SUDO_USER} -r '' --defaults --yes -VV
+<% else -%>
+spawn knife configure -i --server-url https://127.0.0.1 -u ${SUDO_USER} -r '' --defaults --yes -VV
+<% end -%>
+expect "Please enter a password for the new user:" { send "<%= @default_password %>\n" }
 interact
 EOF
 chmod +x ${KNIFE_CONFIG_EXP_FILE}
@@ -68,13 +88,3 @@ ${KNIFE_CONFIG_EXP_FILE}
 
 knife client create <%= @user %> -a -f ${HOME}/.chef/<%= @user %>.pem --disable-editing --yes -VV
 chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
-
-knife cookbook upload --all --cookbook-path /tmp/chef-solo/cookbooks --force --yes -VV
-knife role from file /tmp/chef-solo/roles/*.rb --yes -VV
-
-cat <<EOF > /etc/chef/bootstrap-chef-client.json
-<%= @chef_client_attributes.to_json %>
-EOF
-chef-client -j /etc/chef/bootstrap-chef-client.json --validation_key /etc/chef-server/chef-validator.pem --server https://127.0.0.1
-
-touch ${CUCUMBER_CHEF_BOOTSTRAP_DONE}

@@ -71,7 +71,7 @@ module Cucumber
           # if it is not in place mkdir fails with Net::SFTP::StatusException on
           # the Net::SFTP mkdir internal call triggered by a Net::SFTP upload
           # call
-          @test_lab.bootstrap_ssh.exec(%(rm -rf #{remote_path}))
+          @test_lab.bootstrap_ssh.exec(%(sudo rm -rf #{remote_path}))
           begin
             @test_lab.bootstrap_ssh.upload(local_path, remote_path)
           rescue Net::SFTP::StatusException => e
@@ -87,44 +87,54 @@ module Cucumber
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
         ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          chef_client_attributes = if Cucumber::Chef.chef_pre_11
+
+          chef_solo_attributes = case Cucumber::Chef.chef_pre_11
+          when true then
             {
-              "run_list" => %w(role[test_lab] recipe[chef-server::default] recipe[chef-server::apache-proxy] recipe[chef-client]),
-              "cucumber_chef" => {
-                "version" => Cucumber::Chef::VERSION,
-                "prerelease" => Cucumber::Chef::Config.prerelease,
-                "lab_user" => Cucumber::Chef.lab_user,
-                "lxc_user" => Cucumber::Chef.lxc_user
-              },
               "chef-server" => {
                 "webui_enabled" => true
-              }
+              },
+              "run_list" => %w(recipe[chef-server::rubygems-install] recipe[chef-server::apache-proxy] role[test_lab])
             }
-          else
+          when false then
             {
-              "run_list" => %w(role[test_lab]),
-              "cucumber_chef" => {
-                "version" => Cucumber::Chef::VERSION,
-                "prerelease" => Cucumber::Chef::Config.prerelease,
-                "lab_user" => Cucumber::Chef.lab_user,
-                "lxc_user" => Cucumber::Chef.lxc_user
-              }
+              "chef-server" => {
+                "nginx" => {
+                  "enable_non_ssl" => true,
+                  "server_name" => "localhost",
+                  "url" => "http://localhost"
+                },
+                "chef_server_webui" => {
+                  "enable" => true
+                }
+              },
+              "run_list" => %w(recipe[chef-server::default] role[test_lab])
             }
           end
 
+          chef_solo_attributes.merge!(
+            "cucumber_chef" => {
+              "version" => Cucumber::Chef::VERSION,
+              "prerelease" => Cucumber::Chef::Config.prerelease,
+              "lab_user" => Cucumber::Chef.lab_user,
+              "lxc_user" => Cucumber::Chef.lxc_user
+            }
+          )
+
           context = {
-            :chef_client_attributes => chef_client_attributes,
-            :amqp_password => Cucumber::Chef::Config.chef[:amqp_password],
-            :admin_password => Cucumber::Chef::Config.chef[:admin_password],
+            :chef_pre_11 => Cucumber::Chef.chef_pre_11,
+            :chef_solo_attributes => chef_solo_attributes,
+            :chef_version => Cucumber::Chef::Config.chef[:version],
+            :chef_validator => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/validation.pem' : '/etc/chef-server/chef-validator.pem'),
+            :chef_webui => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/webui.pem' : '/etc/chef-server/chef-webui.pem'),
+            :chef_admin => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/admin.pem' : '/etc/chef-server/admin.pem'),
+            :default_password => Cucumber::Chef::Config.chef[:default_password],
             :user => Cucumber::Chef::Config.user,
             :hostname_short => Cucumber::Chef.lab_hostname_short,
-            :hostname_full => Cucumber::Chef.lab_hostname_full,
-            :chef_server_version => Cucumber::Chef::Config.chef[:server_version],
-            :chef_client_version => Cucumber::Chef::Config.chef[:client_version]
+            :hostname_full => Cucumber::Chef.lab_hostname_full
           }
 
-          bootstrap_template_file = (Cucumber::Chef.chef_pre_11 ? 'ubuntu-precise-apt.erb' : 'ubuntu-precise-omnibus.erb')
-          bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", bootstrap_template_file)
+          bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-omnibus.erb")
 
           local_bootstrap_file = Tempfile.new("bootstrap")
           local_bootstrap_filename = local_bootstrap_file.path
@@ -198,18 +208,8 @@ module Cucumber
 ################################################################################
 
       def wait_for_chef_server
-        if (Cucumber::Chef.chef_pre_11 == true)
-          ZTK::Benchmark.bench(:message => "Waiting for the chef-server", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-            ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4000, :data => "GET", :wait => 120).wait
-          end
-
-          ZTK::Benchmark.bench(:message => "Waiting for the chef-server-webui", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-            ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4040, :data => "GET", :wait => 120).wait
-          end
-        else
-          ZTK::Benchmark.bench(:message => "Waiting for the chef-server nginx daemon", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-            ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 80, :data => "GET", :wait => 120).wait
-          end
+        ZTK::Benchmark.bench(:message => "Waiting for the chef-server-api HTTPS", :mark => "responded after %0.4f seconds.", :ui => @ui) do
+          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 443, :data => "GET", :wait => 120).wait
         end
       end
 

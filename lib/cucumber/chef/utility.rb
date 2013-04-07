@@ -87,8 +87,8 @@ module Cucumber
 ################################################################################
 
       def chef_pre_11
-        return false if (Cucumber::Chef::Config.chef[:server_version].downcase == "latest")
-        (Cucumber::Chef::Config.chef[:server_version].to_f < 11.0)
+        return false if (Cucumber::Chef::Config.chef[:version].downcase == "latest")
+        (Cucumber::Chef::Config.chef[:version].to_f < 11.0)
       end
 
 ################################################################################
