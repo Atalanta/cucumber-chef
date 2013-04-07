@@ -237,13 +237,13 @@ module Cucumber
             @test_lab.bootstrap_ssh.exec(%(sudo #{create_command(name, distro, release, arch)}), :silence => true)
           end
 
-          lab_ssh_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
-          ssh_path = File.join(root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")
+          lab_ssh_path = File.join(Cucumber::Chef.lxc_user_home_dir, ".ssh")
+          lxc_ssh_path = File.join(root(name), Cucumber::Chef.lxc_user_home_dir, ".ssh")
           motd_path = File.join(root(name), "etc", "motd")
 
-          @test_lab.bootstrap_ssh.exec(%(sudo mkdir -vp #{ssh_path}), :silence => true)
-          @test_lab.bootstrap_ssh.exec(%(sudo chmod 0700 #{ssh_path}), :silence => true)
-          @test_lab.bootstrap_ssh.exec(%(sudo cat #{File.join(lab_ssh_path, "id_rsa.pub")} | sudo tee -a #{File.join(ssh_path, "authorized_keys")}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo mkdir -vp #{lxc_ssh_path}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo chmod 0700 #{lxc_ssh_path}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo cat #{File.join(lab_ssh_path, "id_rsa.pub")} | sudo tee -a #{File.join(lxc_ssh_path, "authorized_keys")}), :silence => true)
 
           @test_lab.bootstrap_ssh.exec(%(sudo rm -vf #{motd_path}), :silence => true)
           @test_lab.bootstrap_ssh.exec(%(sudo cp -v /etc/motd #{motd_path}), :silence => true)

@@ -237,7 +237,7 @@ module Cucumber
       end
 
       def lxc_identity
-        lxc_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lab_user}")
+        lxc_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lxc_user}")
         File.exists?(lxc_identity) && File.chmod(0400, lxc_identity)
         lxc_identity
       end

@@ -47,7 +47,7 @@ module Cucumber
         wait_for_chef_server
 
         download_chef_credentials
-        download_proxy_ssh_credentials
+        download_ssh_credentials
 
         reboot_test_lab
       end
@@ -71,11 +71,11 @@ module Cucumber
           # if it is not in place mkdir fails with Net::SFTP::StatusException on
           # the Net::SFTP mkdir internal call triggered by a Net::SFTP upload
           # call
-          @test_lab.bootstrap_ssh.exec(%(sudo rm -rf #{remote_path}), :silence => true)
+          @test_lab.bootstrap_ssh.exec(%(sudo rm -vrf #{remote_path}), :silence => true)
           begin
             @test_lab.bootstrap_ssh.upload(local_path, remote_path)
           rescue Net::SFTP::StatusException => e
-            @test_lab.bootstrap_ssh.exec(%(mkdir -p #{remote_path}), :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(mkdir -vp #{remote_path}), :silence => true)
             retry
           end
         end
@@ -156,7 +156,7 @@ module Cucumber
 ################################################################################
 
       def download_chef_credentials
-        ZTK::Benchmark.bench(:message => "Downloading chef-server credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+        ZTK::Benchmark.bench(:message => "Downloading chef credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           local_path = File.dirname(Cucumber::Chef.chef_identity)
           @ui.logger.debug { "local_path == #{local_path.inspect}" }
 
@@ -179,33 +179,27 @@ module Cucumber
 
 ################################################################################
 
-      def download_proxy_ssh_credentials
-        ZTK::Benchmark.bench(:message => "Downloading proxy SSH credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+      def download_ssh_credentials
+        ZTK::Benchmark.bench(:message => "Downloading SSH credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
-          remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
-          files = { "id_rsa" => "id_rsa-#{Cucumber::Chef.lab_user}" }
-          files.each do |remote_file, local_file|
-            tmp = File.join("/tmp", local_file)
-            remote = File.join(remote_path, remote_file)
-            local = File.join(local_path, local_file)
-            File.exists?(local) and File.delete(local)
-            @test_lab.bootstrap_ssh.exec(%(sudo cp -v #{remote} #{tmp} && sudo chown -v #{Cucumber::Chef.bootstrap_user}:#{Cucumber::Chef.bootstrap_user} #{tmp}), :silence => true)
-            @test_lab.bootstrap_ssh.download(tmp, local)
-            File.chmod(0600, local)
+          users = {
+            Cucumber::Chef.lab_user => Cucumber::Chef.lab_user_home_dir,
+            Cucumber::Chef.lxc_user => Cucumber::Chef.lxc_user_home_dir
+          }
+
+          users.each do |username, home_dir|
+            identity_file = File.join(home_dir, ".ssh", "id_rsa")
+            temp_file = File.join("/tmp", "id_rsa-#{username}")
+            local_file = File.join(local_path, "id_rsa-#{username}")
+
+            @test_lab.bootstrap_ssh.exec(%(sudo cp -v #{identity_file} #{temp_file}), :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo chown -v #{Cucumber::Chef.bootstrap_user}:#{Cucumber::Chef.bootstrap_user} #{temp_file}), :silence => true)
+
+            File.exists?(local_file) and File.delete(local_file)
+            @test_lab.bootstrap_ssh.download(temp_file, local_file)
+            File.chmod(0600, local_file)
           end
-        end
-      end
-
-################################################################################
-
-      def chef_first_run
-        ZTK::Benchmark.bench(:message => "Performing chef-client run", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          log_level = (ENV['LOG_LEVEL'].downcase rescue (Cucumber::Chef.is_rc? ? "debug" : "info"))
-
-          command = "/usr/bin/chef-client -j /etc/chef/first-boot.json --log_level #{log_level} --once"
-          command = "sudo #{command}"
-          @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
       end
 
