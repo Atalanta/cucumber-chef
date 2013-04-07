@@ -122,6 +122,7 @@ module Cucumber
           )
 
           context = {
+            :lab_user => Cucumber::Chef.lab_user,
             :chef_pre_11 => Cucumber::Chef.chef_pre_11,
             :chef_solo_attributes => chef_solo_attributes,
             :chef_version => Cucumber::Chef::Config.chef[:version],
