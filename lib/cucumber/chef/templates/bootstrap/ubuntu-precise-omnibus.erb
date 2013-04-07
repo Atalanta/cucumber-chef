@@ -1,12 +1,19 @@
 #!/bin/env bash
 #
-# Cucumber-Chef Bootstrap Script
+# Cucumber-Chef v<%= Cucumber::Chef::VERSION %> Bootstrap Script
 #
 # Generated <%= Time.now.utc %>
 #
 set -x
-export DEBIAN_FRONTEND=noninteractive
-cd /tmp/chef-solo
+export DEBIAN_FRONTEND="noninteractive"
+CHEF_SOLO_ROOT="/tmp/chef-solo"
+KNIFE_CONFIG_EXP_FILE="/tmp/knife-config.exp"
+cd ${CHEF_SOLO_ROOT}
+
+grep "<%= @lab_user %>" /etc/sudoers
+if [ $? -eq 1 ]; then
+  echo "<%= @lab_user %> ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers
+fi
 
 echo "127.0.0.1 <%= @hostname_full %> <%= @hostname_short %>" | tee -a /etc/hosts
 echo "<%= @hostname_full %>" | tee /etc/hostname
@@ -15,47 +22,47 @@ hostname <%= @hostname_full %>
 apt-get -y --force-yes update
 apt-get -y --force-yes install build-essential expect
 
-mkdir -p /etc/chef /var/log/chef ${HOME}/.chef
+mkdir -pv /etc/chef /var/log/chef ${HOME}/.chef
 
-cat <<EOF > /etc/chef/solo.rb
-file_cache_path "/tmp/chef-solo/"
-cookbook_path %w(/tmp/chef-solo/cookbooks/ /tmp/chef-solo/site-cookbooks/)
-role_path "/tmp/chef-solo/roles/"
+cat <<EOF | tee /etc/chef/solo.rb
+file_cache_path "${CHEF_SOLO_ROOT}/"
+cookbook_path %w(${CHEF_SOLO_ROOT}/cookbooks/ ${CHEF_SOLO_ROOT}/site-cookbooks/)
+role_path "${CHEF_SOLO_ROOT}/roles/"
 EOF
 
-cat <<EOF > /tmp/chef-solo/attributes.json
+cat <<EOF | tee ${CHEF_SOLO_ROOT}/attributes.json
 <%= @chef_solo_attributes.to_json %>
 EOF
 
-wget http://www.opscode.com/chef/install.sh
+wget -v http://www.opscode.com/chef/install.sh
 bash install.sh -v <%= @chef_version %>
 <% if (@chef_pre_11 == false) -%>
 
-mkdir -p /var/chef/cache /tmp/chef-solo/cookbooks/chef-server
-wget -qO- https://github.com/opscode-cookbooks/chef-server/archive/master.tar.gz | tar xvzC /tmp/chef-solo/cookbooks/chef-server --strip-components=1
+mkdir -pv /var/chef/cache ${CHEF_SOLO_ROOT}/cookbooks/chef-server
+wget -qO- https://github.com/opscode-cookbooks/chef-server/archive/master.tar.gz | tar xvzC ${CHEF_SOLO_ROOT}/cookbooks/chef-server --strip-components=1
 <% else -%>
 
 export PATH=/opt/chef/embedded/bin:$PATH
 
-cat <<EOF > /tmp/chef-solo/Gemfile
+cat <<EOF | tee ${CHEF_SOLO_ROOT}/Gemfile
 source 'https://rubygems.org'
 gem 'chef', '<%= @chef_version %>'
 gem 'berkshelf'
 gem 'moneta', '< 0.7.0'
 EOF
 
-cat <<EOF > /tmp/chef-solo/Berksfile
+cat <<EOF | tee ${CHEF_SOLO_ROOT}/Berksfile
 site :opscode
 cookbook 'chef-server'
 EOF
 
 gem install bundler --no-ri --no-rdoc
 bundle install --standalone --path vendor/bundle --binstubs
-mv /tmp/chef-solo/cookbooks /tmp/chef-solo/site-cookbooks
-bin/berks install --path /tmp/chef-solo/cookbooks/
+mv -v ${CHEF_SOLO_ROOT}/cookbooks ${CHEF_SOLO_ROOT}/site-cookbooks
+bin/berks install --path ${CHEF_SOLO_ROOT}/cookbooks/
 <% end -%>
 
-chef-solo --config /etc/chef/solo.rb --json-attributes /tmp/chef-solo/attributes.json --logfile /var/log/chef/chef-solo.log
+chef-solo --config /etc/chef/solo.rb --json-attributes ${CHEF_SOLO_ROOT}/attributes.json --logfile /var/log/chef/chef-solo.log --log_level debug
 
 echo -n "Waiting on <%= File.basename(@chef_validator) %> and <%= File.basename(@chef_webui) %> to appear..."
 until [ -f <%= @chef_validator %> ] && [ -f <%= @chef_webui %> ]; do
@@ -67,12 +74,11 @@ echo "done."
 cp -v <%= @chef_validator %> <%= @chef_webui %> ~/.chef
 
 <% if (@chef_pre_11 == false) -%>
-ln -s <%= @chef_validator %> /etc/chef/validation.pem
-ln -s <%= @chef_admin %> /etc/chef/admin.pem
+ln -sv <%= @chef_validator %> /etc/chef/validation.pem
+ln -sv <%= @chef_admin %> /etc/chef/admin.pem
 <% end -%>
 
-KNIFE_CONFIG_EXP_FILE="/tmp/knife-config.exp"
-cat <<EOF > ${KNIFE_CONFIG_EXP_FILE}
+cat <<EOF | tee ${KNIFE_CONFIG_EXP_FILE}
 #!/usr/bin/expect -f
 set timeout 10
 <% if (@chef_pre_11 == false) -%>
@@ -87,4 +93,4 @@ chmod +x ${KNIFE_CONFIG_EXP_FILE}
 ${KNIFE_CONFIG_EXP_FILE}
 
 knife client create <%= @user %> -a -f ${HOME}/.chef/<%= @user %>.pem --disable-editing --yes -VV
-chown -R ${SUDO_USER}:${SUDO_USER} ${HOME}
+chown -Rv ${SUDO_USER}:${SUDO_USER} ${HOME}
