@@ -57,8 +57,7 @@ module Cucumber
 
         # Upload all of the chef-repo cookbooks
         ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo cookbooks to the test lab", :mark => "completed in %0.4f seconds.") do
-          cookbook_paths = ["./cookbooks"]
-          cookbook_paths << "./site-cookbooks" if Cucumber::Chef::Config.librarian_chef
+          cookbook_paths = Cucumber::Chef::Config.chef[:cookbook_paths]
           @test_lab.knife_cli(%(cookbook upload --all --cookbook-path #{cookbook_paths.join(':')} --force), :silence => true)
         end
 

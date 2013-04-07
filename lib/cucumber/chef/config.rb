@@ -170,8 +170,6 @@ module Cucumber
       mode              :user
       prerelease        (Cucumber::Chef.is_rc? ? true : false)
 
-      librarian_chef    false
-
       user              (ENV['OPSCODE_USER'] || ENV['USER'])
 
       artifacts         ({"chef-client-log" => "/var/log/chef/client.log",
@@ -179,7 +177,8 @@ module Cucumber
 
       chef              ({:version => "latest",
                           :default_password => "p@ssw0rd1",
-                          :render_client_rb => true})
+                          :render_client_rb => true,
+                          :cookbook_paths => %w(cookbooks)})
 
       test_lab          ({:hostname => "cucumber-chef",
                           :tld => "test-lab"})
