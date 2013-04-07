@@ -87,6 +87,7 @@ module Cucumber
 ################################################################################
 
       def chef_pre_11
+        return false if (Cucumber::Chef::Config.chef[:server_version].downcase == "latest")
         (Cucumber::Chef::Config.chef[:server_version].to_f < 11.0)
       end
 
@@ -199,6 +200,10 @@ module Cucumber
         lab_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lab_user}")
         File.exists?(lab_identity) && File.chmod(0400, lab_identity)
         lab_identity
+      end
+
+      def lab_ip
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:ssh][:lab_ip]
       end
 
       def lab_ssh_port

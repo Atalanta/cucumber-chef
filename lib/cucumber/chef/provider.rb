@@ -71,6 +71,10 @@ module Cucumber
 
 ################################################################################
 
+      def ip
+        (Cucumber::Chef.lab_ip || super(:ip))
+      end
+
       def port
         (Cucumber::Chef.lab_ssh_port || super(:port))
       end

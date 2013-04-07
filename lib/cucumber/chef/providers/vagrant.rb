@@ -44,7 +44,20 @@ module Cucumber
 
         def create
           ZTK::Benchmark.bench(:message => "Creating #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
-            self.vagrant_cli("up")
+
+            context = {
+              :ip => Cucumber::Chef.lab_ip,
+              :cpus => Cucumber::Chef::Config.vagrant[:cpus],
+              :memory => Cucumber::Chef::Config.vagrant[:memory]
+            }
+
+            vagrantfile_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "Vagrantfile.erb")
+
+            vagrantfile = File.join(Cucumber::Chef.chef_repo, "Vagrantfile")
+
+            !File.exists?(vagrantfile) and IO.write(vagrantfile, ::ZTK::Template.render(vagrantfile_template, context))
+
+            self.vagrant_cli("up", id)
             ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
           end
 
@@ -62,7 +75,7 @@ module Cucumber
 
         def destroy
           if exists?
-            self.vagrant_cli("destroy", "--force")
+            self.vagrant_cli("destroy", "--force", id)
           else
             raise VagrantError, "We could not find a test lab!"
           end
@@ -79,7 +92,7 @@ module Cucumber
 
         def up
           if (exists? && dead?)
-            self.vagrant_cli("up")
+            self.vagrant_cli("up", id)
             ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
           else
             raise VagrantError, "We could not find a powered off test lab."
@@ -97,7 +110,7 @@ module Cucumber
 
         def down
           if (exists? && alive?)
-            self.vagrant_cli("halt")
+            self.vagrant_cli("halt", id)
           else
             raise AWSError, "We could not find a running test lab."
           end
@@ -114,7 +127,7 @@ module Cucumber
 
         def reload
           if (exists? && alive?)
-            self.vagrant_cli("reload")
+            self.vagrant_cli("reload", id)
           else
             raise AWSError, "We could not find a running test lab."
           end
@@ -142,7 +155,7 @@ module Cucumber
 ################################################################################
 
         def id
-          "default"
+          "test-lab-#{ENV['USER']}".downcase
         end
 
         def state
