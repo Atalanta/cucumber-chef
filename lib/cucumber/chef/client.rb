@@ -49,32 +49,31 @@ module Cucumber
 
         # PUSH CHEF-REPO
         #################
-        if environment_variable_set?("PUSH")
-          # Upload all of the chef-repo environments
-          ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo environments to the test lab", :mark => "completed in %0.4f seconds.") do
-            @test_lab.knife_cli(%(environment from file ./environments/*.rb), :silence => true)
-          end
 
-          # Upload all of the chef-repo cookbooks
-          ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo cookbooks to the test lab", :mark => "completed in %0.4f seconds.") do
-            cookbook_paths = ["./cookbooks"]
-            cookbook_paths << "./site-cookbooks" if Cucumber::Chef::Config.librarian_chef
-            @test_lab.knife_cli(%(cookbook upload --all --cookbook-path #{cookbook_paths.join(':')} --force), :silence => true)
-          end
+        # Upload all of the chef-repo environments
+        ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo environments to the test lab", :mark => "completed in %0.4f seconds.") do
+          @test_lab.knife_cli(%(environment from file ./environments/*.rb), :silence => true)
+        end
 
-          # Upload all of the chef-repo roles
-          ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo roles to the test lab", :mark => "completed in %0.4f seconds.") do
-            @test_lab.knife_cli(%(role from file ./roles/*.rb), :silence => true)
-          end
+        # Upload all of the chef-repo cookbooks
+        ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo cookbooks to the test lab", :mark => "completed in %0.4f seconds.") do
+          cookbook_paths = ["./cookbooks"]
+          cookbook_paths << "./site-cookbooks" if Cucumber::Chef::Config.librarian_chef
+          @test_lab.knife_cli(%(cookbook upload --all --cookbook-path #{cookbook_paths.join(':')} --force), :silence => true)
+        end
 
-          # Upload all of our chef-repo data bags
-          Dir.glob("./data_bags/*").each do |data_bag_path|
-            next if !File.directory?(data_bag_path)
-            ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo data bag '#{File.basename(data_bag_path)}' to the test lab", :mark => "completed in %0.4f seconds.") do
-              data_bag = File.basename(data_bag_path)
-              @test_lab.knife_cli(%(data bag create "#{data_bag}"), :silence => true)
-              @test_lab.knife_cli(%(data bag from file "#{data_bag}" "#{data_bag_path}"), :silence => true)
-            end
+        # Upload all of the chef-repo roles
+        ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo roles to the test lab", :mark => "completed in %0.4f seconds.") do
+          @test_lab.knife_cli(%(role from file ./roles/*.rb), :silence => true)
+        end
+
+        # Upload all of our chef-repo data bags
+        Dir.glob("./data_bags/*").each do |data_bag_path|
+          next if !File.directory?(data_bag_path)
+          ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo data bag '#{File.basename(data_bag_path)}' to the test lab", :mark => "completed in %0.4f seconds.") do
+            data_bag = File.basename(data_bag_path)
+            @test_lab.knife_cli(%(data bag create "#{data_bag}"), :silence => true)
+            @test_lab.knife_cli(%(data bag from file "#{data_bag}" "#{data_bag_path}"), :silence => true)
           end
         end
 
