@@ -159,7 +159,7 @@ module Cucumber
           local_path = File.dirname(Cucumber::Chef.chef_identity)
           @ui.logger.debug { "local_path == #{local_path.inspect}" }
 
-          remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
+          remote_path = File.join(Cucumber::Chef.bootstrap_user_home_dir, ".chef")
           @ui.logger.debug { "remote_path == #{remote_path.inspect}" }
 
           files = [ File.basename(Cucumber::Chef.chef_identity) ]
@@ -183,11 +183,14 @@ module Cucumber
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
           remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
-          files = { "id_rsa" => "id_rsa-#{@test_lab.bootstrap_ssh.config.user}" }
+          files = { "id_rsa" => "id_rsa-#{Cucumber::Chef.lab_user}" }
           files.each do |remote_file, local_file|
+            tmp = File.join("/tmp", local_file)
+            remote = File.join(remote_path, remote_file)
             local = File.join(local_path, local_file)
             File.exists?(local) and File.delete(local)
-            @test_lab.bootstrap_ssh.download(File.join(remote_path, remote_file), local)
+            @test_lab.bootstrap_ssh.exec(%(sudo cp -v #{remote} #{tmp} && sudo chown -v #{Cucumber::Chef.bootstrap_user}:#{Cucumber::Chef.bootstrap_user} #{tmp}), :silence => true)
+            @test_lab.bootstrap_ssh.download(tmp, local)
             File.chmod(0600, local)
           end
         end

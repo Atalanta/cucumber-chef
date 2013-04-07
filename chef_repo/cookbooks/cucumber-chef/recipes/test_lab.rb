@@ -27,48 +27,63 @@
   package p
 end
 
-[ node.cucumber_chef.lab_user, node.cucumber_chef.lxc_user ].flatten.each do |user|
-  home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
+[ node.cucumber_chef.lab_user, node.cucumber_chef.lxc_user ].flatten.each do |username|
+  home_dir = ((username.downcase == "root") ? "/#{username}" : "/home/#{username}")
 
-  directory "create .ssh directory for #{user}" do
+  user username do
+    comment username
+    home home_dir
+    supports :manage_home => true
+  end
+
+  directory "create home directory for #{username}" do
+    path home_dir
+    owner username
+    group username
+    mode "0700"
+
+    not_if { File.directory?(File.join(home_dir)) }
+  end
+
+  directory "create .ssh directory for #{username}" do
     path "#{home_dir}/.ssh"
-    owner user
-    group user
+    owner username
+    group username
     mode "0700"
 
     not_if { File.directory?(File.join(home_dir, ".ssh")) }
   end
 
-  template "create ssh config for #{user}" do
+  template "create ssh config for #{username}" do
     path "#{home_dir}/.ssh/config"
     source "ssh-config.erb"
-    owner user
-    group user
+    owner username
+    group username
     mode "0600"
 
     not_if { File.exists?(File.join(home_dir, ".ssh", "config")) }
   end
 
-  execute "generate ssh keypair for #{user}" do
+  execute "generate ssh keypair for #{username}" do
     command "ssh-keygen -q -N '' -f #{home_dir}/.ssh/id_rsa"
 
     not_if { File.exists?(File.join(home_dir, ".ssh", "id_rsa")) }
   end
 
-  file "ensure ssh private key ownership for #{user}" do
+  file "ensure ssh private key ownership for #{username}" do
     path "#{home_dir}/.ssh/id_rsa"
-    owner user
-    group user
+    owner username
+    group username
     mode "0400"
   end
 
-  file "ensure ssh public key ownership for #{user}" do
+  file "ensure ssh public key ownership for #{username}" do
     path "#{home_dir}/.ssh/id_rsa.pub"
-    owner user
-    group user
+    owner username
+    group username
   end
 
-  execute "copy public key into authorized_keys for #{user}" do
+  execute "copy public key into authorized_keys for #{username}" do
     command "cat #{home_dir}/.ssh/id_rsa.pub | tee -a #{home_dir}/.ssh/authorized_keys"
 
     not_if do

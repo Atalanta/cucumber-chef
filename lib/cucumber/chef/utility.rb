@@ -174,7 +174,12 @@ module Cucumber
 ################################################################################
 
       def bootstrap_user
-        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lab_user]
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:bootstrap_user]
+      end
+
+      def bootstrap_user_home_dir
+        user = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:bootstrap_user]
+        ((user == "root") ? "/root" : "/home/#{user}")
       end
 
       def bootstrap_identity

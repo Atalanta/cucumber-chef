@@ -188,7 +188,8 @@ module Cucumber
 
       provider          :vagrant
 
-      aws               ({:lab_user => "ubuntu",
+      aws               ({:bootstrap_user => "ubuntu",
+                          :lab_user => "cucumber-chef",
                           :lxc_user => "root",
                           :ssh => {
                             :lab_port => 22,
@@ -200,7 +201,8 @@ module Cucumber
                           :aws_instance_type => "m1.small",
                           :aws_security_group => "cucumber-chef"})
 
-      vagrant           ({:lab_user => "vagrant",
+      vagrant           ({:bootstrap_user => "vagrant",
+                          :lab_user => "cucumber-chef",
                           :lxc_user => "root",
                           :ssh => {
                             :lab_ip => "127.0.0.1",
