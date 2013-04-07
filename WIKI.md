@@ -314,6 +314,83 @@ Displays information on the status of the current test lab containers:
     | mysql-test-1         | true  | ubuntu | 192.168.0.220 | 00:00:5e:ea:fe:28 | Chef: 10.18.2 | true    |
     +----------------------+-------+--------+---------------+-------------------+---------------+---------+
 
+## `cucumber-chef displayconfig`
+
+Display various configuration information:
+
+    $ cucumber-chef displayconfig
+    cucumber-chef v3.0.0.rc.5
+    --------------------------------------------------------------------------------
+    ---
+    :mode: :user
+    :prerelease: true
+    :user: zpatten
+    :artifacts:
+      chef-client-log: /var/log/chef/client.log
+      chef-client-stacktrace: /var/chef/cache/chef-stacktrace.out
+    :chef:
+      :version: 10.24.0
+      :default_password: p@ssw0rd1
+      :render_client_rb: true
+      :cookbook_paths:
+      - cookbooks
+      - site-cookbooks
+    :test_lab:
+      :hostname: cucumber-chef
+      :tld: test-lab
+    :command_timeout: 1800
+    :provider: :vagrant
+    :aws:
+      :bootstrap_user: ubuntu
+      :lab_user: cucumber-chef
+      :lxc_user: root
+      :ssh:
+        :lab_port: 22
+        :lxc_port: 22
+      :ubuntu_release: precise
+      :aws_instance_arch: i386
+      :aws_instance_disk_store: ebs
+      :aws_instance_type: c1.medium
+      :aws_security_group: cucumber-chef
+      :identity_file:
+      :aws_access_key_id:
+      :aws_secret_access_key:
+      :aws_ssh_key_id:
+      :region: us-west-2
+      :availability_zone: us-west-2a
+    :vagrant:
+      :bootstrap_user: vagrant
+      :lab_user: cucumber-chef
+      :lxc_user: root
+      :ssh:
+        :lab_ip: 192.168.33.10
+        :lab_port: 22
+        :lxc_port: 22
+      :cpus: 4
+      :memory: 4096
+      :identity_file: /home/zpatten/.vagrant.d/insecure_private_key
+
+    --------------------------------------------------------------------------------
+                   root_dir = "/home/zpatten/code/cc-chef-repo/vendor/checkouts/cucumber-chef"
+                   home_dir = "/home/zpatten/code/cc-chef-repo/.cucumber-chef"
+                   log_file = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/cucumber-chef.log"
+              artifacts_dir = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/vagrant/artifacts"
+                  config_rb = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/config.rb"
+                    labfile = "/home/zpatten/code/cc-chef-repo/Labfile"
+                  chef_repo = "/home/zpatten/code/cc-chef-repo"
+                  chef_user = "zpatten"
+              chef_identity = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/vagrant/zpatten.pem"
+             bootstrap_user = "vagrant"
+    bootstrap_user_home_dir = "/home/vagrant"
+         bootstrap_identity = "/home/zpatten/.vagrant.d/insecure_private_key"
+                   lab_user = "cucumber-chef"
+          lab_user_home_dir = "/home/cucumber-chef"
+               lab_identity = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/vagrant/id_rsa-cucumber-chef"
+                   lxc_user = "root"
+          lxc_user_home_dir = "/root"
+               lxc_identity = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/vagrant/id_rsa-cucumber-chef"
+                chef_pre_11 = true
+    --------------------------------------------------------------------------------
 
 # RESOURCES
 
