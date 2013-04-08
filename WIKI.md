@@ -66,7 +66,9 @@ Cucumber-Chef creates a home directory for itself named `.cucumber-chef` off the
 
 When doing integration testing it makes sense that one generally wants to test across an entire ecosystem of servers.  You typically acquire a set of virtual or bare metal servers, provision those servers acordingly, put them into play then rinse and repeat.  I introduce the `Labfile`, the concept is simple if you haven't already guessed it.  You define a set of servers, i.e. an ecosystem, also dictating the settings and configuration.  Part of this change is because a) it makes alot of sense to me and b) it greatly decreases runtimes.  Also in cucumber-chef 2.x, we had insane background sections which bothered me tremendously and this change cleans up all of that mess as well.  The ultimate goal is to support configuration of multiple ecosystems, but we've got other ground to cover first so that feature will have to wait for a bit.  The `Labfile` should reside in the root of your Chef-Repo.
 
-Here is a sample of what a `Labfile` might look like (https://github.com/zpatten/cc-chef-repo/blob/master/Labfile):
+https://github.com/zpatten/cc-chef-repo/blob/master/Labfile
+
+Here is a sample of what a `Labfile` might look like:
 
     #!/usr/bin/env ruby
     #^syntax detection
@@ -133,7 +135,9 @@ Here is a sample of what a `Labfile` might look like (https://github.com/zpatten
 
 ## `config.rb`
 
-You can customize your configuration by editing your `<chef-repo>/.cucumber-chef/config.rb` file.  Here's an example of the current one I'm using for testing (https://github.com/zpatten/cc-chef-repo/blob/master/.cucumber-chef/config.rb):
+https://github.com/zpatten/cc-chef-repo/blob/master/.cucumber-chef/config.rb
+
+You can customize your configuration by editing your `<chef-repo>/.cucumber-chef/config.rb` file.  Here's an example of the current one I'm using for testing:
 
     provider        :vagrant
 
