@@ -1,6 +1,5 @@
-[![Dependency Status](https://gemnasium.com/jovelabs/cucumber-chef.png)](https://gemnasium.com/jovelabs/cucumber-chef)
-
-[![Build Status](https://secure.travis-ci.org/jovelabs/cucumber-chef.png)](http://travis-ci.org/jovelabs/cucumber-chef)
+[![Build Status](https://secure.travis-ci.org/zpatten/cucumber-chef.png)](http://travis-ci.org/zpatten/cucumber-chef)
+[![Dependency Status](https://gemnasium.com/zpatten/cucumber-chef.png)](https://gemnasium.com/zpatten/cucumber-chef)
 
 Cucumber-chef is a library of tools to enable the emerging discipline of infrastructure as code to practice test driven development.  It provides a testing platform within which Cucumber tests can be run which provision virtual machines, configure them by applying the appropriate Chef roles to them, and then run acceptance and integration tests against the environment.
 
