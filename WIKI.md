@@ -33,13 +33,15 @@ When using Cucumber-Chef, especially at first, I highly recommend you tail the l
 3. `cucumber-chef` runs the chef-client across the ecosystem using attributes from the `Labfile` (optionally executed)
 4. `cucumber`/`rspec` resumes execution
 
-# Execution
+# First-Time Execution
 
 1. Ensure you have the latest vagrant and virtualbox installed.
-2. `cucumber-chef init` to initalize a disabled config template
-1. `cucumber-chef destroy` is executed if you want to destroy your test lab. (optional)
-2. `cucumber-chef setup` is executed to ensure your test lab is provisioned. (optional, first-run)
-3. `cucumber` to execute features located in your `chef-repo`.
+2. `cucumber-chef init` to initalize a disabled config template.
+3. `cucumber-chef create test` to create a blank test feature.
+4. `cucumber-chef setup` is executed to ensure your test lab is provisioned.
+5. `cucumber` to execute features located in your `chef-repo`.
+
+# Other Execution Examples
 
 For example when I am testing, I often use this command sequence (I use binstubs, so everything will be prefixed with bin/):
 
