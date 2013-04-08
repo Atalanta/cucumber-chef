@@ -45,6 +45,10 @@ For example when I am testing, I often use this command sequence (I use binstubs
 
 This will destroy the current test lab (if one exists), setup a new test (since we destroyed any existing labs), then execute the cucumber features.
 
+To force destruction of the containers when running cucumber place `PURGE=1` before your cucumber command like so:
+
+    PURGE=1 bin/cucumber
+
 # Configuration
 
 Cucumber-Chef creates a home directory for itself named `.cucumber-chef` off the root of your Chef-Repo.  Here you can find the configuration files as well as logs and artifacts from test runs.  There are two main configuration files for Cucumber-Chef.  The `Labfile` in the Chef-Repo directory and `config.rb` in the Cucumber-Chef home directory.
