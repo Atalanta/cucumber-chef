@@ -87,6 +87,7 @@ module Cucumber
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
         ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+          server_name = @test_lab.ip
 
           chef_solo_attributes = case Cucumber::Chef.chef_pre_11
           when true then
@@ -99,14 +100,24 @@ module Cucumber
           when false then
             {
               "chef-server" => {
+                "api_fqdn" => server_name,
                 "nginx" => {
                   "enable_non_ssl" => true,
-                  "server_name" => "localhost",
-                  "url" => "http://localhost"
+                  "server_name" => server_name,
+                  "url" => "https://#{server_name}"
+                },
+                "lb" => {
+                  "fqdn" => server_name
+                },
+                "bookshelf" => {
+                  "vip" => server_name
                 },
                 "chef_server_webui" => {
                   "enable" => true
-                }
+                },
+                "version" => Cucumber::Chef::Config.chef[:version],
+                "prereleases" => Cucumber::Chef::Config.chef[:prereleases],
+                "nightlies" => Cucumber::Chef::Config.chef[:nightlies]
               },
               "run_list" => %w(recipe[chef-server::default] role[test_lab])
             }
@@ -122,6 +133,7 @@ module Cucumber
           )
 
           context = {
+            :server_name => server_name,
             :lab_user => Cucumber::Chef.lab_user,
             :chef_pre_11 => Cucumber::Chef.chef_pre_11,
             :chef_solo_attributes => chef_solo_attributes,

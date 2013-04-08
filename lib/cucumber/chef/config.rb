@@ -175,11 +175,15 @@ module Cucumber
       artifacts         ({"chef-client-log" => "/var/log/chef/client.log",
                           "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"})
 
-      chef              ({:version => "latest",
+      chef              ({
+                          :version => "latest",
                           :container_version => "latest",
                           :default_password => "p@ssw0rd1",
                           :render_client_rb => true,
-                          :cookbook_paths => %w(cookbooks)})
+                          :cookbook_paths => %w(cookbooks),
+                          :prereleases => false,
+                          :nightlies => false
+                        })
 
       test_lab          ({:hostname => "cucumber-chef",
                           :tld => "test-lab"})
