@@ -66,7 +66,7 @@ Cucumber-Chef creates a home directory for itself named `.cucumber-chef` off the
 
 When doing integration testing it makes sense that one generally wants to test across an entire ecosystem of servers.  You typically acquire a set of virtual or bare metal servers, provision those servers acordingly, put them into play then rinse and repeat.  I introduce the `Labfile`, the concept is simple if you haven't already guessed it.  You define a set of servers, i.e. an ecosystem, also dictating the settings and configuration.  Part of this change is because a) it makes alot of sense to me and b) it greatly decreases runtimes.  Also in cucumber-chef 2.x, we had insane background sections which bothered me tremendously and this change cleans up all of that mess as well.  The ultimate goal is to support configuration of multiple ecosystems, but we've got other ground to cover first so that feature will have to wait for a bit.  The `Labfile` should reside in the root of your Chef-Repo.
 
-Here is a sample of what a `Labfile` might look like:
+Here is a sample of what a `Labfile` might look like (https://github.com/zpatten/cc-chef-repo/blob/master/Labfile):
 
     #!/usr/bin/env ruby
     #^syntax detection
@@ -132,6 +132,43 @@ Here is a sample of what a `Labfile` might look like:
     end
 
 ## `config.rb`
+
+You can customize your configuration by editing your `<chef-repo>/.cucumber-chef/config.rb` file.  Here's an example of the current one I'm using for testing (https://github.com/zpatten/cc-chef-repo/blob/master/.cucumber-chef/config.rb):
+
+    provider        :vagrant
+
+    vagrant.merge!( :identity_file => "#{ENV['HOME']}/.vagrant.d/insecure_private_key",
+                    :ssh => {
+                        :lab_ip => "192.168.33.10",
+                        :lab_port => 22,
+                        :lxc_port => 22
+                    },
+                    :cpus => 4,
+                    :memory => 4096 )
+
+    aws.merge!(     :identity_file => ENV['AWS_IDENTITY'],
+                    :ssh => {
+                        :lab_port => 22,
+                        :lxc_port => 22
+                    },
+                    :aws_access_key_id => ENV['AWS_ACCESS_KEY_ID'],
+                    :aws_secret_access_key => ENV['AWS_SECRET_ACCESS_KEY'],
+                    :aws_ssh_key_id => ENV['AWS_SSH_KEY_ID'],
+                    :region => "us-west-2",
+                    :availability_zone => "us-west-2a",
+                    :aws_instance_arch => "i386",
+                    :aws_instance_type => "c1.medium" )
+
+    artifacts       ({ "chef-client-log" => "/var/log/chef/client.log",
+                       "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out" })
+
+    chef.merge!(    :version => "10.24.0",
+                    :container_version => "10.18.2",
+                    :cookbook_paths => %w(cookbooks site-cookbooks))
+
+    # chef.merge!(    :version => "10.24.0")
+    # chef.merge!(    :version => "11.4.0")
+    # chef.merge!(    :version => "latest")
 
 If you want to see how your cucumber-chef installation is configured run `cucumber-chef displayconfig`:
 
@@ -209,44 +246,6 @@ If you want to see how your cucumber-chef installation is configured run `cucumb
                lxc_identity = "/home/zpatten/code/cc-chef-repo/.cucumber-chef/vagrant/id_rsa-root"
                 chef_pre_11 = true
     --------------------------------------------------------------------------------
-
-You can customize your configuration by editing your `<chef-repo>/.cucumber-chef/config.rb` file.  Here's an example of the current one I'm using for testing:
-
-    provider        :vagrant
-
-    vagrant.merge!( :identity_file => "#{ENV['HOME']}/.vagrant.d/insecure_private_key",
-                    :ssh => {
-                        :lab_ip => "192.168.33.10",
-                        :lab_port => 22,
-                        :lxc_port => 22
-                    },
-                    :cpus => 4,
-                    :memory => 4096 )
-
-    aws.merge!(     :identity_file => ENV['AWS_IDENTITY'],
-                    :ssh => {
-                        :lab_port => 22,
-                        :lxc_port => 22
-                    },
-                    :aws_access_key_id => ENV['AWS_ACCESS_KEY_ID'],
-                    :aws_secret_access_key => ENV['AWS_SECRET_ACCESS_KEY'],
-                    :aws_ssh_key_id => ENV['AWS_SSH_KEY_ID'],
-                    :region => "us-west-2",
-                    :availability_zone => "us-west-2a",
-                    :aws_instance_arch => "i386",
-                    :aws_instance_type => "c1.medium" )
-
-    artifacts       ({ "chef-client-log" => "/var/log/chef/client.log",
-                       "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out" })
-
-    chef.merge!(    :version => "10.24.0",
-                    :container_version => "10.18.2",
-                    :cookbook_paths => %w(cookbooks site-cookbooks))
-
-    # chef.merge!(    :version => "10.24.0")
-    # chef.merge!(    :version => "11.4.0")
-    # chef.merge!(    :version => "latest")
-
 
 # Cucumber-Chef Tasks
 
