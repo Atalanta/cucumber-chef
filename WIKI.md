@@ -33,6 +33,18 @@ When using Cucumber-Chef, especially at first, I highly recommend you tail the l
 3. `cucumber-chef` runs the chef-client across the ecosystem using attributes from the `Labfile` (optionally executed)
 4. `cucumber`/`rspec` resumes execution
 
+# Execution
+
+1. `cucumber-chef destroy` is executed if you want to destroy your test lab. (optional)
+2. `cucumber-chef setup` is executed to ensure your test lab is provisioned. (optional, first-run)
+3. `cucumber` to execute features located in your `chef-repo`.
+
+For example when I am testing, I often use this command sequence (I use binstubs, so everything will be prefixed with bin/):
+
+    echo "yes" | bin/cucumber-chef destroy && bin/cucumber-chef setup && bin/cucumber
+
+This will destroy the current test lab (if one exists), setup a new test (since we destroyed any existing labs), then execute the cucumber features.
+
 # Configuration
 
 Cucumber-Chef creates a home directory for itself named `.cucumber-chef` off the root of your Chef-Repo.  Here you can find the configuration files as well as logs and artifacts from test runs.  There are two main configuration files for Cucumber-Chef.  The `Labfile` in the Chef-Repo directory and `config.rb` in the Cucumber-Chef home directory.
