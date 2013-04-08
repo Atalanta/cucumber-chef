@@ -35,6 +35,8 @@ When using Cucumber-Chef, especially at first, I highly recommend you tail the l
 
 # Execution
 
+1. Ensure you have the latest vagrant and virtualbox installed.
+2. `cucumber-chef init` to initalize a disabled config template
 1. `cucumber-chef destroy` is executed if you want to destroy your test lab. (optional)
 2. `cucumber-chef setup` is executed to ensure your test lab is provisioned. (optional, first-run)
 3. `cucumber` to execute features located in your `chef-repo`.
