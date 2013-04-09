@@ -12,8 +12,8 @@ When /^I have the following SSH sessions:$/ do |table|
       @ssh_sessions[id] = ZTK::SSH.new
 
       @ssh_sessions[id].config.proxy_host_name = $cc_client.test_lab.ip
-      @ssh_sessions[id].config.proxy_user = Cucumber::Chef.lab_user
-      @ssh_sessions[id].config.proxy_keys = Cucumber::Chef.lab_identity
+      @ssh_sessions[id].config.proxy_user      = Cucumber::Chef.lab_user
+      @ssh_sessions[id].config.proxy_keys      = Cucumber::Chef.lab_identity
 
       hash['hostname'] and (@ssh_sessions[id].config.host_name = hash['hostname'])
       hash['username'] and (@ssh_sessions[id].config.user = hash['username'])
@@ -33,9 +33,9 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
     @connection = ZTK::SSH.new(:timeout => 120, :ignore_exit_status => true)
 
     @connection.config.proxy_host_name = $cc_client.test_lab.ip
-    @connection.config.proxy_port = $cc_client.test_lab.port
-    @connection.config.proxy_user = Cucumber::Chef.lab_user
-    @connection.config.proxy_keys = Cucumber::Chef.lab_identity
+    @connection.config.proxy_port      = $cc_client.test_lab.port
+    @connection.config.proxy_user      = Cucumber::Chef.lab_user
+    @connection.config.proxy_keys      = Cucumber::Chef.lab_identity
 
     hostname and (@connection.config.host_name = hostname)
     session["password"] and (@connection.config.password = session["password"])
@@ -60,8 +60,8 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
 end
 
 And /^I run "([^\"]*)"$/ do |command|
-  @result = @connection.exec(command, :silence => true)
-  @output = @result.output
+  @result    = @connection.exec(command, :silence => true)
+  @output    = @result.output
   @exit_code = @result.exit_code
 end
 
@@ -85,53 +85,59 @@ Then /^the exit code should be "([^\"]*)"$/ do |exit_code|
   @exit_code.to_i.should == exit_code.to_i
 end
 
-Then /^(path|directory|file|symlink) "([^\"]*)" should exist$/ do |type, path|
-  parent = File.dirname path
-  child = File.basename path
-  command = "ls %s" % [
-    parent
+Then /^(path|directory|file|symlink) "([^\"]*)" should( not)? exist$/ do |type, path, boolean|
+  parent  = File.dirname path
+  child   = File.basename path
+  command = "ls -a %s" % [
+      parent
   ]
   @output = @connection.exec(command, :silence => true).output
-  @output.should =~ /#{child}/
+  if (!boolean)
+    @output.should =~ /#{child}/
+  else
+    @output.should_not =~ /#{child}/
+  end
 
 # if a specific type (directory|file) was specified, test for it
   command = "stat -c %%F %s" % [
-    path
+      path
   ]
   @output = @connection.exec(command, :silence => true).output
-  types = {
-    "file" => /regular file/,
-    "directory" => /directory/,
-    "symlink" => /symbolic link/
+  types   = {
+      "file"      => /regular file/,
+      "directory" => /directory/,
+      "symlink"   => /symbolic link/
   }
 
   if types.keys.include? type
-    @output.should =~ types[type]
+    if (!boolean)
+      @output.should =~ types[type]
+    end
   end
 end
 
 Then /^(?:path|directory|file) "([^\"]*)" should be owned by "([^\"]*)"$/ do |path, owner|
   command = "stat -c %%U:%%G %s" % [
-    path
+      path
   ]
-  @output = @connection.exec(command).output
+  @output = @connection.exec(command, :silence => true).output
   @output.should =~ /#{owner}/
 end
 
 # we can now match multi-line strings. We want to match *contiguous lines*
 Then /^file "([^\"]*)" should( not)? contain/ do |path, boolean, content|
   command = "cat %s" % [
-    path
+      path
   ]
 
 # turn the command-line output and the expectation string into Arrays and strip
 # leading and trailing cruft from members
-  @output = @connection.exec(command).output.split("\n").map{ |i| i.strip }
-  content = content.split("\n").map{ |i| i.strip }
+  @output = @connection.exec(command, :silence => true).output.split("\n").map { |i| i.strip }
+  content = content.split("\n").map { |i| i.strip }
 
 # assume no match
-  match = false
-  count = 0
+  match   = false
+  count   = 0
 
 # step through the command output array
   while count < @output.length
@@ -172,6 +178,12 @@ Then /^package "([^\"]*)" should be installed$/ do |package|
   @result.output.should =~ /#{package}/
 end
 
+Then /^"mod_([^ ]*)" should be enabled$/ do |mod|
+  command = "apache2ctl -t -D DUMP_MODULES"
+  @result = @connection.exec(command, :silence => true)
+  @result.output.should =~ /#{mod}_module/
+end
+
 # This regex is a little ugly, but it's so we can accept any of these
 #
 # * "foo" is running
@@ -186,7 +198,7 @@ end
 # works
 Then /^(?:(?:service|application|process)? )?"([^\"]*)" should( not)? be running$/ do |service, boolean|
   command = "ps ax"
-  @output = @connection.exec(command).output
+  @output = @connection.exec(command, :silence => true).output
   if (!boolean)
     @output.should =~ /#{service}/
   else
