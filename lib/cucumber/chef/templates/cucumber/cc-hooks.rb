@@ -18,35 +18,26 @@
 #
 ################################################################################
 
-tag = Cucumber::Chef.tag("cucumber-chef")
-puts("  * #{tag}")
-Cucumber::Chef.boot(tag)
-
-$ui = ZTK::UI.new(:logger => Cucumber::Chef.logger)
-if (($test_lab = Cucumber::Chef::TestLab.new($ui)) && $test_lab.alive?)
-  $test_lab.cc_client.up
-else
-  message = "No running cucumber-chef test labs to connect to!"
-  $ui.logger.fatal { message }
-  raise message
-end
-
+$cc_client = Cucumber::Chef::Client.new
+$cc_client.up
 
 ################################################################################
 # HOOKS
 ################################################################################
 
 Before do |scenario|
-  $test_lab.cc_client.before(scenario)
+  $cc_client.before(scenario)
 end
 
 After do |scenario|
   @connection and @connection.ssh.shutdown!
-  $test_lab.cc_client.after(scenario)
+  $cc_client.after(scenario)
 end
 
+################################################################################
+
 Kernel.at_exit do
-  $test_lab.cc_client.at_exit
+  $cc_client.at_exit
 end
 
 ################################################################################

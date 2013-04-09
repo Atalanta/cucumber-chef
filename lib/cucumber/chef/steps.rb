@@ -21,7 +21,6 @@
 
 require 'cucumber/chef/steps/chef_steps'
 require 'cucumber/chef/steps/minitest_steps'
-require 'cucumber/chef/steps/provision_steps'
 require 'cucumber/chef/steps/ssh_steps'
 
 ################################################################################

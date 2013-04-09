@@ -170,17 +170,20 @@ module Cucumber
       mode              :user
       prerelease        (Cucumber::Chef.is_rc? ? true : false)
 
-      librarian_chef    false
-
       user              (ENV['OPSCODE_USER'] || ENV['USER'])
 
       artifacts         ({"chef-client-log" => "/var/log/chef/client.log",
                           "chef-client-stacktrace" => "/var/chef/cache/chef-stacktrace.out"})
 
-      chef              ({:version => "10.18.2",
-                          :amqp_password => "p@ssw0rd1",
-                          :admin_password => "p@ssw0rd1",
-                          :render_client_rb => true})
+      chef              ({
+                          :version => "latest",
+                          :container_version => "latest",
+                          :default_password => "p@ssw0rd1",
+                          :render_client_rb => true,
+                          :cookbook_paths => %w(cookbooks),
+                          :prereleases => false,
+                          :nightlies => false
+                        })
 
       test_lab          ({:hostname => "cucumber-chef",
                           :tld => "test-lab"})
@@ -189,16 +192,29 @@ module Cucumber
 
       provider          :vagrant
 
-      aws               ({:lab_user => "ubuntu",
+      aws               ({:bootstrap_user => "ubuntu",
+                          :lab_user => "cucumber-chef",
                           :lxc_user => "root",
+                          :ssh => {
+                            :lab_port => 22,
+                            :lxc_port => 22
+                          },
                           :ubuntu_release => "precise",
                           :aws_instance_arch => "i386",
                           :aws_instance_disk_store => "ebs",
                           :aws_instance_type => "m1.small",
                           :aws_security_group => "cucumber-chef"})
 
-      vagrant           ({:lab_user => "vagrant",
-                          :lxc_user => "root"})
+      vagrant           ({:bootstrap_user => "vagrant",
+                          :lab_user => "cucumber-chef",
+                          :lxc_user => "root",
+                          :ssh => {
+                            :lab_ip => "127.0.0.1",
+                            :lab_port => 2222,
+                            :lxc_port => 22
+                          },
+                          :cpus => 1,
+                          :memory => 1024 })
 
 ################################################################################
 

@@ -19,17 +19,26 @@
 #
 ################################################################################
 
-module Cucumber::Chef::Helpers::MiniTest
+module Cucumber
+  module Chef
 
-  def enable_minitest(name)
-    @chef_client_attributes[:run_list].unshift("recipe[minitest-handler]")
+    class ContainerError < Error; end
+
+    class Container < ZTK::DSL::Base
+      belongs_to :ecosystem, :class_name => "Cucumber::Chef::Ecosystem"
+
+      attribute :name
+      attribute :ip
+      attribute :mac
+      attribute :persist
+      attribute :distro
+      attribute :release
+      attribute :arch
+      attribute :roles
+      attribute :chef_client
+    end
+
   end
-
-  def run_minitests(name)
-    chef_run = chef_run_client(name, "-l info")
-    test_result = chef_run.drop_while {|e| e !~ /^# Running tests/}.take_while {|e| e !~ /^[.*] INFO/}
-    puts test_result
-    test_result
-  end
-
 end
+
+################################################################################

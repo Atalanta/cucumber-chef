@@ -11,7 +11,7 @@ When /^I have the following SSH sessions:$/ do |table|
       @ssh_sessions[id] and !@ssh_sessions[id].closed? and @ssh_sessions[id].close
       @ssh_sessions[id] = ZTK::SSH.new
 
-      @ssh_sessions[id].config.proxy_host_name = $test_lab.ip
+      @ssh_sessions[id].config.proxy_host_name = $cc_client.test_lab.ip
       @ssh_sessions[id].config.proxy_user      = Cucumber::Chef.lab_user
       @ssh_sessions[id].config.proxy_keys      = Cucumber::Chef.lab_identity
 
@@ -32,8 +32,8 @@ When /^I ssh to "([^\"]*)" with the following credentials:$/ do |hostname, table
     @connection and @connection.ssh.shutdown!
     @connection = ZTK::SSH.new(:timeout => 120, :ignore_exit_status => true)
 
-    @connection.config.proxy_host_name = $test_lab.ip
-    @connection.config.proxy_port      = $test_lab.port
+    @connection.config.proxy_host_name = $cc_client.test_lab.ip
+    @connection.config.proxy_port      = $cc_client.test_lab.port
     @connection.config.proxy_user      = Cucumber::Chef.lab_user
     @connection.config.proxy_keys      = Cucumber::Chef.lab_identity
 
@@ -75,9 +75,9 @@ end
 
 Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |boolean, key, name|
   if (!boolean)
-    @output.should =~ /#{$test_lab.drb.containers[name][key.downcase.to_sym]}/i
+    @output.should =~ /#{Cucumber::Chef::Containers.all.select { |c| c.name == name }.first.send(key.downcase.to_sym)}/i
   else
-    @output.should_not =~ /#{$test_lab.drb.containers[name][key.downcase.to_sym]}/i
+    @output.should_not =~ /#{Cucumber::Chef::Containers.all.select { |c| c.name == name }.first.send(key.downcase.to_sym)}/i
   end
 end
 

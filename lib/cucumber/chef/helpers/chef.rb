@@ -19,53 +19,30 @@
 #
 ################################################################################
 
-module Cucumber::Chef::Helpers::Utility
+module Cucumber::Chef::Helpers::Chef
 
 ################################################################################
 
-  def logger
-    Cucumber::Chef.logger
+  def create_data_bag(data_bag, data_bag_path)
+    $cc_client.test_lab.knife_cli(%(data bag create "#{data_bag}"), :silence => true)
+    $cc_client.test_lab.knife_cli(%(data bag from file "#{data_bag}" "#{data_bag_path}"), :silence => true)
+  end
+
+  def delete_data_bag(data_bag)
+    $cc_client.test_lab.knife_cli(%(data bag delete "#{data_bag}" --yes), :silence => true)
   end
 
 ################################################################################
 
-  def generate_ip
-    octets = [ 192..192,
-               168..168,
-               0..254,
-               1..254 ]
-    ip = ""
-    for x in 1..4 do
-      ip += octets[x-1].to_a[rand(octets[x-1].count)].to_s
-      ip += "." if x != 4
+  def role_from_file(role, role_path)
+    if File.extname(role).empty?
+      Dir.glob(File.join(role_path, "#{role}.*")).each do |role_file|
+        $cc_client.test_lab.knife_cli(%(role from file #{role_file}), :silence => true)
+      end
+    else
+      $cc_client.test_lab.knife_cli(%(role from file #{File.join(role_path, role)}), :silence => true)
     end
-    ip
   end
-
-################################################################################
-
-  def generate_mac
-    digits = [ %w( 0 ),
-               %w( 0 ),
-               %w( 0 ),
-               %w( 0 ),
-               %w( 5 ),
-               %w( e ),
-               %w( 0 1 2 3 4 5 6 7 8 9 a b c d e f ),
-               %w( 0 1 2 3 4 5 6 7 8 9 a b c d e f ),
-               %w( 5 6 7 8 9 a b c d e f ),
-               %w( 3 4 5 6 7 8 9 a b c d e f ),
-               %w( 0 1 2 3 4 5 6 7 8 9 a b c d e f ),
-               %w( 0 1 2 3 4 5 6 7 8 9 a b c d e f ) ]
-    mac = ""
-    for x in 1..12 do
-      mac += digits[x-1][rand(digits[x-1].count)]
-      mac += ":" if (x.modulo(2) == 0) && (x != 12)
-    end
-    mac
-  end
-
-################################################################################
 
 end
 

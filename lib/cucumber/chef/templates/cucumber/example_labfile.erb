@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+#^syntax detection
+
+ecosystem "<%= @project %>-ecosystem-1" do
+
+  container "<%= @project %>-app-1" do
+    distro "ubuntu"
+    release "lucid"
+    persist true
+    ip "192.168.0.1"
+    mac "00:00:5e:35:ea:d5"
+    chef_client  ({ :run_list => [] })
+  end
+
+end

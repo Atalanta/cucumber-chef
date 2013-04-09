@@ -21,17 +21,13 @@
 
 And /^the following (databag|databags) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   table.hashes.each do |entry|
-    data_bag = entry['databag']
-    data_bag_path = entry['databag_path']
-    $test_lab.knife_cli(%Q{data bag create "#{data_bag}"}, :silence => true)
-    $test_lab.knife_cli(%Q{data bag from file "#{data_bag}" "#{data_bag_path}"}, :silence => true)
+    create_data_bag(entry['databag'], entry['databag_path'])
   end
 end
 
 And /^the following (databag|databags) (has|have) been (deleted|removed):$/ do |ignore0, ignore1, ignore2, table|
   table.hashes.each do |entry|
-    data_bag = entry['databag']
-    $test_lab.knife_cli(%Q{data bag delete "#{data_bag}" --yes}, :silence => true)
+    delete_data_bag(entry['databag'])
   end
 end
 
@@ -39,16 +35,7 @@ end
 
 And /^the following (role|roles) (has|have) been (updated|uploaded):$/ do |ignore0, ignore1, ignore2, table|
   table.hashes.each do |entry|
-    role = entry['role']
-    role_path = entry['role_path']
-
-    if File.extname(role).empty?
-      Dir.glob(File.join(role_path, "#{role}.*")).each do |role_file|
-        $test_lab.knife_cli(%Q{role from file #{role_file}}, :silence => true)
-      end
-    else
-      $test_lab.knife_cli(%Q{role from file #{File.join(role_path, role)}}, :silence => true)
-    end
+    role_from_file(entry['role'], entry['role_path'])
   end
 end
 
@@ -63,12 +50,12 @@ And /^the following (cookbook|cookbooks) (has|have) been (updated|uploaded):$/ d
   end
 
   cookbooks.each do |cookbook_path, cookbooks|
-    $test_lab.knife_cli(%Q{cookbook upload #{cookbooks.join(" ")} -o #{cookbook_path}}, :silence => true)
+    $cc_client.test_lab.knife_cli(%(cookbook upload #{cookbooks.join(" ")} -o #{cookbook_path}), :silence => true)
   end
 end
 
 And /^all of the cookbooks in "([^\"]*)" (has|have) been (updated|uploaded)$/ do |cookbook_path, ignore0, ignore1|
-  $test_lab.knife_cli(%Q{cookbook upload -a -o #{cookbook_path}}, :silence => true)
+  $cc_client.test_lab.knife_cli(%(cookbook upload -a -o #{cookbook_path}), :silence => true)
 end
 
 ################################################################################
@@ -80,10 +67,10 @@ And /^the following (environment|environments) (has|have) been (updated|uploaded
 
     if File.extname(environment).empty?
       Dir.glob(File.join(environment_path, "#{environment}.*")).each do |environment_file|
-        $test_lab.knife_cli(%Q{environment from file #{environment_file}}, :silence => true)
+        $cc_client.test_lab.knife_cli(%(environment from file #{environment_file}), :silence => true)
       end
     else
-      $test_lab.knife_cli(%Q{environment from file #{File.join(environment_path, environment)}}, :silence => true)
+      $cc_client.test_lab.knife_cli(%(environment from file #{File.join(environment_path, environment)}), :silence => true)
     end
   end
 end

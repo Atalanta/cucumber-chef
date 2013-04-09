@@ -23,62 +23,68 @@
 # SYSTEM TWEAKS
 ################################################################################
 
-%w( build-essential wget chkconfig ruby-full ruby-dev libxml2-dev libxslt1-dev ).each do |p|
+%w(build-essential wget chkconfig).each do |p|
   package p
 end
 
-[ node.lab_user, node.lxc_user ].flatten.each do |user|
-  home_dir = (user == "root" ? "/#{user}" : "/home/#{user}")
+[ node.cucumber_chef.lab_user, node.cucumber_chef.lxc_user ].each do |username|
+  home_dir = ((username.downcase == "root") ? "/#{username}" : "/home/#{username}")
 
-  directory "create .ssh directory for #{user}" do
+  user username do
+    comment username
+    home home_dir
+    shell "/bin/bash"
+    supports :manage_home => true
+  end
+
+  directory "create home directory for #{username}" do
+    path home_dir
+    owner username
+    group username
+    mode "0700"
+
+    not_if { File.directory?(File.join(home_dir)) }
+  end
+
+  directory "create .ssh directory for #{username}" do
     path "#{home_dir}/.ssh"
-    owner user
-    group user
+    owner username
+    group username
     mode "0700"
 
     not_if { File.directory?(File.join(home_dir, ".ssh")) }
   end
 
-  template "create ssh config for #{user}" do
+  template "create ssh config for #{username}" do
     path "#{home_dir}/.ssh/config"
     source "ssh-config.erb"
-    owner user
-    group user
+    owner username
+    group username
     mode "0600"
 
     not_if { File.exists?(File.join(home_dir, ".ssh", "config")) }
   end
 
-  template "create .gemrc for #{user}" do
-    path "#{home_dir}/.gemrc"
-    source "gemrc.erb"
-    owner user
-    group user
-    mode "0644"
-
-    not_if { File.exists?(File.join(home_dir, ".gemrc")) }
-  end
-
-  execute "generate ssh keypair for #{user}" do
+  execute "generate ssh keypair for #{username}" do
     command "ssh-keygen -q -N '' -f #{home_dir}/.ssh/id_rsa"
 
     not_if { File.exists?(File.join(home_dir, ".ssh", "id_rsa")) }
   end
 
-  file "ensure ssh private key ownership for #{user}" do
+  file "ensure ssh private key ownership for #{username}" do
     path "#{home_dir}/.ssh/id_rsa"
-    owner user
-    group user
+    owner username
+    group username
     mode "0400"
   end
 
-  file "ensure ssh public key ownership for #{user}" do
+  file "ensure ssh public key ownership for #{username}" do
     path "#{home_dir}/.ssh/id_rsa.pub"
-    owner user
-    group user
+    owner username
+    group username
   end
 
-  execute "copy public key into authorized_keys for #{user}" do
+  execute "copy public key into authorized_keys for #{username}" do
     command "cat #{home_dir}/.ssh/id_rsa.pub | tee -a #{home_dir}/.ssh/authorized_keys"
 
     not_if do
@@ -86,6 +92,13 @@ end
       ($? == 0)
     end
   end
+
+  file "ensure ssh authorized_keys ownership for #{username}" do
+    path "#{home_dir}/.ssh/authorized_keys"
+    owner username
+    group username
+  end
+
 end
 
 file "remove update-motd" do
@@ -107,36 +120,6 @@ end
 
 
 ################################################################################
-# RUBY
-################################################################################
-bash "install rubygems" do
-  code <<-EOH
-cd /tmp
-wget http://production.cf.rubygems.org/rubygems/rubygems-1.8.19.tgz
-tar zxf rubygems-1.8.19.tgz
-cd rubygems-1.8.19
-ruby setup.rb --no-format-executable
-  EOH
-end
-
-gem_package "cucumber-chef" do
-  gem_binary("/usr/bin/gem")
-
-  version(node['cucumber_chef']['version'])
-
-  if node['cucumber_chef']['prerelease']
-    options("--prerelease")
-  end
-end
-
-%w( rspec ).each do |g|
-  gem_package g do
-    gem_binary("/usr/bin/gem")
-  end
-end
-
-
-################################################################################
 # CHEF-CLIENT
 ################################################################################
 service "chef-client"
@@ -150,17 +133,4 @@ execute "set chef-client logging to debug" do
     %x( cat /etc/chef/client.rb | grep "log_level          :info" )
     ($? == 0)
   end
-end
-
-
-################################################################################
-# CHEF-SOLR / APACHE SOLR
-################################################################################
-
-template "install custom solr config" do
-  path "/var/lib/chef/solr/conf/solrconfig.xml"
-  source "solrconfig.erb"
-  owner "chef"
-  group "chef"
-  mode "0644"
 end

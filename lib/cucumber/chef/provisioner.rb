@@ -37,26 +37,17 @@ module Cucumber
 
         @cookbooks_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "cookbooks")
         @roles_path = File.join(Cucumber::Chef.root_dir, "chef_repo", "roles")
-        @bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-test-lab.erb")
       end
 
 ################################################################################
 
       def build
+        upload_chef_repo
         bootstrap
         wait_for_chef_server
 
         download_chef_credentials
-        render_knife_rb
-
-        upload_cookbook
-        upload_role
-        tag_node
-        add_node_role
-
-        chef_first_run
-
-        download_proxy_ssh_credentials
+        download_ssh_credentials
 
         reboot_test_lab
       end
@@ -66,36 +57,104 @@ module Cucumber
     private
 ################################################################################
 
+      def upload_chef_repo
+        ZTK::Benchmark.bench(:message => "Uploading embedded chef-repo", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+          local_path = File.join(Cucumber::Chef.root_dir, "chef_repo")
+          @ui.logger.debug { "local_path == #{local_path.inspect}" }
+
+          remote_path = File.join("/tmp", "chef-solo")
+          @ui.logger.debug { "remote_path == #{remote_path.inspect}" }
+
+          # FIXME!
+          # there seems to be a major difference between net-sftp v2.0.5 and
+          # v2.1.1; under v2.0.5 the remote_path is expected to exist already so
+          # if it is not in place mkdir fails with Net::SFTP::StatusException on
+          # the Net::SFTP mkdir internal call triggered by a Net::SFTP upload
+          # call
+          @test_lab.bootstrap_ssh.exec(%(sudo rm -vrf #{remote_path}), :silence => true)
+          begin
+            @test_lab.bootstrap_ssh.upload(local_path, remote_path)
+          rescue Net::SFTP::StatusException => e
+            @test_lab.bootstrap_ssh.exec(%(mkdir -vp #{remote_path}), :silence => true)
+            retry
+          end
+        end
+      end
+
+################################################################################
+
       def bootstrap
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
         ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          chef_client_attributes = {
-            "run_list" => "role[test_lab]",
+          server_name = @test_lab.ip
+
+          chef_solo_attributes = case Cucumber::Chef.chef_pre_11
+          when true then
+            {
+              "chef-server" => {
+                "webui_enabled" => true
+              },
+              "run_list" => %w(recipe[chef-server::rubygems-install] recipe[chef-server::apache-proxy] role[test_lab])
+            }
+          when false then
+            {
+              "chef-server" => {
+                "api_fqdn" => server_name,
+                "nginx" => {
+                  "enable_non_ssl" => true,
+                  "server_name" => server_name,
+                  "url" => "https://#{server_name}"
+                },
+                "lb" => {
+                  "fqdn" => server_name
+                },
+                "bookshelf" => {
+                  "vip" => server_name
+                },
+                "chef_server_webui" => {
+                  "enable" => true
+                },
+                "version" => Cucumber::Chef::Config.chef[:version],
+                "prereleases" => Cucumber::Chef::Config.chef[:prereleases],
+                "nightlies" => Cucumber::Chef::Config.chef[:nightlies]
+              },
+              "run_list" => %w(recipe[chef-server::default] role[test_lab])
+            }
+          end
+
+          chef_solo_attributes.merge!(
             "cucumber_chef" => {
               "version" => Cucumber::Chef::VERSION,
-              "prerelease" => Cucumber::Chef::Config.prerelease
-            },
-            "lab_user" => Cucumber::Chef.lab_user,
-            "lxc_user" => Cucumber::Chef.lxc_user
-          }
+              "prerelease" => Cucumber::Chef::Config.prerelease,
+              "lab_user" => Cucumber::Chef.lab_user,
+              "lxc_user" => Cucumber::Chef.lxc_user
+            }
+          )
 
           context = {
-            :chef_client_attributes => chef_client_attributes,
-            :amqp_password => Cucumber::Chef::Config.chef[:amqp_password],
-            :admin_password => Cucumber::Chef::Config.chef[:admin_password],
+            :server_name => server_name,
+            :lab_user => Cucumber::Chef.lab_user,
+            :chef_pre_11 => Cucumber::Chef.chef_pre_11,
+            :chef_solo_attributes => chef_solo_attributes,
+            :chef_version => Cucumber::Chef::Config.chef[:version],
+            :chef_validator => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/validation.pem' : '/etc/chef-server/chef-validator.pem'),
+            :chef_webui => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/webui.pem' : '/etc/chef-server/chef-webui.pem'),
+            :chef_admin => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/admin.pem' : '/etc/chef-server/admin.pem'),
+            :default_password => Cucumber::Chef::Config.chef[:default_password],
             :user => Cucumber::Chef::Config.user,
             :hostname_short => Cucumber::Chef.lab_hostname_short,
-            :hostname_full => Cucumber::Chef.lab_hostname_full,
-            :chef_version => Cucumber::Chef::Config.chef[:version]
+            :hostname_full => Cucumber::Chef.lab_hostname_full
           }
+
+          bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-omnibus.erb")
 
           local_bootstrap_file = Tempfile.new("bootstrap")
           local_bootstrap_filename = local_bootstrap_file.path
-          local_bootstrap_file.write(::ZTK::Template.render(@bootstrap_template, context))
+          local_bootstrap_file.write(::ZTK::Template.render(bootstrap_template, context))
           local_bootstrap_file.close
 
-          remote_bootstrap_filename = File.join(Cucumber::Chef.lab_user_home_dir, "cucumber-chef-bootstrap.sh")
+          remote_bootstrap_filename = File.join('/tmp', 'cucumber-chef-bootstrap.sh')
 
           @test_lab.bootstrap_ssh.upload(local_bootstrap_filename, remote_bootstrap_filename)
 
@@ -109,12 +168,22 @@ module Cucumber
 ################################################################################
 
       def download_chef_credentials
-        ZTK::Benchmark.bench(:message => "Downloading chef-server credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
-          remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".chef")
+        ZTK::Benchmark.bench(:message => "Downloading chef credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+          local_path = File.dirname(Cucumber::Chef.chef_identity)
+          @ui.logger.debug { "local_path == #{local_path.inspect}" }
 
-          files = [ "#{Cucumber::Chef::Config[:user]}.pem", "validation.pem" ]
+          remote_path = File.join(Cucumber::Chef.bootstrap_user_home_dir, ".chef")
+          @ui.logger.debug { "remote_path == #{remote_path.inspect}" }
+
+          files = [ File.basename(Cucumber::Chef.chef_identity) ]
+          if (Cucumber::Chef.chef_pre_11 == true)
+            files << "validation.pem"
+          else
+            files << "chef-validator.pem"
+          end
           files.each do |file|
+            @ui.logger.debug { "file == #{file.inspect}" }
+
             @test_lab.bootstrap_ssh.download(File.join(remote_path, file), File.join(local_path, file))
           end
         end
@@ -122,94 +191,35 @@ module Cucumber
 
 ################################################################################
 
-      def download_proxy_ssh_credentials
-        ZTK::Benchmark.bench(:message => "Downloading proxy SSH credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
+      def download_ssh_credentials
+        ZTK::Benchmark.bench(:message => "Downloading SSH credentials", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           local_path = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
-          remote_path = File.join(Cucumber::Chef.lab_user_home_dir, ".ssh")
 
-          files = { "id_rsa" => "id_rsa-#{@test_lab.bootstrap_ssh.config.user}" }
-          files.each do |remote_file, local_file|
-            local = File.join(local_path, local_file)
-            File.exists?(local) and File.delete(local)
-            @test_lab.bootstrap_ssh.download(File.join(remote_path, remote_file), local)
-            File.chmod(0600, local)
-          end
-        end
-      end
-
-################################################################################
-
-      def render_knife_rb
-        ZTK::Benchmark.bench(:message => "Building 'cc-knife' configuration", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          template_file = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "knife-rb.erb")
-
-          context = {
-            :chef_server => @test_lab.ip,
-            :librarian_chef => Cucumber::Chef::Config.librarian_chef,
-            :user => Cucumber::Chef::Config.user
+          users = {
+            Cucumber::Chef.lab_user => Cucumber::Chef.lab_user_home_dir,
+            Cucumber::Chef.lxc_user => Cucumber::Chef.lxc_user_home_dir
           }
 
-          File.open(Cucumber::Chef.knife_rb, 'w') do |f|
-            f.puts(ZTK::Template.render(template_file, context))
+          users.each do |username, home_dir|
+            identity_file = File.join(home_dir, ".ssh", "id_rsa")
+            temp_file = File.join("/tmp", "id_rsa-#{username}")
+            local_file = File.join(local_path, "id_rsa-#{username}")
+
+            @test_lab.bootstrap_ssh.exec(%(sudo cp -v #{identity_file} #{temp_file}), :silence => true)
+            @test_lab.bootstrap_ssh.exec(%(sudo chown -v #{Cucumber::Chef.bootstrap_user}:#{Cucumber::Chef.bootstrap_user} #{temp_file}), :silence => true)
+
+            File.exists?(local_file) and File.delete(local_file)
+            @test_lab.bootstrap_ssh.download(temp_file, local_file)
+            File.chmod(0600, local_file)
           end
-        end
-      end
-
-################################################################################
-
-      def upload_cookbook
-        @ui.logger.debug { "Uploading cucumber-chef cookbooks..." }
-        ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' cookbooks", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%Q{cookbook upload cucumber-chef -o #{@cookbooks_path}}, :silence => true)
-        end
-      end
-
-################################################################################
-
-      def upload_role
-        @ui.logger.debug { "Uploading cucumber-chef test lab role..." }
-        ZTK::Benchmark.bench(:message => "Uploading 'cucumber-chef' roles", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%Q{role from file #{File.join(@roles_path, "test_lab.rb")}}, :silence => true)
-        end
-      end
-
-################################################################################
-
-      def tag_node
-        @ui.logger.debug { "Tagging cucumber-chef test lab node..." }
-        ZTK::Benchmark.bench(:message => "Tagging 'cucumber-chef' node", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%Q{tag create #{Cucumber::Chef.lab_hostname_full} #{Cucumber::Chef::Config.mode}}, :silence => true)
-        end
-      end
-
-################################################################################
-
-      def add_node_role
-        @ui.logger.debug { "Setting up cucumber-chef test lab run list..." }
-        ZTK::Benchmark.bench(:message => "Setting 'cucumber-chef' run list", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          @test_lab.knife_cli(%Q{node run_list add #{Cucumber::Chef.lab_hostname_full} "role[test_lab]"}, :silence => true)
-        end
-      end
-
-################################################################################
-
-      def chef_first_run
-        ZTK::Benchmark.bench(:message => "Performing chef-client run", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          command = "/usr/bin/chef-client -j /etc/chef/first-boot.json -l debug"
-          command = "sudo #{command}"
-          @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
       end
 
 ################################################################################
 
       def wait_for_chef_server
-        ZTK::Benchmark.bench(:message => "Waiting for the chef-server", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4000, :data => "GET", :wait => 120).wait
-        end
-
-        ZTK::Benchmark.bench(:message => "Waiting for the chef-server-webui", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 4040, :data => "GET", :wait => 120).wait
+        ZTK::Benchmark.bench(:message => "Waiting for the chef-server-api HTTPS", :mark => "responded after %0.4f seconds.", :ui => @ui) do
+          ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => 443, :data => "GET", :wait => 120).wait
         end
       end
 
@@ -219,6 +229,7 @@ module Cucumber
         ZTK::Benchmark.bench(:message => "Rebooting the test lab", :mark => "completed in %0.4f seconds.", :ui => @ui) do
           command = "sudo reboot"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
+          sleep(10)
           ZTK::TCPSocketCheck.new(:host => @test_lab.ip, :port => @test_lab.port, :wait => 120).wait
         end
 

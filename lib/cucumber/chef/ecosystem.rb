@@ -19,34 +19,19 @@
 #
 ################################################################################
 
-module Cucumber::Chef::Helpers::TestLab
+module Cucumber
+  module Chef
 
-################################################################################
+    class EcosystemError < Error; end
 
-  def test_lab_config_dhcpd
-    dhcpd_config = File.join("/etc/dhcp/test-lab.conf")
-    File.open(dhcpd_config, 'w') do |f|
-      f.puts(Cucumber::Chef.generate_do_not_edit_warning("DHCPD Configuration"))
-      @containers.each do |key, value|
-        next if [:mac, :ip].any?{ |z| value[z].nil? }
+    class Ecosystem < ZTK::DSL::Base
+      belongs_to :labfile, :class_name => "Cucumber::Chef::Labfile"
+      has_many :containers, :class_name => "Cucumber::Chef::Container"
 
-        f.puts
-        f.puts("host #{key} {")
-        f.puts("  hardware ethernet #{value[:mac]};")
-        f.puts("  fixed-address #{value[:ip]};")
-        f.puts("  ddns-hostname \"#{key}\";")
-        f.puts("}")
-      end
-      f.flush
-      f.close
+      attribute :name
     end
 
-    command_run_local("service isc-dhcp-server restart")
-    command_run_local("service bind9 restart")
   end
-
-################################################################################
-
 end
 
 ################################################################################

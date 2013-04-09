@@ -85,6 +85,13 @@ module Cucumber
       end
 
 ################################################################################
+
+      def chef_pre_11
+        return false if (Cucumber::Chef::Config.chef[:version].downcase == "latest")
+        (Cucumber::Chef::Config.chef[:version].to_f < 11.0)
+      end
+
+################################################################################
 # Path Helpers
 ################################################################################
 
@@ -136,18 +143,30 @@ module Cucumber
 
 ################################################################################
 
-      def knife_rb
-        knife_rb = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "knife.rb")
-        FileUtils.mkdir_p(File.dirname(knife_rb))
-        knife_rb
+      def labfile
+        labfile = File.join(Cucumber::Chef.chef_repo, "Labfile")
+        FileUtils.mkdir_p(File.dirname(labfile))
+        labfile
       end
 
 ################################################################################
 
-      def containers_bin
-        containers_bin = File.join(Cucumber::Chef.home_dir, "containers.bin")
-        FileUtils.mkdir_p(File.dirname(containers_bin))
-        containers_bin
+      # def knife_rb
+      #   knife_rb = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "knife.rb")
+      #   FileUtils.mkdir_p(File.dirname(knife_rb))
+      #   knife_rb
+      # end
+
+################################################################################
+
+      def chef_user
+        Cucumber::Chef::Config.user
+      end
+
+      def chef_identity
+        chef_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "#{chef_user}.pem")
+        FileUtils.mkdir_p(File.dirname(chef_identity))
+        chef_identity
       end
 
 ################################################################################
@@ -155,7 +174,12 @@ module Cucumber
 ################################################################################
 
       def bootstrap_user
-        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lab_user]
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:bootstrap_user]
+      end
+
+      def bootstrap_user_home_dir
+        user = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:bootstrap_user]
+        ((user == "root") ? "/root" : "/home/#{user}")
       end
 
       def bootstrap_identity
@@ -183,6 +207,14 @@ module Cucumber
         lab_identity
       end
 
+      def lab_ip
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:ssh][:lab_ip]
+      end
+
+      def lab_ssh_port
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:ssh][:lab_port]
+      end
+
       def lab_hostname_short
         Cucumber::Chef::Config.test_lab[:hostname]
       end
@@ -205,7 +237,7 @@ module Cucumber
       end
 
       def lxc_identity
-        lxc_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lab_user}")
+        lxc_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lxc_user}")
         File.exists?(lxc_identity) && File.chmod(0400, lxc_identity)
         lxc_identity
       end
@@ -236,26 +268,7 @@ module Cucumber
         name and logger.info { "loading #{name}" }
         logger.info { "boot(#{Cucumber::Chef.config_rb})" }
         Cucumber::Chef::Config.load
-        load_chef_config
-      end
-
-################################################################################
-# Load Chef::Config
-################################################################################
-
-      def load_chef_config
-        if File.exists?(Cucumber::Chef.knife_rb)
-          logger.info { "load_chef_config(#{Cucumber::Chef.knife_rb})" }
-          ::Chef::Config.from_file(Cucumber::Chef.knife_rb)
-
-          if (test_lab = (Cucumber::Chef::TestLab.new rescue nil)) && test_lab.alive?
-            chef_server_url = "http://#{test_lab.ip}:4000"
-            logger.info { "chef_server_url(#{chef_server_url})" }
-            ::Chef::Config[:chef_server_url] = chef_server_url
-          end
-        else
-          logger.warn { "knife config '#{Cucumber::Chef.knife_rb}' was missing!" }
-        end
+        Cucumber::Chef::Labfile.load(Cucumber::Chef.labfile)
       end
 
 ################################################################################
@@ -267,13 +280,11 @@ module Cucumber
 
           dependencies = {
             "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
-            "chef_version" => ::Chef::VERSION.inspect,
             "fog_version" => ::Fog::VERSION.inspect,
             "ruby_version" => RUBY_VERSION.inspect,
             "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
             "ruby_platform" => RUBY_PLATFORM.inspect,
             "ztk_version" => ::ZTK::VERSION.inspect
-            # "cucumber_version" => ::Cucumber::VERSION.inspect
           }
           if RUBY_VERSION >= "1.9"
             dependencies.merge!("ruby_engine" => RUBY_ENGINE.inspect)
@@ -285,8 +296,7 @@ module Cucumber
             "chef_repo" => chef_repo.inspect,
             "log_file" => log_file.inspect,
             "config_rb" => config_rb.inspect,
-            "knife_rb" => knife_rb.inspect,
-            "containers_bin" => containers_bin.inspect
+            "labfile" => labfile.inspect
           }
 
           max_key_length = [dependencies.keys.collect{ |key| key.to_s.length }.max, details.keys.collect{ |key| key.to_s.length }.max].max + 2

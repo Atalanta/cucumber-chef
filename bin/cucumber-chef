@@ -3,6 +3,7 @@
 require 'thor'
 require 'cucumber-chef'
 
+
 # $logger = Cucumber::Chef.logger
 
 class CucumberChef < Thor
@@ -16,8 +17,6 @@ class CucumberChef < Thor
       FileUtils.mkdir_p(destination_dir)
 
       CucumberChef.source_root(source_dir)
-
-      get_aws_credentials
 
       templates = {
         "config-rb.erb" => "config.rb"
@@ -37,15 +36,16 @@ class CucumberChef < Thor
 
       CucumberChef.source_root source_dir
       templates = {
-        "readme.erb" => "features/#{project}/README",
+        "readme.erb" => "features/#{project}/README.md",
         "example_feature.erb" => "features/#{project}/#{project}.feature",
         "example_steps.erb" => "features/#{project}/step_definitions/#{project}_steps.rb",
+        "example_labfile.erb" => "Labfile",
         "env.rb" => "features/support/env.rb",
         "cc-hooks.rb" => "features/support/cc-hooks.rb",
-        "readme-data_bags.erb" => "features/support/data_bags/README",
-        "readme-roles.erb" => "features/support/roles/README",
-        "readme-keys.erb" => "features/support/keys/README",
-        "readme-environments.erb" => "features/support/environments/README"
+        "readme-data_bags.erb" => "features/support/data_bags/README.md",
+        "readme-roles.erb" => "features/support/roles/README.md",
+        "readme-keys.erb" => "features/support/keys/README.md",
+        "readme-environments.erb" => "features/support/environments/README.md"
       }
 
       templates.each do |source, destination|
@@ -55,7 +55,7 @@ class CucumberChef < Thor
 
     def boot
       tag = Cucumber::Chef.tag("cucumber-chef")
-      puts(set_color(tag, :green, true))
+      puts(tag)
       Cucumber::Chef.boot(tag)
       $logger = Cucumber::Chef.logger
 
@@ -67,51 +67,6 @@ class CucumberChef < Thor
     def fatal(message)
       puts(set_color(message, :red, :bold))
       exit(255)
-    end
-
-    def get_aws_credentials
-      say "OHAI!", :magenta
-      puts
-      say "Cucumber-Chef uses Amazon Web Services to build a test lab for automated infrastructure testing."
-      say "I need a few details before I can set up your test lab for you."
-      puts
-      say "We're going to use symmetric keys to authenticate with the AWS API."
-      say "First, I need your access key."
-      say "Your access key identifies you as you make API calls.  It's not a secret."
-      say "You can find it under 'Access Credentials', on https://aws-portal.amazon.com/gp/aws/securityCredentials"
-      puts
-      @aws_access_key = ask "What is your AWS Access Key?", :bold
-      puts
-      say "Now I need your secret access key.  This *is* a secret.  The clue's in the name."
-      say "This is just a string of characters used to create the digital signature included in your API requests."
-      say "You can also find this under 'Access Credentials', on https://aws-portal.amazon.com/gp/aws/securityCredentials"
-      puts
-      @aws_secret_access_key = ask "What is your AWS Secret Access Key?", :bold
-      puts
-      say "Right. Now I need to know about the ssh key pair you want to use to connect to EC2 machines."
-      say "I need the name of the key pair. You can see this on the AWS management console, under Network & Security > Key Pairs"
-      puts
-      @aws_ssh_id = ask "What is your AWS Key Pair called?", :bold
-      puts
-      say "I also need to know what the ssh key is called - the actual name of the file on your local machine, eg #{@aws_ssh_id}.pem"
-      puts
-      @aws_ssh_key = ask "What's the filename of your ssh key?", :bold
-      puts
-      say "And, finally, I need to know where you keep it, on the file system. Often this is ~/.ssh"
-      puts
-      @aws_ssh_key_dir = ask "What directory contains your ssh key?", :bold
-      puts
-      say "OK, nearly there. AWS uses different keys depending on which region you use."
-      say "For example, 'us-east', 'us-west', or 'eu-west'"
-      puts
-      @region = ask "Which region are you using?", :bold
-      puts
-      say("One last thing.  If you're using librarian-chef, we want to be sure all the hooks are in place.")
-      puts
-      @librarian_chef = yes?("Does this chef-repo use librarian-chef?", :bold)
-      puts
-      say "Awesome.  Thank you!"
-      puts
     end
 
   end
@@ -127,7 +82,7 @@ class CucumberChef < Thor
 # SETUP
 ################################################################################
 
-  desc "setup", "Setup cucumber-chef test lab in Amazon EC2"
+  desc "setup", "Setup the cucumber-chef test lab"
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def setup
     boot
@@ -165,7 +120,7 @@ class CucumberChef < Thor
 # DESTROY
 ################################################################################
 
-  desc "destroy [container]", "Destroy the cucumber-chef test lab in Amazon EC2 or a test lab [container] if specified."
+  desc "destroy [container] [...]", "Destroy the cucumber-chef test lab or a single or multiple containers if specified"
   method_option :test, :type => :boolean, :desc => "INTERNAL USE ONLY"
   def destroy(*args)
     boot
@@ -204,21 +159,10 @@ class CucumberChef < Thor
           puts("BOOM!")
           puts
 
-          ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_client.up(:silence => true)
-          end
-
           args.each do |container|
             ZTK::Benchmark.bench(:message => "Destroy container '#{container}'", :mark => "completed in %0.4f seconds.") do
-              test_lab.drb.load_containers
-              test_lab.drb.server_destroy(container)
-              test_lab.drb.server_delete(container)
-              test_lab.drb.save_containers
+              test_lab.containers.destroy(container)
             end
-          end
-
-          ZTK::Benchmark.bench(:message => "Stop cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_client.down
           end
 
         else
@@ -242,7 +186,7 @@ class CucumberChef < Thor
 # UP
 ################################################################################
 
-  desc "up", "Startup the cucumber-chef test lab"
+  desc "up", "Power up the cucumber-chef test lab"
   def up
     boot
 
@@ -261,16 +205,16 @@ class CucumberChef < Thor
   end
 
 ################################################################################
-# HALT
+# DOWN
 ################################################################################
 
-  desc "halt", "Power off the cucumber-chef test lab"
-  def halt
+  desc "down", "Power off the cucumber-chef test lab"
+  def down
     boot
 
     if (test_lab = Cucumber::Chef::TestLab.new) && test_lab.alive?
-      ZTK::Benchmark.bench(:message => "Halting #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'", :mark => "completed in %0.4f seconds.") do
-        test_lab.halt
+      ZTK::Benchmark.bench(:message => "Downing #{Cucumber::Chef::Config.provider.upcase} instance '#{test_lab.id}'", :mark => "completed in %0.4f seconds.") do
+        test_lab.down
       end
     else
       raise Cucumber::Chef::Error, "We could not find a running test lab."
@@ -304,6 +248,20 @@ class CucumberChef < Thor
     fatal(e)
   end
 
+  desc "genmac", "Generate an RFC compliant private MAC address"
+  def genmac
+    boot
+
+    puts Cucumber::Chef::Containers.generate_mac
+  end
+
+  desc "genip", "Generate an RFC compliant private IP address"
+  def genip
+    boot
+
+    puts Cucumber::Chef::Containers.generate_ip
+  end
+
 ################################################################################
 # STATUS
 ################################################################################
@@ -318,31 +276,25 @@ class CucumberChef < Thor
     if (test_lab = Cucumber::Chef::TestLab.new)
       if @options.containers?
         if test_lab.alive?
-          ZTK::Benchmark.bench(:message => "Start cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_client.up(:silence => true)
-          end
 
-          test_lab.drb.load_containers
-
-          if test_lab.drb.containers.count > 0
-            headers = [:name, :alive, :arch, :distro, :ip, :mac, :"chef version", :persist]
-            results = ZTK::Report.new.spreadsheet(test_lab.drb.containers, headers) do |name, detail|
+          if test_lab.containers.count > 0
+            headers = [:name, :alive, :distro, :ip, :mac, :"chef version", :persist]
+            results = ZTK::Report.new.spreadsheet(Cucumber::Chef::Container.all, headers) do |container|
               chef_version = "N/A"
-              alive = (test_lab.drb.command_run_local(%Q{ping -n -c 1 -W 1 #{detail[:ip]}}, :ignore_exit_status => true).exit_code == 0)
+              alive = (test_lab.bootstrap_ssh(:ignore_exit_status => true).exec(%(ping -n -c 1 -W 1 #{container.ip}), :silence => true).exit_code == 0)
               if alive
-                chef_version = test_lab.drb.command_run_chroot(name, %Q{/usr/bin/env chef-client -v}, :ignore_exit_status => true).output.chomp
+                chef_version = test_lab.proxy_ssh(container.id, :ignore_exit_status => true).exec(%(/usr/bin/env chef-client -v), :silence => true).output.chomp
               end
 
               OpenStruct.new(
-                :name => name,
-                :ip => detail[:ip],
-                :mac => detail[:mac],
-                :distro => detail[:distro],
-                :arch => detail[:arch],
+                :name => container.id,
+                :ip => container.ip,
+                :mac => container.mac,
+                :distro => container.distro,
                 :alive => alive,
                 :"chef version" => chef_version,
-                :persist => detail[:persist],
-                :chef_attributes => detail[:chef_client]
+                :persist => container.persist,
+                :chef_attributes => container.chef_client
               )
             end
 
@@ -359,9 +311,6 @@ class CucumberChef < Thor
             raise Cucumber::Chef::Error, "We could not find any containers!"
           end
 
-          ZTK::Benchmark.bench(:message => "Stop cc-server", :mark => "completed in %0.4f seconds.") do
-            test_lab.cc_client.down
-          end
         else
           raise Cucumber::Chef::Error, "We could not find a running test lab."
         end
@@ -381,8 +330,8 @@ class CucumberChef < Thor
 # SSH
 ################################################################################
 
-  desc "ssh [container]", "SSH to cucumber-chef test lab or [container] if specified."
-  method_option :bootstrap, :type => :boolean, :desc => "Use the bootstrap settings.", :default => false
+  desc "ssh [container]", "SSH to cucumber-chef test lab or [container] if specified"
+  method_option :bootstrap, :type => :boolean, :desc => "Use the bootstrap settings", :default => false
   def ssh(*args)
     boot
 
@@ -516,16 +465,20 @@ class CucumberChef < Thor
       "log_file" => Cucumber::Chef.log_file,
       "artifacts_dir" => Cucumber::Chef.artifacts_dir,
       "config_rb" => Cucumber::Chef.config_rb,
-      "containers_bin" => Cucumber::Chef.containers_bin,
-      "knife_rb" => Cucumber::Chef.knife_rb,
+      "labfile" => Cucumber::Chef.labfile,
       "chef_repo" => Cucumber::Chef.chef_repo,
+      "chef_user" => Cucumber::Chef.chef_user,
+      "chef_identity" => Cucumber::Chef.chef_identity,
+      "bootstrap_user" => Cucumber::Chef.bootstrap_user,
+      "bootstrap_user_home_dir" => Cucumber::Chef.bootstrap_user_home_dir,
       "bootstrap_identity" => Cucumber::Chef.bootstrap_identity,
       "lab_user" => Cucumber::Chef.lab_user,
       "lab_user_home_dir" => Cucumber::Chef.lab_user_home_dir,
       "lab_identity" => Cucumber::Chef.lab_identity,
       "lxc_user" => Cucumber::Chef.lxc_user,
       "lxc_user_home_dir" => Cucumber::Chef.lxc_user_home_dir,
-      "lxc_identity" => Cucumber::Chef.lxc_identity
+      "lxc_identity" => Cucumber::Chef.lxc_identity,
+      "chef_pre_11" => Cucumber::Chef.chef_pre_11
     }
     max_key_length = details.collect{ |k,v| k.to_s.length }.max
 
@@ -573,8 +526,7 @@ class CucumberChef < Thor
   depreciated_tasks = {
     "teardown" => "You should execute the 'destroy' task instead.",
     "info" => "You should execute the 'status' task instead.",
-    "test" => "You should execute 'cucumber' or 'rspec' directly.",
-    "down" => "You should execute the 'halt' task instead."
+    "test" => "You should execute 'cucumber' or 'rspec' directly."
   }
 
   depreciated_tasks.each do |old_task, message|

@@ -19,24 +19,16 @@
 #
 ################################################################################
 
-module Cucumber::Chef::Helpers::ChefServer
+module Cucumber
+  module Chef
 
-################################################################################
+    class LabfileError < Error; end
 
-  def chef_server_node_destroy(name)
-    (::Chef::Node.load(name).destroy rescue nil)
-    logger.info { "Destroyed chef node '#{name}'." }
+    class Labfile < ZTK::DSL::Base
+      has_many :ecosystems, :class_name => "Cucumber::Chef::Ecosystem"
+    end
+
   end
-
-################################################################################
-
-  def chef_server_client_destroy(name)
-    (::Chef::ApiClient.load(name).destroy rescue nil)
-    logger.info { "Destroyed chef client '#{name}'." }
-  end
-
-################################################################################
-
 end
 
 ################################################################################
