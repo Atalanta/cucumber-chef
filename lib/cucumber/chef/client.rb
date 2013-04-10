@@ -21,7 +21,8 @@
 module Cucumber
   module Chef
 
-    class ClientError < Error; end
+    class ClientError < Error;
+    end
 
     class Client
       attr_accessor :test_lab
@@ -99,7 +100,7 @@ module Cucumber
 
         # PROVISION CONTAINERS
         #######################
-        @test_lab.containers.chef_set_client_config(:chef_server_url => "https://192.168.255.254",
+        @test_lab.containers.chef_set_client_config(:chef_server_url        => "https://192.168.255.254",
                                                     :validation_client_name => "chef-validator")
         Cucumber::Chef::Container.all.each do |container|
           ZTK::Benchmark.bench(:message => ">>> Provisioning container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
@@ -127,7 +128,7 @@ module Cucumber
       end
 
 ################################################################################
-    private
+      private
 ################################################################################
 
       def environment_variable_set?(variable_name)
