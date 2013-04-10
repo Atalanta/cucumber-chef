@@ -181,6 +181,8 @@ module Cucumber
                           :default_password => "p@ssw0rd1",
                           :render_client_rb => true,
                           :cookbook_paths => %w(cookbooks),
+                          :environment_paths => %w(environments),
+                          :role_paths => %(roles),
                           :prereleases => false,
                           :nightlies => false
                         })
