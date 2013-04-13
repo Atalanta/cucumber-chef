@@ -72,11 +72,11 @@ module Cucumber
 ################################################################################
 
       def ip
-        (Cucumber::Chef.lab_ip || super(:ip))
+        (Cucumber::Chef.lab_ip || @provider.ip)
       end
 
       def port
-        (Cucumber::Chef.lab_ssh_port || super(:port))
+        (Cucumber::Chef.lab_ssh_port || @provider.port)
       end
 
 ################################################################################
