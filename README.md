@@ -1,5 +1,7 @@
-[![Build Status](https://secure.travis-ci.org/zpatten/cucumber-chef.png)](http://travis-ci.org/zpatten/cucumber-chef)
+[![Gem Version](https://badge.fury.io/rb/cucumber-chef.png)](http://badge.fury.io/rb/cucumber-chef)
 [![Dependency Status](https://gemnasium.com/zpatten/cucumber-chef.png)](https://gemnasium.com/zpatten/cucumber-chef)
+[![Build Status](https://secure.travis-ci.org/zpatten/cucumber-chef.png)](http://travis-ci.org/zpatten/cucumber-chef)
+[![Code Climate](https://codeclimate.com/github/zpatten/cucumber-chef.png)](https://codeclimate.com/github/zpatten/cucumber-chef)
 
 Cucumber-chef is a library of tools to enable the emerging discipline of infrastructure as code to practice test driven development.  It provides a testing platform within which Cucumber tests can be run which provision virtual machines, configure them by applying the appropriate Chef roles to them, and then run acceptance and integration tests against the environment.
 
