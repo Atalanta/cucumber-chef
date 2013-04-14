@@ -18,6 +18,11 @@
 #   limitations under the License.
 #
 ################################################################################
+require 'cucumber/chef/utility/bootstrap_helper'
+require 'cucumber/chef/utility/dir_helper'
+require 'cucumber/chef/utility/file_helper'
+require 'cucumber/chef/utility/lab_helper'
+require 'cucumber/chef/utility/lxc_helper'
 
 module Cucumber
   module Chef
@@ -25,6 +30,12 @@ module Cucumber
     class UtilityError < Error; end
 
     module Utility
+
+      include Cucumber::Chef::Utility::BootstrapHelper
+      include Cucumber::Chef::Utility::DirHelper
+      include Cucumber::Chef::Utility::FileHelper
+      include Cucumber::Chef::Utility::LabHelper
+      include Cucumber::Chef::Utility::LXCHelper
 
 ################################################################################
 
@@ -117,66 +128,6 @@ module Cucumber
 
 ################################################################################
 
-      def root_dir
-        File.expand_path(File.join(File.dirname(__FILE__), "..", "..", ".."), File.dirname(__FILE__))
-      end
-
-################################################################################
-
-      def home_dir
-        result = (ENV['CUCUMBER_CHEF_HOME'] || File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
-        ensure_directory(result)
-        result
-      end
-
-      def provider_dir
-        result = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
-        ensure_directory(result)
-        result
-      end
-
-################################################################################
-
-      def artifacts_dir
-        result = File.join(provider_dir, "artifacts")
-        ensure_directory(result)
-        result
-      end
-
-################################################################################
-
-      def log_file
-        result = File.join(Cucumber::Chef.home_dir, "cucumber-chef.log")
-        ensure_directory(result)
-        result
-      end
-
-################################################################################
-
-      def config_rb
-        result = File.join(Cucumber::Chef.home_dir, "config.rb")
-        ensure_directory(result)
-        result
-      end
-
-################################################################################
-
-      def labfile
-        result = File.join(Cucumber::Chef.chef_repo, "Labfile")
-        ensure_directory(result)
-        result
-      end
-
-################################################################################
-
-      # def knife_rb
-      #   knife_rb = File.join(provider_dir, "knife.rb")
-      #   FileUtils.mkdir_p(File.dirname(knife_rb))
-      #   knife_rb
-      # end
-
-################################################################################
-
       def chef_user
         Cucumber::Chef::Config.user
       end
@@ -195,76 +146,6 @@ module Cucumber
 
       def ensure_identity_permissions(identity)
         (File.exists?(identity) && File.chmod(0400, identity))
-      end
-
-################################################################################
-# Bootstraping SSH Helpers
-################################################################################
-
-      def bootstrap_user
-        provider_config[:bootstrap_user]
-      end
-
-      def bootstrap_user_home_dir
-        build_home_dir(provider_config[:bootstrap_user])
-      end
-
-      def bootstrap_identity
-        bootstrap_identity = provider_config[:identity_file]
-        ensure_identity_permissions(bootstrap_identity)
-        bootstrap_identity
-      end
-
-################################################################################
-# Test Lab SSH Helpers
-################################################################################
-
-      def lab_user
-        provider_config[:lab_user]
-      end
-
-      def lab_user_home_dir
-        build_home_dir(provider_config[:lab_user])
-      end
-
-      def lab_identity
-        lab_identity = File.join(provider_dir, "id_rsa-#{lab_user}")
-        ensure_identity_permissions(lab_identity)
-        lab_identity
-      end
-
-      def lab_ip
-        provider_config[:ssh][:lab_ip]
-      end
-
-      def lab_ssh_port
-        provider_config[:ssh][:lab_port]
-      end
-
-      def lab_hostname_short
-        Cucumber::Chef::Config.test_lab[:hostname]
-      end
-
-      def lab_hostname_full
-        "#{lab_hostname_short}.#{Cucumber::Chef::Config.test_lab[:tld]}"
-      end
-
-################################################################################
-# Container SSH Helpers
-################################################################################
-
-      def lxc_user
-        provider_config[:lxc_user]
-      end
-
-      def lxc_user_home_dir
-        build_home_dir(provider_config[:lxc_user])
-      end
-
-      def lxc_identity
-        lxc_identity = File.join(provider_dir, "id_rsa-#{lxc_user}")
-        ensure_identity_permissions(lxc_identity)
-        lxc_identity
       end
 
 ################################################################################
