@@ -1,7 +1,7 @@
 ################################################################################
 #
-#      Author: Stephen Nelson-Smith <stephen@atalanta-systems.com>
-#      Author: Zachary Patten <zachary@jovelabs.com>
+#      Author: Stephen Nelson-Smith <stephen@atalanta-systemspec.com>
+#      Author: Zachary Patten <zachary@jovelabspec.com>
 #   Copyright: Copyright (c) 2011-2013 Atalanta Systems Ltd
 #     License: Apache License, Version 2.0
 #
@@ -18,44 +18,41 @@
 #   limitations under the License.
 #
 ################################################################################
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'cucumber/chef/version'
 
-require File.expand_path("../lib/cucumber/chef/version", __FILE__)
+Gem::Specification.new do |spec|
+  spec.name          = "cucumber-chef"
+  spec.version       = Cucumber::Chef::VERSION
+  spec.authors       = ["Stephen Nelson-Smith", "Zachary Patten"]
+  spec.email         = ["stephen@atalanta-systemspec.com", "zachary@jovelabspec.com"]
+  spec.description   = "Framework for test-driven infrastructure development."
+  spec.summary       = "Test Driven Infrastructure"
+  spec.homepage      = "http://www.cucumber-chef.org"
+  spec.license       = "Apache 2.0"
 
-Gem::Specification.new do |s|
-  s.name = "cucumber-chef"
-  s.version = Cucumber::Chef::VERSION
-  s.platform = Gem::Platform::RUBY
-  s.authors = ["Stephen Nelson-Smith", "Zachary Patten"]
-  s.email = ["stephen@atalanta-systems.com", "zachary@jovelabs.com"]
-  s.homepage = "http://www.cucumber-chef.org"
-  s.summary = "Test Driven Infrastructure"
-  s.description = "Framework for test-driven infrastructure development."
-  s.required_ruby_version = ">= 1.8.7"
-  s.required_rubygems_version = ">= 1.3.6"
-  s.licenses = ["Apache 2.0"]
+  spec.files         = `git ls-files`.split($/)
+  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
+  spec.require_paths = ["lib"]
 
   # Providers
-  s.add_dependency("fog", ">= 1.3.1")
+  spec.add_dependency("fog", ">= 1.3.1")
 
   # TDD
-  s.add_dependency("cucumber", ">= 0")
-  s.add_dependency("rspec", ">= 0")
+  spec.add_dependency("cucumber")
+  spec.add_dependency("rspec")
 
   # Support
-  s.add_dependency("mixlib-config", ">= 1.1.2")
-  s.add_dependency("rake", ">= 0.9.2")
-  s.add_dependency("thor", ">= 0.15.2")
-  s.add_dependency("ubuntu_ami", ">= 0.4.0")
-  s.add_dependency("ztk", ">= 1.0.9")
+  spec.add_dependency("mixlib-config", ">= 1.1.2")
+  spec.add_dependency("rake", ">= 0.9.2")
+  spec.add_dependency("thor", ">= 0.15.2")
+  spec.add_dependency("ubuntu_ami", ">= 0.4.0")
+  spec.add_dependency("ztk", ">= 1.0.9")
 
-  s.add_development_dependency("simplecov", ">= 0.6.4")
-  s.add_development_dependency("pry", ">= 0")
-  s.add_development_dependency("yard", ">= 0")
-  s.add_development_dependency("redcarpet", ">= 0")
-
-  s.files        = `git ls-files`.split("\n")
-  s.test_files   = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables  = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-
-  s.require_path = 'lib'
+  spec.add_development_dependency("simplecov")
+  spec.add_development_dependency("pry")
+  spec.add_development_dependency("yard")
+  spec.add_development_dependency("redcarpet")
 end
