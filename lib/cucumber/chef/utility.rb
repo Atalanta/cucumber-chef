@@ -337,22 +337,27 @@ module Cucumber
       def logger
         if (!defined?($logger) || $logger.nil?)
           $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
-          Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
-          dependencies            = log_dependencies
-          details                 = log_details
+          if Cucumber::Chef.is_rc?
+            $logger.level = ZTK::Logger::DEBUG
+          end
 
-          max_dependencies_length = dependencies.keys.collect{ |key| key.to_s.length }.max
-          max_details_length      = details.keys.collect{ |key| key.to_s.length }.max
-          max_key_length          = [max_dependencies_length, max_details_length].max + 2
+          dependencies    = log_dependencies
+          details         = log_details
+
+          max_key_length  = [dependencies.keys.map(&:length).max, details.keys.map(&:length).max].max + 2
 
           log_page_break(max_key_length, '=')
 
-          details.sort.each{ |key, value| log_key_value(key, value, max_key_length) }
+          details.sort.each do |key, value|
+            log_key_value(key, value, max_key_length)
+          end
 
           log_page_break(max_key_length)
 
-          dependencies.sort.each{ |key, value| log_key_value(key, value, max_key_length) }
+          dependencies.sort.each do |key, value|
+            log_key_value(key, value, max_key_length)
+          end
 
           log_page_break(max_key_length)
 
