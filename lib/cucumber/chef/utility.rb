@@ -92,8 +92,20 @@ module Cucumber
       end
 
 ################################################################################
+# Config Helpers
+################################################################################
+
+      def provider_config
+        Cucumber::Chef::Config[Cucumber::Chef::Config.provider]
+      end
+
+################################################################################
 # Path Helpers
 ################################################################################
+
+      def ensure_directory(dir)
+        FileUtils.mkdir_p(File.dirname(dir))
+      end
 
       def chef_repo
         (Cucumber::Chef.locate_parent(".chef") rescue nil)
@@ -112,41 +124,47 @@ module Cucumber
 ################################################################################
 
       def home_dir
-        home_dir = (ENV['CUCUMBER_CHEF_HOME'] || File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
-        FileUtils.mkdir_p(File.dirname(home_dir))
-        home_dir
+        result = (ENV['CUCUMBER_CHEF_HOME'] || File.join(Cucumber::Chef.locate_parent(".chef"), ".cucumber-chef"))
+        ensure_directory(result)
+        result
+      end
+
+      def provider_dir
+        result = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s)
+        ensure_directory(result)
+        result
       end
 
 ################################################################################
 
       def artifacts_dir
-        artifacts_dir = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "artifacts")
-        FileUtils.mkdir_p(File.dirname(artifacts_dir))
-        artifacts_dir
+        result = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "artifacts")
+        ensure_directory(result)
+        result
       end
 
 ################################################################################
 
       def log_file
-        log_file = File.join(Cucumber::Chef.home_dir, "cucumber-chef.log")
-        FileUtils.mkdir_p(File.dirname(log_file))
-        log_file
+        result = File.join(Cucumber::Chef.home_dir, "cucumber-chef.log")
+        ensure_directory(result)
+        result
       end
 
 ################################################################################
 
       def config_rb
-        config_rb = File.join(Cucumber::Chef.home_dir, "config.rb")
-        FileUtils.mkdir_p(File.dirname(config_rb))
-        config_rb
+        result = File.join(Cucumber::Chef.home_dir, "config.rb")
+        ensure_directory(result)
+        result
       end
 
 ################################################################################
 
       def labfile
-        labfile = File.join(Cucumber::Chef.chef_repo, "Labfile")
-        FileUtils.mkdir_p(File.dirname(labfile))
-        labfile
+        result = File.join(Cucumber::Chef.chef_repo, "Labfile")
+        ensure_directory(result)
+        result
       end
 
 ################################################################################
@@ -164,9 +182,15 @@ module Cucumber
       end
 
       def chef_identity
-        chef_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "#{chef_user}.pem")
-        FileUtils.mkdir_p(File.dirname(chef_identity))
-        chef_identity
+        result = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "#{chef_user}.pem")
+        ensure_directory(result)
+        result
+      end
+
+################################################################################
+
+      def build_home_dir(user)
+        ((user == "root") ? "/root" : "/home/#{user}")
       end
 
 ################################################################################
@@ -174,16 +198,15 @@ module Cucumber
 ################################################################################
 
       def bootstrap_user
-        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:bootstrap_user]
+        provider_config[:bootstrap_user]
       end
 
       def bootstrap_user_home_dir
-        user = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:bootstrap_user]
-        ((user == "root") ? "/root" : "/home/#{user}")
+        build_home_dir(provider_config[:bootstrap_user])
       end
 
       def bootstrap_identity
-        bootstrap_identity = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:identity_file]
+        bootstrap_identity = provider_config[:identity_file]
         File.exists?(bootstrap_identity) && File.chmod(0400, bootstrap_identity)
         bootstrap_identity
       end
@@ -193,12 +216,11 @@ module Cucumber
 ################################################################################
 
       def lab_user
-        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lab_user]
+        provider_config[:lab_user]
       end
 
       def lab_user_home_dir
-        user = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lab_user]
-        ((user == "root") ? "/root" : "/home/#{user}")
+        build_home_dir(provider_config[:lab_user])
       end
 
       def lab_identity
@@ -208,11 +230,11 @@ module Cucumber
       end
 
       def lab_ip
-        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:ssh][:lab_ip]
+        provider_config[:ssh][:lab_ip]
       end
 
       def lab_ssh_port
-        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:ssh][:lab_port]
+        provider_config[:ssh][:lab_port]
       end
 
       def lab_hostname_short
@@ -228,12 +250,11 @@ module Cucumber
 ################################################################################
 
       def lxc_user
-        Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lxc_user]
+        provider_config[:lxc_user]
       end
 
       def lxc_user_home_dir
-        user = Cucumber::Chef::Config[Cucumber::Chef::Config.provider][:lxc_user]
-        ((user == "root") ? "/root" : "/home/#{user}")
+        build_home_dir(provider_config[:lxc_user])
       end
 
       def lxc_identity
