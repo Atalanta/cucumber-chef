@@ -26,7 +26,7 @@ module Cucumber
       module DirHelper
 
         def root_dir
-          File.expand_path(File.join(File.dirname(__FILE__), "..", "..", ".."), File.dirname(__FILE__))
+          File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", ".."), File.dirname(__FILE__))
         end
 
         def home_dir
