@@ -306,40 +306,54 @@ module Cucumber
         $logger.info { (char * (max_key_length * 2)) }
       end
 
+      def log_dependencies
+        dependencies = {
+          "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
+          "fog_version" => ::Fog::VERSION.inspect,
+          "ruby_version" => RUBY_VERSION.inspect,
+          "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
+          "ruby_platform" => RUBY_PLATFORM.inspect,
+          "ztk_version" => ::ZTK::VERSION.inspect
+        }
+
+        if RUBY_VERSION >= "1.9"
+          dependencies.merge!("ruby_engine" => RUBY_ENGINE.inspect)
+        end
+
+        dependencies
+      end
+
+      def log_details
+        {
+          "program" => $0.to_s.inspect,
+          "uname" => %x(uname -a).chomp.strip.inspect,
+          "chef_repo" => chef_repo.inspect,
+          "log_file" => log_file.inspect,
+          "config_rb" => config_rb.inspect,
+          "labfile" => labfile.inspect
+        }
+      end
+
       def logger
         if (!defined?($logger) || $logger.nil?)
           $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
           Cucumber::Chef.is_rc? and ($logger.level = ZTK::Logger::DEBUG)
 
-          dependencies = {
-            "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
-            "fog_version" => ::Fog::VERSION.inspect,
-            "ruby_version" => RUBY_VERSION.inspect,
-            "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
-            "ruby_platform" => RUBY_PLATFORM.inspect,
-            "ztk_version" => ::ZTK::VERSION.inspect
-          }
-          if RUBY_VERSION >= "1.9"
-            dependencies.merge!("ruby_engine" => RUBY_ENGINE.inspect)
-          end
-
-          details = {
-            "program" => $0.to_s.inspect,
-            "uname" => %x(uname -a).chomp.strip.inspect,
-            "chef_repo" => chef_repo.inspect,
-            "log_file" => log_file.inspect,
-            "config_rb" => config_rb.inspect,
-            "labfile" => labfile.inspect
-          }
+          dependencies            = log_dependencies
+          details                 = log_details
 
           max_dependencies_length = dependencies.keys.collect{ |key| key.to_s.length }.max
           max_details_length      = details.keys.collect{ |key| key.to_s.length }.max
           max_key_length          = [max_dependencies_length, max_details_length].max + 2
 
           log_page_break(max_key_length, '=')
+
           details.sort.each{ |key, value| log_key_value(key, value, max_key_length) }
+
           log_page_break(max_key_length)
+
           dependencies.sort.each{ |key, value| log_key_value(key, value, max_key_length) }
+
           log_page_break(max_key_length)
 
         end
