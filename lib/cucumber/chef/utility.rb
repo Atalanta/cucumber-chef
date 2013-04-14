@@ -298,6 +298,14 @@ module Cucumber
 
 ################################################################################
 
+      def log_key_value(key, value, max_key_length)
+        $logger.info { " %s%s: %s" % [ key.upcase, '.' * (max_key_length - key.length), value.to_s ] }
+      end
+
+      def log_page_break(max_key_length, char='-')
+        $logger.info { (char * (max_key_length * 2)) }
+      end
+
       def logger
         if (!defined?($logger) || $logger.nil?)
           $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
@@ -324,17 +332,15 @@ module Cucumber
             "labfile" => labfile.inspect
           }
 
-          max_key_length = [dependencies.keys.collect{ |key| key.to_s.length }.max, details.keys.collect{ |key| key.to_s.length }.max].max + 2
+          max_dependencies_length = dependencies.keys.collect{ |key| key.to_s.length }.max
+          max_details_length      = details.keys.collect{ |key| key.to_s.length }.max
+          max_key_length          = [max_dependencies_length, max_details_length].max + 2
 
-          $logger.info { ("=" * 80) }
-          details.sort.each do |key, value|
-            $logger.info { " %s%s: %s" % [ key.upcase, '.' * (max_key_length - key.length), value.to_s ] }
-          end
-          $logger.info { ("-" * (max_key_length * 2)) }
-          dependencies.sort.each do |key, value|
-            $logger.info { " %s%s: %s" % [ key.upcase, '.' * (max_key_length - key.length), value.to_s ] }
-          end
-          $logger.info { ("-" * (max_key_length * 2)) }
+          log_page_break(max_key_length, '=')
+          details.sort.each{ |key, value| log_key_value(key, value, max_key_length) }
+          log_page_break(max_key_length)
+          dependencies.sort.each{ |key, value| log_key_value(key, value, max_key_length) }
+          log_page_break(max_key_length)
 
         end
 
