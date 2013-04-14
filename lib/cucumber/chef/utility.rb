@@ -19,9 +19,11 @@
 #
 ################################################################################
 require 'cucumber/chef/utility/bootstrap_helper'
+require 'cucumber/chef/utility/chef_helper'
 require 'cucumber/chef/utility/dir_helper'
 require 'cucumber/chef/utility/file_helper'
 require 'cucumber/chef/utility/lab_helper'
+require 'cucumber/chef/utility/log_helper'
 require 'cucumber/chef/utility/lxc_helper'
 
 module Cucumber
@@ -32,9 +34,11 @@ module Cucumber
     module Utility
 
       include Cucumber::Chef::Utility::BootstrapHelper
+      include Cucumber::Chef::Utility::ChefHelper
       include Cucumber::Chef::Utility::DirHelper
       include Cucumber::Chef::Utility::FileHelper
       include Cucumber::Chef::Utility::LabHelper
+      include Cucumber::Chef::Utility::LogHelper
       include Cucumber::Chef::Utility::LXCHelper
 
 ################################################################################
@@ -97,48 +101,13 @@ module Cucumber
 
 ################################################################################
 
-      def chef_pre_11
-        return false if (Cucumber::Chef::Config.chef[:version].downcase == "latest")
-        (Cucumber::Chef::Config.chef[:version].to_f < 11.0)
-      end
-
-################################################################################
-# Config Helpers
-################################################################################
-
       def provider_config
         Cucumber::Chef::Config[Cucumber::Chef::Config.provider]
       end
 
-################################################################################
-# Path Helpers
-################################################################################
-
       def ensure_directory(dir)
         FileUtils.mkdir_p(File.dirname(dir))
       end
-
-      def chef_repo
-        (Cucumber::Chef.locate_parent(".chef") rescue nil)
-      end
-
-      def in_chef_repo?
-        ((chef_repo && File.exists?(chef_repo) && File.directory?(chef_repo)) ? true : false)
-      end
-
-################################################################################
-
-      def chef_user
-        Cucumber::Chef::Config.user
-      end
-
-      def chef_identity
-        result = File.join(provider_dir, "#{chef_user}.pem")
-        ensure_directory(result)
-        result
-      end
-
-################################################################################
 
       def build_home_dir(user)
         ((user == "root") ? "/root" : "/home/#{user}")
@@ -148,22 +117,14 @@ module Cucumber
         (File.exists?(identity) && File.chmod(0400, identity))
       end
 
-################################################################################
-
       def tag(name=nil)
         [ name, "v#{Cucumber::Chef::VERSION}" ].compact.join(" ")
       end
-
-################################################################################
 
       def build_command(name, *args)
         executable = (Cucumber::Chef.locate(:file, "bin", name) rescue "/usr/bin/env #{name}")
         [executable, args].flatten.compact.join(" ")
       end
-
-################################################################################
-# BOOT
-################################################################################
 
       def boot(name=nil)
         if !in_chef_repo?
@@ -179,75 +140,9 @@ module Cucumber
 
 ################################################################################
 
-      def log_key_value(key, value, max_key_length)
-        $logger.info { " %s%s: %s" % [ key.upcase, '.' * (max_key_length - key.length), value.to_s ] }
-      end
-
-      def log_page_break(max_key_length, char='-')
-        $logger.info { (char * (max_key_length * 2)) }
-      end
-
-      def log_dependencies
-        dependencies = {
-          "cucumber_chef_version" => Cucumber::Chef::VERSION.inspect,
-          "fog_version" => ::Fog::VERSION.inspect,
-          "ruby_version" => RUBY_VERSION.inspect,
-          "ruby_patchlevel" => RUBY_PATCHLEVEL.inspect,
-          "ruby_platform" => RUBY_PLATFORM.inspect,
-          "ztk_version" => ::ZTK::VERSION.inspect
-        }
-
-        if RUBY_VERSION >= "1.9"
-          dependencies.merge!("ruby_engine" => RUBY_ENGINE.inspect)
-        end
-
-        dependencies
-      end
-
-      def log_details
-        {
-          "program" => $0.to_s.inspect,
-          "uname" => %x(uname -a).chomp.strip.inspect,
-          "chef_repo" => chef_repo.inspect,
-          "log_file" => log_file.inspect,
-          "config_rb" => config_rb.inspect,
-          "labfile" => labfile.inspect
-        }
-      end
-
-      def logger
-        if (!defined?($logger) || $logger.nil?)
-          $logger = ZTK::Logger.new(Cucumber::Chef.log_file)
-
-          if Cucumber::Chef.is_rc?
-            $logger.level = ZTK::Logger::DEBUG
-          end
-
-          dependencies    = log_dependencies
-          details         = log_details
-
-          max_key_length  = [dependencies.keys.map(&:length).max, details.keys.map(&:length).max].max + 2
-
-          log_page_break(max_key_length, '=')
-
-          details.sort.each do |key, value|
-            log_key_value(key, value, max_key_length)
-          end
-
-          log_page_break(max_key_length)
-
-          dependencies.sort.each do |key, value|
-            log_key_value(key, value, max_key_length)
-          end
-
-          log_page_break(max_key_length)
-
-        end
-
-        $logger
-      end
-
     end
+
+################################################################################
 
   end
 end
