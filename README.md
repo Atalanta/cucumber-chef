@@ -7,6 +7,11 @@ Cucumber-chef is a library of tools to enable the emerging discipline of infrast
 
 # RESOURCES
 
+Example Use:
+
+* https://github.com/zpatten/cc-chef-repo
+* https://github.com/zpatten/cc-chef-repo/blob/master/README.md
+
 Source:
 
 * https://github.com/Atalanta/cucumber-chef
