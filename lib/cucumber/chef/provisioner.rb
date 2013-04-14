@@ -87,65 +87,9 @@ module Cucumber
         raise ProvisionerError, "You must have the environment variable 'USER' set." if !Cucumber::Chef::Config.user
 
         ZTK::Benchmark.bench(:message => "Bootstrapping #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :ui => @ui) do
-          server_name = @test_lab.ip
-
-          chef_solo_attributes = case Cucumber::Chef.chef_pre_11
-          when true then
-            {
-              "chef-server" => {
-                "webui_enabled" => true
-              },
-              "run_list" => %w(recipe[chef-server::rubygems-install] recipe[chef-server::apache-proxy] role[test_lab])
-            }
-          when false then
-            {
-              "chef-server" => {
-                "api_fqdn" => server_name,
-                "nginx" => {
-                  "enable_non_ssl" => true,
-                  "server_name" => server_name,
-                  "url" => "https://#{server_name}"
-                },
-                "lb" => {
-                  "fqdn" => server_name
-                },
-                "bookshelf" => {
-                  "vip" => server_name
-                },
-                "chef_server_webui" => {
-                  "enable" => true
-                },
-                "version" => Cucumber::Chef::Config.chef[:version],
-                "prereleases" => Cucumber::Chef::Config.chef[:prereleases],
-                "nightlies" => Cucumber::Chef::Config.chef[:nightlies]
-              },
-              "run_list" => %w(recipe[chef-server::default] role[test_lab])
-            }
-          end
-
-          chef_solo_attributes.merge!(
-            "cucumber_chef" => {
-              "version" => Cucumber::Chef::VERSION,
-              "prerelease" => Cucumber::Chef::Config.prerelease,
-              "lab_user" => Cucumber::Chef.lab_user,
-              "lxc_user" => Cucumber::Chef.lxc_user
-            }
-          )
-
-          context = {
-            :server_name => server_name,
-            :lab_user => Cucumber::Chef.lab_user,
-            :chef_pre_11 => Cucumber::Chef.chef_pre_11,
-            :chef_solo_attributes => chef_solo_attributes,
-            :chef_version => Cucumber::Chef::Config.chef[:version],
-            :chef_validator => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/validation.pem' : '/etc/chef-server/chef-validator.pem'),
-            :chef_webui => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/webui.pem' : '/etc/chef-server/chef-webui.pem'),
-            :chef_admin => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/admin.pem' : '/etc/chef-server/admin.pem'),
-            :default_password => Cucumber::Chef::Config.chef[:default_password],
-            :user => Cucumber::Chef::Config.user,
-            :hostname_short => Cucumber::Chef.lab_hostname_short,
-            :hostname_full => Cucumber::Chef.lab_hostname_full
-          }
+          server_name           = @test_lab.ip
+          chef_solo_attributes  = build_chef_solo_attributes(server_name)
+          context               = build_context(server_name, chef_solo_attributes)
 
           bootstrap_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "bootstrap", "ubuntu-precise-omnibus.erb")
 
@@ -163,6 +107,83 @@ module Cucumber
           command = "sudo /bin/bash #{remote_bootstrap_filename}"
           @test_lab.bootstrap_ssh.exec(command, :silence => true)
         end
+      end
+
+      def build_chef_solo_10_attributes(server_name)
+        {
+          "chef-server" => {
+            "webui_enabled" => true
+          },
+          "run_list" => %w(recipe[chef-server::rubygems-install] recipe[chef-server::apache-proxy] role[test_lab])
+        }
+      end
+
+      def build_chef_solo_11_attributes(server_name)
+        {
+          "chef-server" => {
+            "api_fqdn" => server_name,
+            "nginx" => {
+              "enable_non_ssl" => true,
+              "server_name" => server_name,
+              "url" => "https://#{server_name}"
+            },
+            "lb" => {
+              "fqdn" => server_name
+            },
+            "bookshelf" => {
+              "vip" => server_name
+            },
+            "chef_server_webui" => {
+              "enable" => true
+            },
+            "version" => Cucumber::Chef::Config.chef[:version],
+            "prereleases" => Cucumber::Chef::Config.chef[:prereleases],
+            "nightlies" => Cucumber::Chef::Config.chef[:nightlies]
+          },
+          "run_list" => %w(recipe[chef-server::default] role[test_lab])
+        }
+      end
+
+      def build_cucumber_chef_attributes(server_name)
+        {
+          "cucumber_chef" => {
+            "version" => Cucumber::Chef::VERSION,
+            "prerelease" => Cucumber::Chef::Config.prerelease,
+            "lab_user" => Cucumber::Chef.lab_user,
+            "lxc_user" => Cucumber::Chef.lxc_user
+          }
+        }
+      end
+
+      def build_chef_solo_attributes(server_name)
+        # TODO: This really should switch on the version number.
+        chef_solo_attributes = case Cucumber::Chef.chef_pre_11
+        when true then
+          build_chef_solo_10_attributes(server_name)
+        when false then
+          build_chef_solo_11_attributes(server_name)
+        end
+
+        chef_solo_attributes.merge!(build_cucumber_chef_attributes(server_name))
+
+        chef_solo_attributes
+      end
+
+      def build_context(server_name, chef_solo_attributes)
+        {
+          :server_name => server_name,
+          :lab_user => Cucumber::Chef.lab_user,
+          :chef_pre_11 => Cucumber::Chef.chef_pre_11,
+          :chef_solo_attributes => chef_solo_attributes,
+          :chef_version => Cucumber::Chef::Config.chef[:version],
+          :chef_validator => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/validation.pem' : '/etc/chef-server/chef-validator.pem'),
+          :chef_webui => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/webui.pem' : '/etc/chef-server/chef-webui.pem'),
+          :chef_admin => (Cucumber::Chef.chef_pre_11 ? '/etc/chef/admin.pem' : '/etc/chef-server/admin.pem'),
+          :default_password => Cucumber::Chef::Config.chef[:default_password],
+          :user => Cucumber::Chef::Config.user,
+          :hostname_short => Cucumber::Chef.lab_hostname_short,
+          :hostname_full => Cucumber::Chef.lab_hostname_full
+        }
       end
 
 ################################################################################
