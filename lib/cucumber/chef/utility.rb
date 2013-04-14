@@ -138,7 +138,7 @@ module Cucumber
 ################################################################################
 
       def artifacts_dir
-        result = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "artifacts")
+        result = File.join(provider_dir, "artifacts")
         ensure_directory(result)
         result
       end
@@ -170,7 +170,7 @@ module Cucumber
 ################################################################################
 
       # def knife_rb
-      #   knife_rb = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "knife.rb")
+      #   knife_rb = File.join(provider_dir, "knife.rb")
       #   FileUtils.mkdir_p(File.dirname(knife_rb))
       #   knife_rb
       # end
@@ -182,7 +182,7 @@ module Cucumber
       end
 
       def chef_identity
-        result = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "#{chef_user}.pem")
+        result = File.join(provider_dir, "#{chef_user}.pem")
         ensure_directory(result)
         result
       end
@@ -191,6 +191,10 @@ module Cucumber
 
       def build_home_dir(user)
         ((user == "root") ? "/root" : "/home/#{user}")
+      end
+
+      def ensure_identity_permissions(identity)
+        (File.exists?(identity) && File.chmod(0400, identity))
       end
 
 ################################################################################
@@ -207,7 +211,7 @@ module Cucumber
 
       def bootstrap_identity
         bootstrap_identity = provider_config[:identity_file]
-        File.exists?(bootstrap_identity) && File.chmod(0400, bootstrap_identity)
+        ensure_identity_permissions(bootstrap_identity)
         bootstrap_identity
       end
 
@@ -224,8 +228,8 @@ module Cucumber
       end
 
       def lab_identity
-        lab_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lab_user}")
-        File.exists?(lab_identity) && File.chmod(0400, lab_identity)
+        lab_identity = File.join(provider_dir, "id_rsa-#{lab_user}")
+        ensure_identity_permissions(lab_identity)
         lab_identity
       end
 
@@ -258,8 +262,8 @@ module Cucumber
       end
 
       def lxc_identity
-        lxc_identity = File.join(Cucumber::Chef.home_dir, Cucumber::Chef::Config.provider.to_s, "id_rsa-#{lxc_user}")
-        File.exists?(lxc_identity) && File.chmod(0400, lxc_identity)
+        lxc_identity = File.join(provider_dir, "id_rsa-#{lxc_user}")
+        ensure_identity_permissions(lxc_identity)
         lxc_identity
       end
 
