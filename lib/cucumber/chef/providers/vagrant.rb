@@ -25,12 +25,15 @@ module Cucumber
       class VagrantError < Error; end
 
       class Vagrant
-        # attr_accessor :env, :vm
 
-        INVALID_STATES = %w(not_created aborted unknown).map(&:to_sym)
-        RUNNING_STATES =  %w(running).map(&:to_sym)
-        SHUTDOWN_STATES = %w(paused saved poweroff).map(&:to_sym)
-        VALID_STATES = RUNNING_STATES+SHUTDOWN_STATES
+        INVALID_STATES      = %w(not_created aborted unknown).map(&:to_sym)
+        RUNNING_STATES      = %w(running).map(&:to_sym)
+        SHUTDOWN_STATES     = %w(paused saved poweroff).map(&:to_sym)
+        VALID_STATES        = (RUNNING_STATES + SHUTDOWN_STATES)
+
+        MSG_NO_RUNNING_LAB  = %(We could not find a running test lab.)
+        MSG_NO_STOPPED_LAB  = %(We could not find a powered off test lab.)
+        MSG_NO_LAB          = %(We could not find a test lab!)
 
 ################################################################################
 
@@ -44,29 +47,27 @@ module Cucumber
 
         def create
           ZTK::Benchmark.bench(:message => "Creating #{Cucumber::Chef::Config.provider.upcase} instance", :mark => "completed in %0.4f seconds.", :stdout => @stdout) do
+            context               = build_create_context
+            vagrantfile_template  = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "Vagrantfile.erb")
+            vagrantfile           = File.join(Cucumber::Chef.chef_repo, "Vagrantfile")
 
-            context = {
-              :ip => Cucumber::Chef.lab_ip,
-              :cpus => Cucumber::Chef::Config.vagrant[:cpus],
-              :memory => Cucumber::Chef::Config.vagrant[:memory]
-            }
-
-            vagrantfile_template = File.join(Cucumber::Chef.root_dir, "lib", "cucumber", "chef", "templates", "cucumber-chef", "Vagrantfile.erb")
-
-            vagrantfile = File.join(Cucumber::Chef.chef_repo, "Vagrantfile")
-
-            !File.exists?(vagrantfile) and IO.write(vagrantfile, ::ZTK::Template.render(vagrantfile_template, context))
+            if !File.exists?(vagrantfile)
+              IO.write(vagrantfile, ::ZTK::Template.render(vagrantfile_template, context))
+            end
 
             self.vagrant_cli("up", id)
             ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
           end
 
           self
+        end
 
-        rescue Exception => e
-          @ui.logger.fatal { e.message }
-          @ui.logger.fatal { e.backtrace.join("\n") }
-          raise VagrantError, e.message
+        def build_create_context
+          {
+            :ip => Cucumber::Chef.lab_ip,
+            :cpus => Cucumber::Chef::Config.vagrant[:cpus],
+            :memory => Cucumber::Chef::Config.vagrant[:memory]
+          }
         end
 
 ################################################################################
@@ -74,16 +75,11 @@ module Cucumber
 ################################################################################
 
         def destroy
-          if exists?
+          if self.exists?
             self.vagrant_cli("destroy", "--force", id)
           else
-            raise VagrantError, "We could not find a test lab!"
+            raise VagrantError, MSG_NO_LAB
           end
-
-        rescue Exception => e
-          @ui.logger.fatal { e.message }
-          @ui.logger.fatal { e.backtrace.join("\n") }
-          raise VagrantError, e.message
         end
 
 ################################################################################
@@ -91,17 +87,12 @@ module Cucumber
 ################################################################################
 
         def up
-          if (exists? && dead?)
+          if self.dead?
             self.vagrant_cli("up", id)
             ZTK::TCPSocketCheck.new(:host => self.ip, :port => self.port, :wait => 120).wait
           else
-            raise VagrantError, "We could not find a powered off test lab."
+            raise VagrantError, MSG_NO_STOPPED_LAB
           end
-
-        rescue Exception => e
-          @ui.logger.fatal { e.message }
-          @ui.logger.fatal { e.backtrace.join("\n") }
-          raise VagrantError, e.message
         end
 
 ################################################################################
@@ -109,16 +100,11 @@ module Cucumber
 ################################################################################
 
         def down
-          if (exists? && alive?)
+          if self.alive?
             self.vagrant_cli("halt", id)
           else
-            raise AWSError, "We could not find a running test lab."
+            raise VagrantError, MSG_NO_RUNNING_LAB
           end
-
-        rescue Exception => e
-          @ui.logger.fatal { e.message }
-          @ui.logger.fatal { e.backtrace.join("\n") }
-          raise VagrantError, e.message
         end
 
 ################################################################################
@@ -126,16 +112,11 @@ module Cucumber
 ################################################################################
 
         def reload
-          if (exists? && alive?)
+          if self.alive?
             self.vagrant_cli("reload", id)
           else
-            raise AWSError, "We could not find a running test lab."
+            raise VagrantError, MSG_NO_RUNNING_LAB
           end
-
-        rescue Exception => e
-          @ui.logger.fatal { e.message }
-          @ui.logger.fatal { e.backtrace.join("\n") }
-          raise VagrantError, e.message
         end
 
 ################################################################################
@@ -145,11 +126,11 @@ module Cucumber
         end
 
         def alive?
-          (RUNNING_STATES.include?(self.state) rescue false)
+          (self.exists? && (RUNNING_STATES.include?(self.state) rescue false))
         end
 
         def dead?
-          (SHUTDOWN_STATES.include?(self.state) rescue true)
+          (self.exists? && (SHUTDOWN_STATES.include?(self.state) rescue true))
         end
 
 ################################################################################
