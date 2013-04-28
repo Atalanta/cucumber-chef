@@ -267,7 +267,7 @@ All tasks should function in a similar manner across all providers.
       cucumber-chef genip                      # Generate an RFC compliant private IP address
       cucumber-chef genmac                     # Generate an RFC compliant private MAC address
       cucumber-chef help [TASK]                # Describe available tasks or one specific task
-      cucumber-chef info                       # *DEPRECIATED* - You should execute the 'status' task instead.
+      cucumber-chef info                       # *DEPRECATED* - You should execute the 'status' task instead.
       cucumber-chef init                       # Initalize cucumber-chef configuration
       cucumber-chef log                        # Streams the cucumber-chef local and test lab logs to the terminal.
       cucumber-chef ps [ps-options]            # Snapshot of the current cucumber-chef test lab container processes.
@@ -275,8 +275,8 @@ All tasks should function in a similar manner across all providers.
       cucumber-chef setup                      # Setup the cucumber-chef test lab
       cucumber-chef ssh [container]            # SSH to cucumber-chef test lab or [container] if specified
       cucumber-chef status                     # Displays the current status of the test lab.
-      cucumber-chef teardown                   # *DEPRECIATED* - You should execute the 'destroy' task instead.
-      cucumber-chef test                       # *DEPRECIATED* - You should execute 'cucumber' or 'rspec' directly.
+      cucumber-chef teardown                   # *DEPRECATED* - You should execute the 'destroy' task instead.
+      cucumber-chef test                       # *DEPRECATED* - You should execute 'cucumber' or 'rspec' directly.
       cucumber-chef up                         # Power up the cucumber-chef test lab
 
 
