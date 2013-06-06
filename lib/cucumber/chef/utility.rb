@@ -26,6 +26,8 @@ require 'cucumber/chef/utility/lab_helper'
 require 'cucumber/chef/utility/log_helper'
 require 'cucumber/chef/utility/lxc_helper'
 
+require 'whichr'
+
 module Cucumber
   module Chef
 
@@ -122,7 +124,11 @@ module Cucumber
       end
 
       def build_command(name, *args)
-        executable = (Cucumber::Chef.locate(:file, "bin", name) rescue "/usr/bin/env #{name}")
+        if OS.windows?
+          executable = ::RubyWhich.new.which(name)[0]
+        else
+          executable = (Cucumber::Chef.locate(:file, "bin", name) rescue "/usr/bin/env #{name}")
+        end
         [executable, args].flatten.compact.join(" ")
       end
 
