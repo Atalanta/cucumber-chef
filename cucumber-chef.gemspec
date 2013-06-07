@@ -50,6 +50,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency("thor", ">= 0.15.2")
   spec.add_dependency("ubuntu_ami", ">= 0.4.0")
   spec.add_dependency("ztk", ">= 1.0.9")
+  spec.add_dependency("whichr", ">= 0.3.6")
 
   spec.add_development_dependency("simplecov")
   spec.add_development_dependency("pry")
