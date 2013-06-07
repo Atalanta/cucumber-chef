@@ -26,6 +26,7 @@ require 'cucumber/chef/utility/lab_helper'
 require 'cucumber/chef/utility/log_helper'
 require 'cucumber/chef/utility/lxc_helper'
 
+require 'net/http'
 require 'whichr'
 
 module Cucumber
@@ -98,7 +99,7 @@ module Cucumber
 ################################################################################
 
       def external_ip
-        %x(wget -q -O - checkip.dyndns.org|sed -e 's/.*Current IP Address: //' -e 's/<.*$//').chomp.strip
+        ::Net::HTTP.get('checkip.dyn.com','/').match(/Current IP Address: ([\d\.]+)</)[1]
       end
 
 ################################################################################
