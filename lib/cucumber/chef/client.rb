@@ -63,7 +63,7 @@ module Cucumber
 
         # Upload all of the chef-repo roles
         ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo roles to the test lab", :mark => "completed in %0.4f seconds.") do
-          @test_lab.knife_cli(%(role from file ./roles/*.rb ./roles/*.rb), :silence => true)
+          @test_lab.knife_cli(%(role from file ./roles/*.rb ./roles/*.json), :silence => true)
         end
 
         # Upload all of our chef-repo data bags
