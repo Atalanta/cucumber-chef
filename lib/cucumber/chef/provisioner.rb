@@ -111,7 +111,7 @@ module Cucumber
 
       def build_chef_solo_10_attributes(server_name)
         {
-          "chef-server" => {
+          "chef_server" => {
             "webui_enabled" => true
           },
           "run_list" => %w(recipe[chef-server::rubygems-install] recipe[chef-server::apache-proxy] role[test_lab])
