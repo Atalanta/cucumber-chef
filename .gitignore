@@ -16,3 +16,8 @@ tmtags
 *.swp
 *gem
 .idea/
+
+Labfile
+Vagrantfile
+features
+.vagrant/*

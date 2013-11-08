@@ -21,7 +21,8 @@
 module Cucumber
   module Chef
 
-    class ClientError < Error; end
+    class ClientError < Error;
+    end
 
     class Client
       attr_accessor :test_lab
@@ -50,20 +51,29 @@ module Cucumber
         # PUSH CHEF-REPO
         #################
 
-        # Upload all of the chef-repo environments
-        ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo environments to the test lab", :mark => "completed in %0.4f seconds.") do
-          @test_lab.knife_cli(%(environment from file ./environments/*.rb), :silence => true)
-        end
-
         # Upload all of the chef-repo cookbooks
         ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo cookbooks to the test lab", :mark => "completed in %0.4f seconds.") do
           cookbook_paths = Cucumber::Chef::Config.chef[:cookbook_paths]
+          cookbook_paths << 'chef_repo/cookbooks' if File.directory? 'chef_repo/cookbooks'
           @test_lab.knife_cli(%(cookbook upload --all --cookbook-path #{cookbook_paths.join(':')} --force), :silence => true)
+        end
+
+        # Upload all of the chef-repo environments
+        ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo environments to the test lab", :mark => "completed in %0.4f seconds.") do
+          environment_paths = Cucumber::Chef::Config.chef[:environment_paths]
+          environment_paths << 'chef_repo/environments' if File.directory? 'chef_repo/environments'
+          environment_paths.each do |ep|
+            @test_lab.knife_cli(%(environment from file #{ep}/*.rb), :silence => true)
+          end
         end
 
         # Upload all of the chef-repo roles
         ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo roles to the test lab", :mark => "completed in %0.4f seconds.") do
-          @test_lab.knife_cli(%(role from file ./roles/*.rb), :silence => true)
+          role_paths = Cucumber::Chef::Config.chef[:role_paths]
+          role_paths << 'chef_repo/roles' if File.directory? 'chef_repo/roles'
+          role_paths.each do |rp|
+            @test_lab.knife_cli(%(role from file #{rp}/*.rb), :silence => true)
+          end
         end
 
         # Upload all of our chef-repo data bags
@@ -99,7 +109,7 @@ module Cucumber
 
         # PROVISION CONTAINERS
         #######################
-        @test_lab.containers.chef_set_client_config(:chef_server_url => "https://192.168.255.254",
+        @test_lab.containers.chef_set_client_config(:chef_server_url        => "https://192.168.255.254",
                                                     :validation_client_name => "chef-validator")
         Cucumber::Chef::Container.all.each do |container|
           ZTK::Benchmark.bench(:message => ">>> Provisioning container '#{container.id}'", :mark => "completed in %0.4f seconds.") do
@@ -127,7 +137,7 @@ module Cucumber
       end
 
 ################################################################################
-    private
+      private
 ################################################################################
 
       def environment_variable_set?(variable_name)

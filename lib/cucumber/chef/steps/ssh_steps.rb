@@ -75,9 +75,9 @@ end
 
 Then /^I should( not)? see the "([^\"]*)" of "([^\"]*)" in the output$/ do |boolean, key, name|
   if (!boolean)
-    @output.should =~ /#{Cucumber::Chef::Containers.all.select{|c| c.name == name}.first.send(key.downcase.to_sym)}/i
+    @output.should =~ /#{Cucumber::Chef::Containers.all.select { |c| c.name == name }.first.send(key.downcase.to_sym)}/i
   else
-    @output.should_not =~ /#{Cucumber::Chef::Containers.all.select{|c| c.name == name}.first.send(key.downcase.to_sym)}/i
+    @output.should_not =~ /#{Cucumber::Chef::Containers.all.select { |c| c.name == name }.first.send(key.downcase.to_sym)}/i
   end
 end
 
