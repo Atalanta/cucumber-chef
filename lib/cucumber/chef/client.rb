@@ -52,7 +52,8 @@ module Cucumber
 
         # Upload all of the chef-repo environments
         ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo environments to the test lab", :mark => "completed in %0.4f seconds.") do
-          @test_lab.knife_cli(%(environment from file ./environments/*.rb), :silence => true)
+#          @test_lab.knife_cli(%(environment from file ./environments/*.rb ./environments/*.json), :silence => true)
+          @test_lab.knife_cli(%(environment from file `find environments | egrep "(json$|rb$)"`), :silence => true)
         end
 
         # Upload all of the chef-repo cookbooks
@@ -63,7 +64,8 @@ module Cucumber
 
         # Upload all of the chef-repo roles
         ZTK::Benchmark.bench(:message => ">>> Pushing chef-repo roles to the test lab", :mark => "completed in %0.4f seconds.") do
-          @test_lab.knife_cli(%(role from file ./roles/*.rb), :silence => true)
+#          @test_lab.knife_cli(%(role from file ./roles/*.rb ./roles/*.json), :silence => true)
+          @test_lab.knife_cli(%(role from file `find roles | egrep "(json$|rb$)"`), :silence => true)
         end
 
         # Upload all of our chef-repo data bags
